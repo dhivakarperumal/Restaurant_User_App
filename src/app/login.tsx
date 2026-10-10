@@ -17,6 +17,7 @@ import {
   loginWithIdentifier,
   logoutUser,
 } from "../lib/api";
+import { getDashboardRoute } from "../lib/auth";
 
 export default function LoginScreen() {
   const [identifier, setIdentifier] = useState("");
@@ -38,19 +39,11 @@ export default function LoginScreen() {
 
     try {
       const result = await loginWithIdentifier(trimmedIdentifier, password);
-      const role = String(result.user?.role ?? result.role ?? "")
-        .trim()
-        .toLowerCase()
-        .replace(/[\s-]+/g, "_");
+      const role = result.user?.role ?? result.role;
+      const dashboardRoute = getDashboardRoute(role);
 
-      if (role === "user") {
-        router.replace("/home");
-      } else if (
-        role === "delivery_partner" ||
-        role === "deliverypartner" ||
-        role === "delivery"
-      ) {
-        router.replace("/delivery");
+      if (dashboardRoute) {
+        router.replace(dashboardRoute);
       } else {
         await logoutUser();
         setErrorMessage(

@@ -58,6 +58,16 @@ export const saveUser = async (user) => {
   }
 };
 
+export const getStoredRole = async () => {
+  const role = await AsyncStorage.getItem("userRole");
+  if (role) {
+    return role;
+  }
+
+  const user = await getStoredUser();
+  return user?.role || null;
+};
+
 export const getStoredUser = async () => {
   const user = await AsyncStorage.getItem("userProfile");
 
@@ -150,13 +160,21 @@ export const loginWithIdentifier = async (identifier, password) => {
     });
 
     const data = response.data || {};
+    const role = data.user?.role ?? data.role;
 
     if (data.token) {
       await setAuthToken(data.token);
     }
 
-    if (data.user) {
-      await saveUser(data.user);
+    if (role) {
+      await AsyncStorage.setItem("userRole", String(role));
+    }
+
+    if (data.user || role) {
+      await saveUser({
+        ...(data.user && typeof data.user === "object" ? data.user : {}),
+        ...(role ? { role } : {}),
+      });
     }
 
     return {
@@ -190,7 +208,7 @@ export const registerUser = async ({ username, email, phone, password }) => {
 
 export const logoutUser = async () => {
   try {
-    await AsyncStorage.multiRemove(["userToken", "userProfile"]);
+    await AsyncStorage.multiRemove(["userToken", "userProfile", "userRole"]);
   } finally {
     clearTokenCache();
   }
