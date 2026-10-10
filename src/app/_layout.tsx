@@ -103,6 +103,22 @@ export default function RootLayout() {
           name="delivery/index"
           options={{ title: "Delivery", href: null }}
         />
+        <Tabs.Screen
+          name="delivery/Navigations/Bottombar"
+          options={{ href: null }}
+        />
+        <Tabs.Screen
+          name="delivery/Navigations/TopHeader"
+          options={{ href: null }}
+        />
+        <Tabs.Screen
+          name="user/Navigations/Bottombar"
+          options={{ href: null }}
+        />
+        <Tabs.Screen
+          name="user/Navigations/TopHeader"
+          options={{ href: null }}
+        />
         <Tabs.Screen name="home" options={{ title: "Home" }} />
         <Tabs.Screen name="explore" options={{ title: "Explore" }} />
         <Tabs.Screen name="cart" options={{ title: "Cart" }} />
