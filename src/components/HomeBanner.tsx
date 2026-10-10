@@ -14,7 +14,6 @@ import {
 import {
   Image,
   Pressable,
-  ScrollView,
   Text,
   View,
 } from "react-native";
@@ -191,42 +190,65 @@ export default function HomeBanner() {
 
   return (
     <View className="overflow-hidden rounded-[30px] bg-[#FFF8ED]">
-      <View className="px-5 pb-6 pt-6">
-        <View className="mb-3 flex-row items-center">
-          <Sparkles color="#E86D16" size={15} />
-          <Text className="ml-2 flex-1 text-[10px] font-extrabold uppercase tracking-[1.4px] text-[#B64F12]">
-            Good food · Good company · Great memories
+      <View className="flex-row items-center px-3 pb-4 pt-5">
+        <View className="flex-1 pr-2">
+          <View className="mb-1 flex-row items-center">
+            <Sparkles color="#E86D16" size={12} />
+            <Text className="ml-1 text-[8px] font-extrabold uppercase tracking-[0.7px] text-[#B64F12]">
+              Good food · Good company
+            </Text>
+          </View>
+          <Text
+            className="text-[22px] font-black leading-[25px] tracking-[-0.6px] text-[#102C22]"
+            numberOfLines={3}
+          >
+            {banner.title}
+          </Text>
+          <Text className="mt-1 text-[10px] font-semibold leading-[14px] text-[#B64F12]">
+            {banner.subtitle}
+          </Text>
+          <Text className="mt-1 text-[11px] leading-[15px] text-[#41443E]" numberOfLines={3}>
+            {banner.description}
           </Text>
         </View>
 
-        <Text className="text-[34px] font-black leading-[38px] tracking-[-1px] text-[#102C22]">
-          {banner.title}
-        </Text>
-        <Text className="mt-3 text-sm leading-5 text-[#41443E]">
-          {banner.description}
-        </Text>
-
-        <View className="mt-5 flex-row">
+        <View className="flex-row items-center">
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Order now"
-            className="min-h-12 flex-row items-center justify-center rounded-xl bg-[#F47716] px-5"
+            className="min-h-10 flex-row items-center justify-center rounded-lg bg-[#F47716] px-2"
             onPress={() => router.push(getBannerDestination(banner.link))}
             style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1 })}
           >
-            <Text className="text-sm font-extrabold text-white">Order Now</Text>
-            <ArrowRight color="#FFFFFF" size={16} className="ml-2" />
+            <Text className="text-[10px] font-extrabold text-white">Order Now</Text>
+            <ArrowRight color="#FFFFFF" size={13} className="ml-1" />
           </Pressable>
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Explore menu"
-            className="ml-3 min-h-12 items-center justify-center rounded-xl border border-[#263A30] px-5"
+            className="ml-1 min-h-10 items-center justify-center rounded-lg border border-[#263A30] px-2"
             onPress={() => router.push("/explore")}
             style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
           >
-            <Text className="text-sm font-bold text-[#14291F]">Explore Menu</Text>
+            <Text className="text-[10px] font-bold text-[#14291F]">Explore Menu</Text>
           </Pressable>
         </View>
+      </View>
+
+      <View className="flex-row justify-between px-2 pb-4">
+        {benefits.map(({ Icon, title, subtitle }) => (
+          <View key={title} className="flex-1 items-center px-0.5">
+            <View className="mb-1 h-8 w-8 items-center justify-center rounded-full bg-white">
+              <Icon color="#183B2B" size={17} strokeWidth={1.8} />
+            </View>
+            <Text className="text-center text-[9px] font-bold leading-[11px] text-[#153526]">
+              {title}
+            </Text>
+            <Text className="text-center text-[9px] leading-[11px] text-[#153526]">
+              {subtitle}
+            </Text>
+          </View>
+        ))}
       </View>
 
       <View className="h-[260px] overflow-hidden bg-[#243B2B]">
@@ -245,13 +267,6 @@ export default function HomeBanner() {
         )}
         <View className="absolute inset-0 bg-black/25" />
 
-        <View className="absolute left-4 top-4 h-[104px] w-[104px] items-center justify-center rounded-full border-2 border-[#F3A126] bg-[#073C2B]/90 p-3">
-          <Text className="text-center text-xs font-bold italic leading-4 text-white">
-            {banner.subtitle}
-          </Text>
-          <Text className="mt-1 text-lg text-[#F5A21B]">♥</Text>
-        </View>
-
         {showcaseImages.length > 0 && (
           <Pressable
             accessibilityRole="button"
@@ -260,9 +275,6 @@ export default function HomeBanner() {
             onPress={() => router.push("/explore")}
             style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1 })}
           >
-            <Text className="mr-2 text-xs font-bold italic text-[#153526]">
-              Special dishes
-            </Text>
             <View className="flex-row">
               {showcaseImages.map((food, index) => (
                 <Image
@@ -322,29 +334,6 @@ export default function HomeBanner() {
         )}
       </View>
 
-      <ScrollView
-        className="bg-[#FFF8ED] px-3 py-4"
-        contentContainerStyle={{ flexGrow: 1, flexDirection: "row" }}
-        horizontal
-        showsHorizontalScrollIndicator={false}
-      >
-        {benefits.map(({ Icon, title, subtitle }) => (
-          <View
-            key={title}
-            className="min-w-[82px] flex-1 items-center px-1.5"
-          >
-            <View className="mb-1.5 h-10 w-10 items-center justify-center rounded-full bg-white">
-              <Icon color="#183B2B" size={21} strokeWidth={1.8} />
-            </View>
-            <Text className="text-center text-[10px] font-bold leading-3 text-[#153526]">
-              {title}
-            </Text>
-            <Text className="text-center text-[10px] leading-3 text-[#153526]">
-              {subtitle}
-            </Text>
-          </View>
-        ))}
-      </ScrollView>
     </View>
   );
 }
