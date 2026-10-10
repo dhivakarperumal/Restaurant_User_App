@@ -1,5 +1,6 @@
 import { Bike, ClipboardList } from "lucide-react-native";
 import { SafeAreaView, Text, View } from "react-native";
+import AuthLogoutButton from "../../components/AuthLogoutButton";
 
 export default function DeliveryPartnerScreen() {
   return (
@@ -21,6 +22,8 @@ export default function DeliveryPartnerScreen() {
             Your delivery dashboard will appear here.
           </Text>
         </View>
+
+        <AuthLogoutButton />
       </View>
     </SafeAreaView>
   );

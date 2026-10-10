@@ -1,4 +1,5 @@
 import { SafeAreaView, ScrollView, Text, View } from "react-native";
+import AuthLogoutButton from "../components/AuthLogoutButton";
 
 export default function ProfileScreen() {
   return (
@@ -12,6 +13,8 @@ export default function ProfileScreen() {
         <View className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4">
           <Text className="text-base font-medium text-slate-700">Account settings</Text>
         </View>
+
+        <AuthLogoutButton />
       </ScrollView>
     </SafeAreaView>
   );
