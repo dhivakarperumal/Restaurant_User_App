@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "Retorent App",
-    "slug": "retorent-app",
+    "name": "Restaurant App",
+    "slug": "restaurant-app",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
