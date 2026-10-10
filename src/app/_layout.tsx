@@ -20,25 +20,26 @@ export default function RootLayout() {
       <Tabs
         screenOptions={({ route }) => ({
           headerShown: false,
-          tabBarActiveTintColor: "#8EA66B",
-          tabBarInactiveTintColor: "#777777",
+          tabBarActiveTintColor: "#374151",
+          tabBarInactiveTintColor: "#6B7280",
           tabBarShowLabel: true,
+          tabBarIndicatorStyle: { display: "none" },
           tabBarStyle: {
             display:
               route.name === "login" || route.name.startsWith("delivery/")
                 ? "none"
                 : "flex",
             backgroundColor: "#FFFFFF",
-            borderTopWidth: 1,
-            borderTopColor: "#E5E7EB",
+            borderTopWidth: 0,
+            borderTopColor: "transparent",
             height: Platform.OS === "android" ? 72 + insets.bottom : 82 + insets.bottom,
             paddingBottom: Math.max(insets.bottom, 8),
             paddingTop: 8,
-            elevation: 8,
+            elevation: 0,
             shadowColor: "#000000",
-            shadowOpacity: 0.05,
-            shadowRadius: 10,
-            shadowOffset: { width: 0, height: -2 },
+            shadowOpacity: 0,
+            shadowRadius: 0,
+            shadowOffset: { width: 0, height: 0 },
           },
           tabBarLabelStyle: {
             fontSize: 11,
@@ -49,7 +50,7 @@ export default function RootLayout() {
             marginTop: 2,
           },
           tabBarBadgeStyle: {
-            backgroundColor: "#8EA66B",
+            backgroundColor: "#6B7280",
             color: "#FFFFFF",
             fontSize: 10,
             minWidth: 18,
