@@ -1,6 +1,7 @@
 import { router } from "expo-router";
 import { Settings } from "lucide-react-native";
 import { Pressable, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 type TopHeaderProps = {
   title: string;
@@ -8,7 +9,10 @@ type TopHeaderProps = {
 
 export default function TopHeader({ title }: TopHeaderProps) {
   return (
-    <View className="bg-[#F3F4F3] px-6 pb-4 pt-3">
+    <SafeAreaView
+      className="bg-[#F3F4F3] px-6 pb-4 pt-3"
+      edges={["top"]}
+    >
       <View className="flex-row items-center justify-between">
         <View className="flex-1">
           <Text className="text-[11px] font-bold uppercase tracking-[2px] text-[#82966A]">
@@ -31,6 +35,6 @@ export default function TopHeader({ title }: TopHeaderProps) {
           <Settings color="#374151" size={22} strokeWidth={2.2} />
         </Pressable>
       </View>
-    </View>
+    </SafeAreaView>
   );
 }
