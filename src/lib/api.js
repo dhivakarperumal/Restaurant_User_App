@@ -2,7 +2,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 
 export const API_BASE_URL =
-  process.env.EXPO_PUBLIC_API_URL || "https://lifetracking.qtechx.com/api";
+  process.env.EXPO_PUBLIC_API_URL || "http://localhost:3000";
   
 
 const api = axios.create({
