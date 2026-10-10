@@ -29,9 +29,16 @@ function stringValue(value: unknown, fallback = "") {
 function resolveAssetUrl(asset: unknown) {
   const value = stringValue(asset);
   if (!value) return "";
-  if (/^(https?:\/\/|data:)/i.test(value)) return value;
 
   const backendUrl = API_BASE_URL.replace(/\/api\/?$/i, "").replace(/\/+$/, "");
+  if (/^data:/i.test(value)) return value;
+  if (/^https?:\/\//i.test(value)) {
+    return value.replace(
+      /^https?:\/\/(?:localhost|127(?:\.\d{1,3}){3})(?::\d+)?/i,
+      backendUrl,
+    );
+  }
+
   return `${backendUrl}/${value.replace(/^\/+/, "")}`;
 }
 
