@@ -99,6 +99,7 @@ export default function RootLayout() {
         })}
       >
         <Tabs.Screen name="login" options={{ title: "Login", href: null }} />
+        <Tabs.Screen name="index" options={{ href: null }} />
         <Tabs.Screen
           name="delivery/index"
           options={{ title: "Delivery", href: null }}
