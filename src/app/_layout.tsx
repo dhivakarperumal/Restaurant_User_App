@@ -24,7 +24,10 @@ export default function RootLayout() {
           tabBarInactiveTintColor: "#777777",
           tabBarShowLabel: true,
           tabBarStyle: {
-            display: route.name === "login" ? "none" : "flex",
+            display:
+              route.name === "login" || route.name.startsWith("delivery/")
+                ? "none"
+                : "flex",
             backgroundColor: "#FFFFFF",
             borderTopWidth: 1,
             borderTopColor: "#E5E7EB",
@@ -95,6 +98,10 @@ export default function RootLayout() {
         })}
       >
         <Tabs.Screen name="login" options={{ title: "Login", href: null }} />
+        <Tabs.Screen
+          name="delivery/index"
+          options={{ title: "Delivery", href: null }}
+        />
         <Tabs.Screen name="home" options={{ title: "Home" }} />
         <Tabs.Screen name="explore" options={{ title: "Explore" }} />
         <Tabs.Screen name="cart" options={{ title: "Cart" }} />

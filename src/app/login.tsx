@@ -15,6 +15,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import {
   getApiErrorMessage,
   loginWithIdentifier,
+  logoutUser,
 } from "../lib/api";
 
 export default function LoginScreen() {
@@ -36,8 +37,28 @@ export default function LoginScreen() {
     setIsSubmitting(true);
 
     try {
-      await loginWithIdentifier(trimmedIdentifier, password);
-      router.replace("/home");
+      const result = await loginWithIdentifier(trimmedIdentifier, password);
+      const role = String(result.user?.role ?? result.role ?? "")
+        .trim()
+        .toLowerCase()
+        .replace(/[\s-]+/g, "_");
+
+      if (role === "user") {
+        router.replace("/home");
+      } else if (
+        role === "delivery_partner" ||
+        role === "deliverypartner" ||
+        role === "delivery"
+      ) {
+        router.replace("/delivery");
+      } else {
+        await logoutUser();
+        setErrorMessage(
+          role
+            ? "This account type is not supported in the app."
+            : "We couldn't identify your account type. Please try again or contact support.",
+        );
+      }
     } catch (error) {
       setErrorMessage(getApiErrorMessage(error, "Unable to sign in. Please try again."));
     } finally {

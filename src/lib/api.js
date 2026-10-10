@@ -2,7 +2,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 
 export const API_BASE_URL =
-  process.env.EXPO_PUBLIC_API_URL || "http://localhost:3000";
+  process.env.EXPO_PUBLIC_API_URL || "http://192.168.1.4:5000/api";
   
 
 const api = axios.create({
@@ -144,7 +144,7 @@ api.interceptors.response.use(
 
 export const loginWithIdentifier = async (identifier, password) => {
   try {
-    const response = await api.post("/auth/login", {
+    const response = await api.post("/users/login", {
       identifier: String(identifier || "").trim(),
       password: String(password || ""),
     });
