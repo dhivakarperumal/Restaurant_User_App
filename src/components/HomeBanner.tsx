@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { router } from "expo-router";
 import { ArrowRight } from "lucide-react-native";
-import { Image, Pressable, Text, View } from "react-native";
+import { ImageBackground, Pressable, Text, View } from "react-native";
 import api, { API_BASE_URL } from "../lib/api";
 
 type Banner = {
@@ -96,51 +96,45 @@ export default function HomeBanner() {
   const banner = banners[0] ?? FALLBACK_BANNER;
 
   return (
-    <View className="overflow-hidden rounded-[24px] bg-[#FFF8ED]">
-      <View className="flex-row items-center px-4 py-4">
-        <View className="mr-3 flex-1">
-          <Text
-            className="text-[22px] font-black leading-[26px] tracking-[-0.6px] text-[#102C22]"
-            numberOfLines={2}
-          >
-            {banner.title}
-          </Text>
-        </View>
+    <ImageBackground
+      accessible
+      accessibilityLabel={banner.title}
+      className="h-[280px] justify-end overflow-hidden rounded-[24px] bg-[#243B2B]"
+      imageStyle={{ borderRadius: 24 }}
+      resizeMode="cover"
+      source={banner.image ? { uri: banner.image } : undefined}
+    >
+      <View className="absolute inset-0 bg-black/45" />
+      <View className="px-5 pb-6 pt-10">
+        <Text
+          className="text-[28px] font-black leading-[32px] tracking-[-0.7px] text-white"
+          numberOfLines={3}
+        >
+          {banner.title}
+        </Text>
 
-        <View className="shrink-0 flex-row">
+        <View className="mt-4 flex-row">
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Order now"
-            className="min-h-10 flex-row items-center justify-center rounded-lg bg-[#F47716] px-2"
+            className="min-h-11 flex-row items-center justify-center rounded-lg bg-[#F47716] px-4"
             onPress={() => router.push(getBannerDestination(banner.link))}
             style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1 })}
           >
-            <Text className="text-[10px] font-extrabold text-white">Order Now</Text>
-            <ArrowRight color="#FFFFFF" size={12} className="ml-1" />
+            <Text className="text-xs font-extrabold text-white">Order Now</Text>
+            <ArrowRight color="#FFFFFF" size={14} className="ml-1.5" />
           </Pressable>
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Explore menu"
-            className="ml-1 min-h-10 items-center justify-center rounded-lg border border-[#263A30] px-2"
+            className="ml-2 min-h-11 items-center justify-center rounded-lg border border-white px-4"
             onPress={() => router.push("/explore")}
-            style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+            style={({ pressed }) => ({ opacity: pressed ? 0.75 : 1 })}
           >
-            <Text className="text-[10px] font-bold text-[#14291F]">Explore</Text>
+            <Text className="text-xs font-bold text-white">Explore Menu</Text>
           </Pressable>
         </View>
       </View>
-
-      <View className="h-[240px] overflow-hidden bg-[#243B2B]">
-        {banner.image && (
-          <Image
-            accessible
-            accessibilityLabel={banner.title}
-            className="absolute h-full w-full"
-            resizeMode="cover"
-            source={{ uri: banner.image }}
-          />
-        )}
-      </View>
-    </View>
+    </ImageBackground>
   );
 }
