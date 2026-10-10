@@ -8,9 +8,18 @@ import {
 } from "lucide-react-native";
 import { Platform, Text } from "react-native";
 import { SafeAreaProvider, useSafeAreaInsets } from "react-native-safe-area-context";
+import TopHeader from "./user/Navigations/TopHeader";
 import "../../global.css";
 
 const cartItems = 3;
+const headerTitles: Record<string, string> = {
+  home: "Home",
+  explore: "Explore",
+  cart: "Cart",
+  orders: "Orders",
+  profile: "Profile",
+  "delivery/index": "Delivery",
+};
 
 export default function RootLayout() {
   const insets = useSafeAreaInsets();
@@ -19,7 +28,9 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <Tabs
         screenOptions={({ route }) => ({
-          headerShown: false,
+          headerShown: Boolean(headerTitles[route.name]),
+          header: () => <TopHeader title={headerTitles[route.name] ?? route.name} />,
+          headerStyle: { backgroundColor: "#F3F4F3" },
           tabBarActiveTintColor: "#374151",
           tabBarInactiveTintColor: "#6B7280",
           tabBarShowLabel: true,
