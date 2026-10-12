@@ -1168,9 +1168,21 @@ export default function ProfileScreen() {
 
               {activeTab === "reservations" ? (
                 <View>
-                  <Text className="mb-4 text-xs leading-5 text-[#728071]">
-                    Table bookings associated with your account.
-                  </Text>
+                  <View className="mb-4 flex-row items-center justify-between">
+                    <Text className="flex-1 pr-2 text-xs leading-5 text-[#728071]">
+                      Table bookings associated with your account.
+                    </Text>
+                    <Pressable
+                      accessibilityRole="button"
+                      className="flex-row items-center rounded-lg bg-[#183B2A] px-3 py-2.5"
+                      onPress={() => router.push("/reservations")}
+                    >
+                      <Plus color="#FFFFFF" size={14} />
+                      <Text className="ml-1 text-[10px] font-bold text-white">
+                        Book table
+                      </Text>
+                    </Pressable>
+                  </View>
                   {reservations.length ? (
                     reservations.map((reservation) => (
                       <View
@@ -1218,6 +1230,13 @@ export default function ProfileScreen() {
                       Icon={CalendarDays}
                       title="No reservations yet"
                       detail="Your table bookings will appear here after you request a reservation."
+                      action={
+                        <ActionButton
+                          label="Reserve a table"
+                          onPress={() => router.push("/reservations")}
+                          Icon={ArrowRight}
+                        />
+                      }
                     />
                   )}
                 </View>

@@ -5,6 +5,7 @@ import {
   Search,
   ShoppingBag,
   ShoppingCart,
+  TableProperties,
   UserRound,
 } from "lucide-react-native";
 import { NavigationBar } from "expo-navigation-bar";
@@ -20,6 +21,7 @@ const headerTitles: Record<string, string> = {
   shop: "Shop",
   cart: "Cart",
   "event-orders": "Event Orders",
+  reservations: "Table Reservation",
   checkout: "Checkout",
   orders: "Orders",
   profile: "Profile",
@@ -172,6 +174,17 @@ function RootTabs() {
                   <PartyPopper {...commonProps} />
                 </View>
               );
+            case "reservations":
+              return (
+                <View
+                  style={[
+                    tabIconContainerStyle,
+                    focused && { backgroundColor: "#EAF2E8" },
+                  ]}
+                >
+                  <TableProperties {...commonProps} />
+                </View>
+              );
             case "orders":
               return (
                 <View
@@ -205,7 +218,7 @@ function RootTabs() {
             shop: "Shop",
             cart: "Cart",
             "event-orders": "Events",
-            orders: "Orders",
+            reservations: "Tables",
             profile: "Profile",
           };
 
@@ -244,8 +257,9 @@ function RootTabs() {
       <Tabs.Screen name="shop" options={{ title: "Shop" }} />
       <Tabs.Screen name="cart" options={{ title: "Cart" }} />
       <Tabs.Screen name="event-orders" options={{ title: "Events" }} />
+      <Tabs.Screen name="reservations" options={{ title: "Tables" }} />
       <Tabs.Screen name="checkout" options={{ href: null }} />
-      <Tabs.Screen name="orders" options={{ title: "Orders" }} />
+      <Tabs.Screen name="orders" options={{ href: null }} />
       <Tabs.Screen name="profile" options={{ title: "Profile" }} />
     </Tabs>
   );
