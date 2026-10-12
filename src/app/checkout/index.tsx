@@ -21,9 +21,9 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useCart } from "../contexts/CartContext";
-import { getCartAccount, type CartAccount } from "../lib/cartApi";
-import { getFoodImage, getFoodName } from "../lib/foods";
+import { useCart } from "../../contexts/CartContext";
+import { getCartAccount, type CartAccount } from "../../lib/cartApi";
+import { getFoodImage, getFoodName } from "../../lib/foods";
 import {
   clearCheckoutIdempotencyKey,
   createOrder,
@@ -33,8 +33,8 @@ import {
   type CheckoutAddress,
   type CheckoutCustomer,
   type CheckoutPayload,
-} from "../lib/orderApi";
-import type { CartItem } from "../types/food";
+} from "../../lib/orderApi";
+import type { CartItem } from "../../types/food";
 import type {
   RazorpayPaymentFailure,
   RazorpayPaymentSuccess,

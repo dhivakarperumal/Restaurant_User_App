@@ -141,7 +141,7 @@ export default function CartScreen() {
               <Pressable
                 accessibilityRole="button"
                 className="mt-4 min-h-12 items-center justify-center rounded-xl bg-[#1A6A3B] active:bg-[#14542E]"
-                onPress={() => router.push("/checkout")}
+                onPress={() => router.push("/checkout/index")}
               >
                 <Text className="text-sm font-extrabold text-white">
                   Continue to checkout
