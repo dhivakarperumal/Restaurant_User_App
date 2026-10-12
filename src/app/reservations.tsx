@@ -11,10 +11,15 @@ import {
   Users,
 } from "lucide-react-native";
 import type { LucideIcon } from "lucide-react-native";
+import DateTimePicker, {
+  DateTimePickerAndroid,
+} from "@react-native-community/datetimepicker";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Image,
+  Modal,
+  Platform,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -38,7 +43,7 @@ type ReservationTable = {
 };
 type Reservation = ApiRecord & { reservation_id: string };
 
-const TIME_SLOTS = Array.from({ length: 25 }, (_, index) => {
+const WEB_TIME_SLOTS = Array.from({ length: 25 }, (_, index) => {
   const totalMinutes = 10 * 60 + index * 30;
   const hour = Math.floor(totalMinutes / 60);
   const minute = totalMinutes % 60;
@@ -76,6 +81,18 @@ function localDateString(date: Date): string {
 function minimumDateString(): string {
   const date = new Date();
   return localDateString(date);
+}
+
+function getMinimumDate(): Date {
+  const date = new Date();
+  date.setHours(0, 0, 0, 0);
+  return date;
+}
+
+function parsePickerDate(dateValue: string, timeValue: string): Date {
+  const [year, month, day] = dateValue.split("-").map(Number);
+  const [hour, minute] = timeValue.split(":").map(Number);
+  return new Date(year, month - 1, day, hour || 0, minute || 0);
 }
 
 function validDate(value: string): boolean {
@@ -198,6 +215,10 @@ export default function ReservationsScreen() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [pickerMode, setPickerMode] = useState<"date" | "time" | null>(null);
+  const [pickerDraft, setPickerDraft] = useState(() =>
+    parsePickerDate(minimumDateString(), "19:00"),
+  );
 
   const loadReservations = useCallback(async () => {
     const response = await api.get("/reservations/mine");
@@ -266,14 +287,17 @@ export default function ReservationsScreen() {
       setError("Choose a valid reservation date today or later.");
       return;
     }
-    if (!TIME_SLOTS.includes(time)) {
+    const [selectedHour, selectedMinute] = time.split(":").map(Number);
+    const selectedTimeMinutes = selectedHour * 60 + selectedMinute;
+    if (
+      !/^(?:1[0-9]|20|21):[0-5]\d$|^22:00$/.test(time)
+    ) {
       setError("Choose a reservation time between 10:00 AM and 10:00 PM.");
       return;
     }
     if (date === minimumDateString()) {
-      const [hour, minute] = time.split(":").map(Number);
       const now = new Date();
-      if (hour * 60 + minute <= now.getHours() * 60 + now.getMinutes()) {
+      if (selectedTimeMinutes <= now.getHours() * 60 + now.getMinutes()) {
         setError("For today, choose a time later than the current time.");
         return;
       }
@@ -416,6 +440,72 @@ export default function ReservationsScreen() {
     setTables([]);
     setSelectedTableId("");
     setHasSearched(false);
+    setError("");
+  };
+
+  const commitPickedDate = (pickedDate: Date) => {
+    const value = localDateString(pickedDate);
+    if (value < minimumDateString()) {
+      setError("Choose a reservation date today or later.");
+      return false;
+    }
+    updateDate(value);
+    setError("");
+    return true;
+  };
+
+  const commitPickedTime = (pickedTime: Date) => {
+    const hours = pickedTime.getHours();
+    const minutes = pickedTime.getMinutes();
+    const minutesFromMidnight = hours * 60 + minutes;
+    if (minutesFromMidnight < 10 * 60 || minutesFromMidnight > 22 * 60) {
+      setError("Choose a reservation time between 10:00 AM and 10:00 PM.");
+      return false;
+    }
+    const value = `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
+    if (date === minimumDateString()) {
+      const now = new Date();
+      if (minutesFromMidnight <= now.getHours() * 60 + now.getMinutes()) {
+        setError("For today, choose a time later than the current time.");
+        return false;
+      }
+    }
+    updateTime(value);
+    setError("");
+    return true;
+  };
+
+  const openPicker = (mode: "date" | "time") => {
+    setError("");
+    const value = parsePickerDate(date, time);
+    if (Platform.OS === "android") {
+      DateTimePickerAndroid.open({
+        value,
+        mode,
+        is24Hour: true,
+        ...(mode === "date" ? { minimumDate: getMinimumDate() } : {}),
+        onValueChange: (_event, selectedDate) => {
+          if (mode === "date") {
+            commitPickedDate(selectedDate);
+          } else {
+            commitPickedTime(selectedDate);
+          }
+        },
+      });
+      return;
+    }
+    setPickerDraft(value);
+    setPickerMode(mode);
+  };
+
+  const confirmIOSPicker = () => {
+    if (pickerMode === "date") {
+      if (commitPickedDate(pickerDraft)) setPickerMode(null);
+      return;
+    }
+    if (pickerMode === "time" && commitPickedTime(pickerDraft)) {
+      setPickerMode(null);
+    }
   };
 
   if (isLoadingProfile) {
@@ -517,50 +607,85 @@ export default function ReservationsScreen() {
           placeholder="Contact phone number"
           value={phone}
         />
-        <Field
-          label="Reservation date *"
-          maxLength={10}
-          onChangeText={updateDate}
-          placeholder="YYYY-MM-DD"
-          value={date}
-        />
+        {Platform.OS === "web" ? (
+          <Field
+            label="Reservation date *"
+            maxLength={10}
+            onChangeText={updateDate}
+            placeholder="YYYY-MM-DD"
+            value={date}
+          />
+        ) : (
+          <View className="mb-3">
+            <Text className="mb-1.5 text-xs font-bold uppercase tracking-wide text-[#59645E]">
+              Reservation date *
+            </Text>
+            <Pressable
+              accessibilityLabel={`Choose reservation date, currently ${formatDate(date)}`}
+              accessibilityRole="button"
+              className="h-12 flex-row items-center rounded-xl border border-[#E1E5DF] bg-white px-3.5"
+              onPress={() => openPicker("date")}
+            >
+              <CalendarDays color="#1A6A3B" size={17} />
+              <Text className="ml-2.5 flex-1 text-sm font-semibold text-[#183B2A]">
+                {formatDate(date)}
+              </Text>
+              <Text className="text-xs font-semibold text-[#728071]">Choose date</Text>
+            </Pressable>
+          </View>
+        )}
         <View className="mb-2 flex-row items-center">
           <Clock3 color="#59645E" size={15} />
           <Text className="ml-2 text-xs font-bold uppercase tracking-wide text-[#59645E]">
             Reservation time *
           </Text>
         </View>
-        <ScrollView
-          className="mb-3 max-h-11"
-          contentContainerStyle={{ gap: 8, paddingRight: 4 }}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-        >
-          {TIME_SLOTS.map((slot) => {
-            const selected = slot === time;
-            return (
-              <Pressable
-                accessibilityRole="button"
-                accessibilityState={{ selected }}
-                className={`rounded-full border px-3.5 py-2 ${
-                  selected
-                    ? "border-[#1A6A3B] bg-[#1A6A3B]"
-                    : "border-[#E1E5DF] bg-white"
-                }`}
-                key={slot}
-                onPress={() => updateTime(slot)}
-              >
-                <Text
-                  className={`text-xs font-semibold ${
-                    selected ? "text-white" : "text-[#344035]"
+        {Platform.OS === "web" ? (
+          <ScrollView
+            className="mb-3 max-h-11"
+            contentContainerStyle={{ gap: 8, paddingRight: 4 }}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+          >
+            {WEB_TIME_SLOTS.map((slot) => {
+              const selected = slot === time;
+              return (
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityState={{ selected }}
+                  className={`rounded-full border px-3.5 py-2 ${
+                    selected
+                      ? "border-[#1A6A3B] bg-[#1A6A3B]"
+                      : "border-[#E1E5DF] bg-white"
                   }`}
+                  key={slot}
+                  onPress={() => updateTime(slot)}
                 >
-                  {formatTime(slot)}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </ScrollView>
+                  <Text
+                    className={`text-xs font-semibold ${
+                      selected ? "text-white" : "text-[#344035]"
+                    }`}
+                  >
+                    {formatTime(slot)}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </ScrollView>
+        ) : (
+          <Pressable
+            accessibilityLabel={`Choose reservation time, currently ${formatTime(time)}`}
+            accessibilityRole="button"
+            className="mb-3 h-12 flex-row items-center rounded-xl border border-[#E1E5DF] bg-white px-3.5"
+            onPress={() => openPicker("time")}
+          >
+            <Clock3 color="#1A6A3B" size={17} />
+            <Text className="ml-2.5 flex-1 text-sm font-semibold text-[#183B2A]">
+              {formatTime(time)}
+            </Text>
+            <Text className="text-xs font-semibold text-[#728071]">Choose time</Text>
+          </Pressable>
+        )}
         <View className="mb-3">
           <Text className="mb-1.5 text-xs font-bold uppercase tracking-wide text-[#59645E]">
             Guests (1–20) *
@@ -753,6 +878,49 @@ export default function ReservationsScreen() {
             </View>
           )}
         </View>
+      ) : null}
+      {Platform.OS === "ios" && pickerMode ? (
+        <Modal
+          animationType="slide"
+          onRequestClose={() => setPickerMode(null)}
+          transparent
+          visible
+        >
+          <View className="flex-1 justify-end bg-black/45">
+            <View className="rounded-t-3xl bg-[#FFFCF6] px-4 pb-8 pt-4">
+              <View className="mb-2 flex-row items-center justify-between">
+                <Pressable
+                  accessibilityRole="button"
+                  className="min-h-11 justify-center px-2"
+                  onPress={() => setPickerMode(null)}
+                >
+                  <Text className="text-sm font-semibold text-[#728071]">Cancel</Text>
+                </Pressable>
+                <Text className="text-base font-extrabold text-[#183B2A]">
+                  {pickerMode === "date" ? "Select date" : "Select time"}
+                </Text>
+                <Pressable
+                  accessibilityRole="button"
+                  className="min-h-11 justify-center px-2"
+                  onPress={confirmIOSPicker}
+                >
+                  <Text className="text-sm font-extrabold text-[#1A6A3B]">Done</Text>
+                </Pressable>
+              </View>
+              <DateTimePicker
+                accentColor="#1A6A3B"
+                display="spinner"
+                is24Hour
+                minuteInterval={5}
+                mode={pickerMode}
+                minimumDate={pickerMode === "date" ? getMinimumDate() : undefined}
+                onValueChange={(_event, value) => setPickerDraft(value)}
+                themeVariant="light"
+                value={pickerDraft}
+              />
+            </View>
+          </View>
+        </Modal>
       ) : null}
     </ScrollView>
   );

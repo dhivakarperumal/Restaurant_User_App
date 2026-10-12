@@ -21,7 +21,6 @@
       "output": "static",
       "favicon": "./assets/images/adminlogo.png",
       "bundler": "metro"
-    
     },
     "plugins": [
       "expo-router",
@@ -39,7 +38,8 @@
           "enforceContrast": false,
           "style": "dark"
         }
-      ]
+      ],
+      "@react-native-community/datetimepicker"
     ],
     "experiments": {
       "typedRoutes": true,
