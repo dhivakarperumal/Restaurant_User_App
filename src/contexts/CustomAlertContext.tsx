@@ -53,8 +53,8 @@ const VARIANT_STYLES = {
   },
   error: {
     Icon: AlertCircle,
-    iconColor: "#B83E2E",
-    iconBackground: "#FCEAE6",
+    iconColor: "#1A6A3B",
+    iconBackground: "#EAF2E8",
     label: "SOMETHING WENT WRONG",
   },
   info: {
@@ -140,7 +140,7 @@ export function CustomAlertProvider({
                       isCancel
                         ? "border border-[#E7E0D8] bg-white"
                         : isDestructive
-                          ? "bg-[#B83E2E]"
+                          ? "bg-[#1A6A3B]"
                           : "bg-[#1A6A3B]"
                     }`}
                     key={`${action.text}-${index}`}
