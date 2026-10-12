@@ -19,6 +19,7 @@ const headerTitles: Record<string, string> = {
   home: "Home",
   explore: "Shop",
   shop: "Shop",
+  favorites: "Favorites",
   cart: "Cart",
   "event-orders": "Event Orders",
   reservations: "Table Reservation",
@@ -255,6 +256,7 @@ function RootTabs() {
       <Tabs.Screen name="home" options={{ title: "Home" }} />
       <Tabs.Screen name="explore" options={{ href: null }} />
       <Tabs.Screen name="shop" options={{ title: "Shop" }} />
+      <Tabs.Screen name="favorites" options={{ href: null }} />
       <Tabs.Screen name="cart" options={{ title: "Cart" }} />
       <Tabs.Screen name="event-orders" options={{ title: "Events" }} />
       <Tabs.Screen name="reservations" options={{ title: "Tables" }} />

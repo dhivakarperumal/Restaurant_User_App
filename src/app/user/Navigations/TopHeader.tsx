@@ -1,5 +1,5 @@
 import { router } from "expo-router";
-import { LogOut, ShoppingBag, UserRoundPen } from "lucide-react-native";
+import { Heart, LogOut, ShoppingBag, UserRoundPen } from "lucide-react-native";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -106,6 +106,14 @@ export default function TopHeader({ title }: TopHeaderProps) {
         </View>
 
         <View className="ml-3 flex-row items-center">
+          <Pressable
+            accessibilityLabel="Open your favorites"
+            accessibilityRole="button"
+            className="mr-2 h-10 w-10 items-center justify-center rounded-full border border-[#E7E0D8] bg-white active:bg-[#F5EFE5]"
+            onPress={() => router.push("/favorites")}
+          >
+            <Heart color="#E11D48" size={19} />
+          </Pressable>
           <Pressable
             accessibilityLabel="Open your orders"
             accessibilityRole="button"
