@@ -126,10 +126,6 @@ api.interceptors.response.use(
     if (error.response) {
       const status = error.response.status;
 
-      if (status === 401) {
-        await logoutUser();
-      }
-
       return Promise.reject({
         status,
         message:
@@ -159,11 +155,16 @@ export const loginWithIdentifier = async (identifier, password) => {
       password: String(password || ""),
     });
 
-    const data = response.data || {};
+    const responseBody = response.data || {};
+    const data =
+      responseBody.data && typeof responseBody.data === "object"
+        ? responseBody.data
+        : responseBody;
     const role = data.user?.role ?? data.role;
 
-    if (data.token) {
-      await setAuthToken(data.token);
+    const token = data.token ?? data.accessToken ?? data.access_token;
+    if (typeof token === "string" && token.trim()) {
+      await setAuthToken(token.trim());
     }
 
     if (role) {

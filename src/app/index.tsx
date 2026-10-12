@@ -26,8 +26,8 @@ export default function Index() {
         }
 
         const role = await getStoredRole();
-        const route = getDashboardRoute(role);
-        if (isMounted) setDestination(route ?? "/login");
+        const route = getDashboardRoute(role) ?? "/home";
+        if (isMounted) setDestination(route);
       } catch (error) {
         console.error("Failed to restore the saved login session:", error);
         if (isMounted) setHasLoadError(true);
