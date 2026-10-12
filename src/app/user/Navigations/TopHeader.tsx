@@ -1,5 +1,5 @@
 import { router } from "expo-router";
-import { LogOut, UserRoundPen } from "lucide-react-native";
+import { LogOut, ShoppingBag, UserRoundPen } from "lucide-react-native";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -105,22 +105,32 @@ export default function TopHeader({ title }: TopHeaderProps) {
           </Text>
         </View>
 
-        <Pressable
-          accessibilityLabel="Open profile menu"
-          accessibilityRole="button"
-          accessibilityState={{ expanded: isMenuVisible }}
-          className="ml-4 h-11 w-11 items-center justify-center rounded-full border border-[#D9E6D9] bg-[#EAF2E8] active:bg-[#DCEBDD]"
-          disabled={isLoggingOut}
-          onPress={() => setIsMenuVisible(true)}
-        >
-          {isLoggingOut ? (
-            <ActivityIndicator color="#1A6A3B" />
-          ) : (
-            <Text className="text-base font-extrabold text-[#1A6A3B]">
-              {account.initial || "U"}
-            </Text>
-          )}
-        </Pressable>
+        <View className="ml-3 flex-row items-center">
+          <Pressable
+            accessibilityLabel="Open your orders"
+            accessibilityRole="button"
+            className="mr-2 h-10 w-10 items-center justify-center rounded-full border border-[#E7E0D8] bg-white active:bg-[#F5EFE5]"
+            onPress={() => router.push("/orders")}
+          >
+            <ShoppingBag color="#1A6A3B" size={19} />
+          </Pressable>
+          <Pressable
+            accessibilityLabel="Open profile menu"
+            accessibilityRole="button"
+            accessibilityState={{ expanded: isMenuVisible }}
+            className="h-11 w-11 items-center justify-center rounded-full border border-[#D9E6D9] bg-[#EAF2E8] active:bg-[#DCEBDD]"
+            disabled={isLoggingOut}
+            onPress={() => setIsMenuVisible(true)}
+          >
+            {isLoggingOut ? (
+              <ActivityIndicator color="#1A6A3B" />
+            ) : (
+              <Text className="text-base font-extrabold text-[#1A6A3B]">
+                {account.initial || "U"}
+              </Text>
+            )}
+          </Pressable>
+        </View>
       </View>
       <Modal
         animationType="fade"

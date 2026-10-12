@@ -1,6 +1,7 @@
 import { Tabs } from "expo-router";
 import {
   House,
+  PartyPopper,
   Search,
   ShoppingBag,
   ShoppingCart,
@@ -18,6 +19,7 @@ const headerTitles: Record<string, string> = {
   explore: "Shop",
   shop: "Shop",
   cart: "Cart",
+  "event-orders": "Event Orders",
   checkout: "Checkout",
   orders: "Orders",
   profile: "Profile",
@@ -159,6 +161,17 @@ function RootTabs() {
                   <ShoppingCart {...commonProps} />
                 </View>
               );
+            case "event-orders":
+              return (
+                <View
+                  style={[
+                    tabIconContainerStyle,
+                    focused && { backgroundColor: "#EAF2E8" },
+                  ]}
+                >
+                  <PartyPopper {...commonProps} />
+                </View>
+              );
             case "orders":
               return (
                 <View
@@ -191,6 +204,7 @@ function RootTabs() {
             explore: "Shop",
             shop: "Shop",
             cart: "Cart",
+            "event-orders": "Events",
             orders: "Orders",
             profile: "Profile",
           };
@@ -229,6 +243,7 @@ function RootTabs() {
       <Tabs.Screen name="explore" options={{ href: null }} />
       <Tabs.Screen name="shop" options={{ title: "Shop" }} />
       <Tabs.Screen name="cart" options={{ title: "Cart" }} />
+      <Tabs.Screen name="event-orders" options={{ title: "Events" }} />
       <Tabs.Screen name="checkout" options={{ href: null }} />
       <Tabs.Screen name="orders" options={{ title: "Orders" }} />
       <Tabs.Screen name="profile" options={{ title: "Profile" }} />
