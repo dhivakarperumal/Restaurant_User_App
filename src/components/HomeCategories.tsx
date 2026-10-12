@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { router } from "expo-router";
-import { ArrowRight, ChevronLeft, ChevronRight, ImageIcon } from "lucide-react-native";
+import { ImageIcon } from "lucide-react-native";
 import {
   Image,
   Pressable,
@@ -50,8 +50,6 @@ const resolveImageUrl = (image: unknown): string => {
 };
 
 export default function HomeCategories() {
-  const scrollViewRef = useRef<ScrollView>(null);
-  const [scrollOffset, setScrollOffset] = useState(0);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -63,8 +61,6 @@ export default function HomeCategories() {
   const cardWidth = Math.max(96, Math.floor((availableWidth - 2 * CARD_GAP) / 3));
   const cardHeight = Math.round(cardWidth * 1.18);
   const imageHeight = Math.round(cardWidth * 0.72);
-  const scrollStep = (cardWidth + CARD_GAP) * 3;
-
   const fetchCategories = useCallback(async () => {
     setLoading(true);
     setError("");
@@ -141,62 +137,16 @@ export default function HomeCategories() {
     void fetchCategories();
   }, [fetchCategories]);
 
-  const handleScrollLeft = () => {
-    const nextOffset = Math.max(0, scrollOffset - scrollStep);
-    scrollViewRef.current?.scrollTo({ x: nextOffset, animated: true });
-    setScrollOffset(nextOffset);
-  };
-
-  const handleScrollRight = () => {
-    const nextOffset = scrollOffset + scrollStep;
-    scrollViewRef.current?.scrollTo({ x: nextOffset, animated: true });
-    setScrollOffset(nextOffset);
-  };
-
   return (
     <View className="mt-7">
       {/* Header Section */}
-      <View className="mb-4 flex-row items-end justify-between">
-        <View className="flex-1 pr-2">
-          <Text className="text-[11px] font-extrabold uppercase tracking-[2px] text-[#E86D16]">
-            Popular Categories
-          </Text>
-          <View className="mt-1 flex-row items-baseline">
-            <Text className="text-2xl font-black text-[#17251E]">Choose Your </Text>
-            <Text className="text-2xl font-black italic text-[#1A6A3B]">Favorite</Text>
-          </View>
-        </View>
-
-        <View className="flex-row items-center gap-1.5">
-          {categories.length > 3 && (
-            <>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Scroll categories left"
-                onPress={handleScrollLeft}
-                className="h-8 w-8 items-center justify-center rounded-full border border-[#E7E0D8] bg-white shadow-sm active:bg-[#FFF8ED]"
-              >
-                <ChevronLeft color="#203129" size={16} />
-              </Pressable>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Scroll categories right"
-                onPress={handleScrollRight}
-                className="h-8 w-8 items-center justify-center rounded-full border border-[#E7E0D8] bg-white shadow-sm active:bg-[#FFF8ED]"
-              >
-                <ChevronRight color="#203129" size={16} />
-              </Pressable>
-            </>
-          )}
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="See all categories"
-            className="flex-row items-center rounded-full border border-[#E7E0D8] bg-white px-3 py-1.5 active:bg-slate-50"
-            onPress={() => router.push("/explore")}
-          >
-            <Text className="text-xs font-bold text-[#1A6A3B]">See all</Text>
-            <ArrowRight color="#1A6A3B" size={12} className="ml-1" />
-          </Pressable>
+      <View className="mb-4 items-center">
+        <Text className="text-[11px] font-extrabold uppercase tracking-[2px] text-[#E86D16]">
+          Popular Categories
+        </Text>
+        <View className="mt-1 flex-row items-baseline">
+          <Text className="text-2xl font-black text-[#17251E]">Choose Your </Text>
+          <Text className="text-2xl font-black italic text-[#1A6A3B]">Favorite</Text>
         </View>
       </View>
 
@@ -240,11 +190,8 @@ export default function HomeCategories() {
         </View>
       ) : categories.length > 0 ? (
         <ScrollView
-          ref={scrollViewRef}
           horizontal
           showsHorizontalScrollIndicator={false}
-          onScroll={(event) => setScrollOffset(event.nativeEvent.contentOffset.x)}
-          scrollEventThrottle={16}
           contentContainerStyle={{ paddingRight: 8, paddingBottom: 6 }}
         >
           {categories.map((category) => (
