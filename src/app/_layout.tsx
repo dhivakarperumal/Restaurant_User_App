@@ -18,6 +18,7 @@ const headerTitles: Record<string, string> = {
   explore: "Shop",
   shop: "Shop",
   cart: "Cart",
+  checkout: "Checkout",
   orders: "Orders",
   profile: "Profile",
   "delivery/index": "Delivery",
@@ -81,7 +82,9 @@ function RootTabs() {
         ),
         tabBarStyle: {
           display:
-            route.name === "login" || route.name.startsWith("delivery/")
+            route.name === "login" ||
+            route.name === "checkout" ||
+            route.name.startsWith("delivery/")
               ? "none"
               : "flex",
           backgroundColor: "#FFFCF6",
@@ -226,6 +229,7 @@ function RootTabs() {
       <Tabs.Screen name="explore" options={{ href: null }} />
       <Tabs.Screen name="shop" options={{ title: "Shop" }} />
       <Tabs.Screen name="cart" options={{ title: "Cart" }} />
+      <Tabs.Screen name="checkout" options={{ href: null }} />
       <Tabs.Screen name="orders" options={{ title: "Orders" }} />
       <Tabs.Screen name="profile" options={{ title: "Profile" }} />
     </Tabs>

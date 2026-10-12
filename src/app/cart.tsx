@@ -14,6 +14,7 @@ import {
   Trash2,
   UtensilsCrossed,
 } from "lucide-react-native";
+import { router } from "expo-router";
 import { getFoodImage, getFoodName } from "../lib/foods";
 import { useCart } from "../contexts/CartContext";
 import type { CartItem } from "../types/food";
@@ -137,6 +138,15 @@ export default function CartScreen() {
                   ₹{total.toFixed(2)}
                 </Text>
               </View>
+              <Pressable
+                accessibilityRole="button"
+                className="mt-4 min-h-12 items-center justify-center rounded-xl bg-[#1A6A3B] active:bg-[#14542E]"
+                onPress={() => router.push("/checkout")}
+              >
+                <Text className="text-sm font-extrabold text-white">
+                  Continue to checkout
+                </Text>
+              </Pressable>
             </View>
           </View>
         </>
