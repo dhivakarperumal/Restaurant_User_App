@@ -4,6 +4,7 @@ import {
   PartyPopper,
   Search,
   ShoppingBag,
+  Store,
   ShoppingCart,
   TableProperties,
   UserRound,
@@ -146,7 +147,6 @@ function RootTabs() {
                 </View>
               );
             case "explore":
-            case "shop":
               return (
                 <View
                   style={[
@@ -155,6 +155,17 @@ function RootTabs() {
                   ]}
                 >
                   <Search {...commonProps} />
+                </View>
+              );
+            case "shop":
+              return (
+                <View
+                  style={[
+                    tabIconContainerStyle,
+                    focused && { backgroundColor: "#EAF2E8" },
+                  ]}
+                >
+                  <Store {...commonProps} />
                 </View>
               );
             case "cart":
