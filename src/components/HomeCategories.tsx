@@ -210,6 +210,9 @@ export default function HomeCategories() {
           };
         });
 
+      console.info(
+        `[HomeCategories] Loaded ${activeCategories.length} active categories from ${payload.length} records.`,
+      );
       setCategories(activeCategories);
     } catch (error) {
       console.error("Failed to load home categories:", error);
@@ -252,8 +255,9 @@ export default function HomeCategories() {
       {isLoading ? (
         <ScrollView
           horizontal
+          style={{ height: 188 }}
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ paddingRight: 8 }}
+          contentContainerStyle={{ paddingRight: 8, alignItems: "center" }}
         >
           {[0, 1, 2].map((item) => (
             <View
@@ -281,8 +285,9 @@ export default function HomeCategories() {
       ) : categories.length > 0 ? (
         <ScrollView
           horizontal
+          style={{ height: 188 }}
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ paddingRight: 8 }}
+          contentContainerStyle={{ paddingRight: 8, alignItems: "center" }}
         >
           {categories.map((category) => (
             <View key={category.id} className="mr-4">
