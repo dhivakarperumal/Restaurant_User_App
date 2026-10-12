@@ -28,21 +28,29 @@ function getString(value: unknown, fallback = "") {
     : fallback;
 }
 
-function extractArrayPayload(payload: unknown, preferredKeys: string[]) {
+function extractArrayPayload(
+  payload: unknown,
+  preferredKeys: string[],
+  depth = 0,
+): unknown[] | null {
   if (Array.isArray(payload)) return payload;
 
-  if (!isRecord(payload)) return [];
+  if (!isRecord(payload) || depth >= 5) return null;
 
   for (const key of preferredKeys) {
     const candidate = payload[key];
-    if (Array.isArray(candidate)) return candidate;
+    const result = extractArrayPayload(candidate, preferredKeys, depth + 1);
+    if (result) return result;
   }
 
   for (const value of Object.values(payload)) {
-    if (Array.isArray(value)) return value;
+    if (isRecord(value)) {
+      const result = extractArrayPayload(value, preferredKeys, depth + 1);
+      if (result) return result;
+    }
   }
 
-  return [];
+  return null;
 }
 
 function resolveImageUrl(value: unknown) {
@@ -59,6 +67,21 @@ function resolveImageUrl(value: unknown) {
   }
 
   return `${backendUrl}/${image.replace(/^\/+/, "")}`;
+}
+
+function isActiveCategory(category: Record<string, unknown>) {
+  if (category.active === false || category.is_active === false) return false;
+  if (category.is_active === 0) return false;
+  if (category.status === false || category.status === 0) return false;
+
+  const status = getString(category.status).toLowerCase();
+  return (
+    !status ||
+    status === "active" ||
+    status === "1" ||
+    status === "true" ||
+    status === "enabled"
+  );
 }
 
 function CategoryCard({
@@ -137,32 +160,51 @@ export default function HomeCategories() {
       const response = await api.get("/categories");
       const payload = extractArrayPayload(response.data, [
         "categories",
+        "category",
         "items",
         "results",
         "data",
         "list",
       ]);
+      if (!payload) {
+        throw new Error("The categories response did not contain a category list.");
+      }
 
       const activeCategories = payload
         .filter(
           (category): category is Record<string, unknown> =>
-            isRecord(category) &&
-            getString(category.status, "Active").toLowerCase() === "active",
+            isRecord(category) && isActiveCategory(category),
         )
         .map((category, index) => {
           const id = getString(
-            category.category_id ?? category.id ?? category.category_name,
+            category.category_id ??
+              category.categoryId ??
+              category.id ??
+              category.category_name ??
+              category.name,
             `category-${index}`,
           );
-          const name = getString(category.category_name ?? category.name, "Category");
+          const name = getString(
+            category.category_name ?? category.categoryName ?? category.name,
+            "Category",
+          );
           return {
             id,
             name,
             image: resolveImageUrl(
-              category.category_image ?? category.image ?? category.icon,
+              category.category_image ??
+                category.categoryImage ??
+                category.image ??
+                category.image_url ??
+                category.icon,
             ),
             filter: getString(
-              category.category_id ?? category.category_name ?? category.id ?? category.name,
+              category.category_id ??
+                category.categoryId ??
+                category.category_name ??
+                category.categoryName ??
+                category.id ??
+                category.name,
               id,
             ),
           };
