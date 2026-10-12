@@ -2,6 +2,7 @@ export type FoodOption = {
   id: string;
   name: string;
   price: number;
+  groupName?: string;
 };
 
 export type FoodCustomizationGroup = {
@@ -44,6 +45,7 @@ export type FoodProduct = {
 
 export type CartItem = {
   key: string;
+  serverId: string;
   food: FoodProduct;
   quantity: number;
   unitPrice: number;

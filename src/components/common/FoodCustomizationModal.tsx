@@ -173,8 +173,10 @@ export default function FoodCustomizationModal({
     setSelectedCustomizations(
       customizationGroups
         .filter((group) => group.required)
-        .map((group) => group.options[0])
-        .filter((option): option is FoodOption => option !== undefined),
+        .flatMap((group) => {
+          const option = group.options[0];
+          return option ? [{ ...option, groupName: group.name }] : [];
+        }),
     );
     setError("");
   }, [food, customizationGroups]);
@@ -192,7 +194,7 @@ export default function FoodCustomizationModal({
       ...current.filter(
         (selected) => !group.options.some((groupOption) => groupOption.id === selected.id),
       ),
-      option,
+      { ...option, groupName: group.name },
     ]);
   };
 

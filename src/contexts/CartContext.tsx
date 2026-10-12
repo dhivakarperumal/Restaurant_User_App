@@ -1,4 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { usePathname } from "expo-router";
 import {
   createContext,
   useCallback,
@@ -10,151 +11,180 @@ import {
   type ReactNode,
 } from "react";
 import { getFoodId } from "../lib/foods";
+import {
+  addCartItem,
+  clearRemoteCart,
+  fetchCart,
+  getCartAccount,
+  removeCartItem,
+  updateCartItem,
+} from "../lib/cartApi";
 import type {
   CartItem,
   CustomizedFoodCartInput,
   FoodProduct,
 } from "../types/food";
 
-const CART_STORAGE_KEY = "restaurantCart";
 const WISHLIST_STORAGE_KEY = "restaurantWishlist";
 
 type CartContextValue = {
   items: CartItem[];
   itemCount: number;
   isHydrated: boolean;
+  isCartLoading: boolean;
+  cartError: string;
   wishlist: FoodProduct[];
   addItem: (input: CustomizedFoodCartInput) => Promise<void>;
   setQuantity: (key: string, quantity: number) => Promise<void>;
+  removeItem: (key: string) => Promise<void>;
+  clearCart: () => Promise<void>;
+  refreshCart: () => Promise<void>;
   toggleWishlist: (food: FoodProduct) => Promise<void>;
 };
 
 const CartContext = createContext<CartContextValue | null>(null);
 
-function getCartItemKey(input: CustomizedFoodCartInput): string {
-  const optionIds = (options: CustomizedFoodCartInput["selectedAddons"]) =>
-    options.map((option) => option.id).sort();
-  return JSON.stringify([
-    getFoodId(input.food),
-    optionIds(input.selectedAddons),
-    optionIds(input.selectedCustomizations),
-  ]);
-}
-
 export function CartProvider({ children }: { children: ReactNode }) {
+  const pathname = usePathname();
   const [items, setItems] = useState<CartItem[]>([]);
   const [wishlist, setWishlist] = useState<FoodProduct[]>([]);
   const [isHydrated, setIsHydrated] = useState(false);
+  const [isCartLoading, setIsCartLoading] = useState(false);
+  const [cartError, setCartError] = useState("");
   const itemsRef = useRef(items);
   const wishlistRef = useRef(wishlist);
-  const storageQueue = useRef<Promise<void>>(Promise.resolve());
+  const accountIdRef = useRef("");
+  const accountLoadPromise = useRef<Promise<void>>(Promise.resolve());
   const wishlistStorageQueue = useRef<Promise<void>>(Promise.resolve());
-  const hydrationPromise = useRef<Promise<void>>(Promise.resolve());
-
-  useEffect(() => {
-    hydrationPromise.current = Promise.all([
-      AsyncStorage.getItem(CART_STORAGE_KEY),
-      AsyncStorage.getItem(WISHLIST_STORAGE_KEY),
-    ])
-      .then(([serializedCart, serializedWishlist]) => {
-        if (serializedCart) {
-          const storedCart: unknown = JSON.parse(serializedCart);
-          if (!Array.isArray(storedCart)) {
-            throw new Error("Saved cart data was invalid.");
-          }
-
-          const validItems = storedCart.filter(
-            (item): item is CartItem =>
-              typeof item === "object" &&
-              item !== null &&
-              typeof item.key === "string" &&
-              typeof item.quantity === "number" &&
-              typeof item.unitPrice === "number" &&
-              typeof item.food === "object" &&
-              item.food !== null &&
-              Array.isArray(item.selectedAddons) &&
-              Array.isArray(item.selectedCustomizations),
-          );
-          itemsRef.current = validItems;
-          setItems(validItems);
-        }
-
-        if (serializedWishlist) {
-          const storedWishlist: unknown = JSON.parse(serializedWishlist);
-          if (!Array.isArray(storedWishlist)) {
-            throw new Error("Saved wishlist data was invalid.");
-          }
-          const validWishlist = storedWishlist.filter(
-            (food): food is FoodProduct =>
-              typeof food === "object" && food !== null,
-          );
-          wishlistRef.current = validWishlist;
-          setWishlist(validWishlist);
-        }
-      })
-      .catch((error: unknown) => {
-        console.error("Failed to restore saved cart:", error);
-      })
-      .finally(() => {
-        setIsHydrated(true);
-      });
-  }, []);
 
   const commitItems = useCallback((nextItems: CartItem[]) => {
     itemsRef.current = nextItems;
     setItems(nextItems);
+  }, []);
 
-    const write = storageQueue.current
-      .catch(() => undefined)
-      .then(async () => {
-        try {
-          await AsyncStorage.setItem(CART_STORAGE_KEY, JSON.stringify(nextItems));
-        } catch (error) {
-          console.error("Failed to save cart:", error);
-          throw error;
+  const loadCart = useCallback(
+    async (force = false) => {
+      const account = await getCartAccount();
+      if (!force && account?.id === accountIdRef.current) return;
+
+      accountIdRef.current = account?.id ?? "";
+      setCartError("");
+      setIsCartLoading(Boolean(account));
+      commitItems([]);
+
+      if (!account) {
+        setIsCartLoading(false);
+        setIsHydrated(true);
+        return;
+      }
+
+      try {
+        const nextItems = await fetchCart(account.id);
+        if (accountIdRef.current === account.id) {
+          commitItems(nextItems);
         }
+      } catch (error) {
+        console.error("Failed to load the signed-in user's cart:", error);
+        if (accountIdRef.current === account.id) {
+          setCartError("We could not load your cart. Please try again.");
+        }
+        throw error;
+      } finally {
+        if (accountIdRef.current === account.id) {
+          setIsCartLoading(false);
+          setIsHydrated(true);
+        }
+      }
+    },
+    [commitItems],
+  );
+
+  useEffect(() => {
+    const loadingCart = loadCart();
+    accountLoadPromise.current = loadingCart.catch(() => undefined);
+  }, [loadCart, pathname]);
+
+  useEffect(() => {
+    void AsyncStorage.getItem(WISHLIST_STORAGE_KEY)
+      .then((serializedWishlist) => {
+        if (!serializedWishlist) return;
+        const storedWishlist: unknown = JSON.parse(serializedWishlist);
+        if (!Array.isArray(storedWishlist)) {
+          throw new Error("Saved wishlist data was invalid.");
+        }
+        const validWishlist = storedWishlist.filter(
+          (food): food is FoodProduct =>
+            typeof food === "object" && food !== null,
+        );
+        wishlistRef.current = validWishlist;
+        setWishlist(validWishlist);
+      })
+      .catch((error: unknown) => {
+        console.error("Failed to restore saved wishlist:", error);
       });
-    storageQueue.current = write;
-    return write;
   }, []);
 
   const addItem = useCallback(
     async (input: CustomizedFoodCartInput) => {
-      await hydrationPromise.current;
-      const key = getCartItemKey(input);
-      const existingItem = itemsRef.current.find((item) => item.key === key);
-      const nextItems = existingItem
-        ? itemsRef.current.map((item) =>
-            item.key === key ? { ...item, quantity: item.quantity + input.quantity } : item,
-          )
-        : [
-            ...itemsRef.current,
-            {
-              ...input,
-              key,
-            },
-          ];
-      await commitItems(nextItems);
+      await accountLoadPromise.current;
+      const account = await getCartAccount();
+      if (!account || account.id !== accountIdRef.current) {
+        throw new Error("Please log in before adding items to your cart.");
+      }
+      await addCartItem(account, input);
+      await loadCart(true);
     },
-    [commitItems],
+    [loadCart],
   );
 
-  const setQuantity = useCallback(
-    async (key: string, quantity: number) => {
-      await hydrationPromise.current;
-      const nextItems =
-        quantity <= 0
-          ? itemsRef.current.filter((item) => item.key !== key)
-          : itemsRef.current.map((item) =>
-              item.key === key ? { ...item, quantity } : item,
-            );
-      await commitItems(nextItems);
+  const requireCartAccount = useCallback(async () => {
+    await accountLoadPromise.current;
+    const account = await getCartAccount();
+    if (!account || account.id !== accountIdRef.current) {
+      throw new Error("Please log in before changing your cart.");
+    }
+    return account;
+  }, []);
+
+  const removeItem = useCallback(
+    async (key: string) => {
+      await requireCartAccount();
+      const item = itemsRef.current.find((cartItem) => cartItem.key === key);
+      if (!item) return;
+      await removeCartItem(item);
+      await loadCart(true);
     },
-    [commitItems],
+    [loadCart, requireCartAccount],
+  );
+
+  const clearCart = useCallback(async () => {
+    await accountLoadPromise.current;
+    const account = await getCartAccount();
+    if (!account || account.id !== accountIdRef.current) {
+      throw new Error("Please log in to clear your cart.");
+    }
+    await clearRemoteCart(account.id);
+    commitItems([]);
+    setCartError("");
+  }, [commitItems]);
+
+  const refreshCart = useCallback(async () => {
+    await loadCart(true);
+  }, [loadCart]);
+
+  const updateQuantityForAccount = useCallback(
+    async (key: string, quantity: number) => {
+      await requireCartAccount();
+      const item = itemsRef.current.find((cartItem) => cartItem.key === key);
+      if (!item) return;
+      await updateCartItem(item, quantity);
+      await loadCart(true);
+    },
+    [loadCart, requireCartAccount],
   );
 
   const toggleWishlist = useCallback(async (food: FoodProduct) => {
-    await hydrationPromise.current;
+    await accountLoadPromise.current;
     const foodId = getFoodId(food);
     const isInWishlist = wishlistRef.current.some(
       (item) => getFoodId(item) === foodId,
@@ -193,12 +223,30 @@ export function CartProvider({ children }: { children: ReactNode }) {
       items,
       itemCount,
       isHydrated,
+      isCartLoading,
+      cartError,
       wishlist,
       addItem,
-      setQuantity,
+      setQuantity: updateQuantityForAccount,
+      removeItem,
+      clearCart,
+      refreshCart,
       toggleWishlist,
     }),
-    [items, itemCount, isHydrated, wishlist, addItem, setQuantity, toggleWishlist],
+    [
+      items,
+      itemCount,
+      isHydrated,
+      isCartLoading,
+      cartError,
+      wishlist,
+      addItem,
+      updateQuantityForAccount,
+      removeItem,
+      clearCart,
+      refreshCart,
+      toggleWishlist,
+    ],
   );
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
