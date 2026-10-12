@@ -26,6 +26,23 @@ function stringValue(value: unknown, fallback = "") {
   return typeof value === "string" ? value.trim() || fallback : fallback;
 }
 
+function extractArrayPayload(payload: unknown, preferredKeys: string[]) {
+  if (Array.isArray(payload)) return payload;
+
+  if (!isRecord(payload)) return [];
+
+  for (const key of preferredKeys) {
+    const candidate = payload[key];
+    if (Array.isArray(candidate)) return candidate;
+  }
+
+  for (const value of Object.values(payload)) {
+    if (Array.isArray(value)) return value;
+  }
+
+  return [];
+}
+
 function resolveAssetUrl(asset: unknown) {
   const value = stringValue(asset);
   if (!value) return "";
@@ -43,14 +60,18 @@ function resolveAssetUrl(asset: unknown) {
 }
 
 function getBannerDestination(link: string) {
-  const path = link.split("?")[0];
-  switch (path) {
+  const rawLink = stringValue(link, FALLBACK_BANNER.link);
+  const normalized = /^https?:\/\//i.test(rawLink)
+    ? new URL(rawLink).pathname
+    : rawLink.split("?")[0];
+
+  switch (normalized) {
     case "/home":
     case "/explore":
     case "/cart":
     case "/orders":
     case "/profile":
-      return path;
+      return normalized;
     default:
       return "/explore";
   }
@@ -65,10 +86,13 @@ export default function HomeBanner() {
     const loadBanners = async () => {
       try {
         const response = await api.get("/banners/public");
-        const payload: unknown = response.data?.data ?? response.data;
-        if (!Array.isArray(payload)) {
-          throw new Error("Home banners response was not an array.");
-        }
+        const payload = extractArrayPayload(response.data, [
+          "banners",
+          "items",
+          "results",
+          "data",
+          "list",
+        ]);
 
         const activeBanners = payload
           .filter(
@@ -76,10 +100,12 @@ export default function HomeBanner() {
               isRecord(item) && item.active !== false,
           )
           .map((item, index) => ({
-            id: stringValue(item.id, `banner-${index}`),
-            title: stringValue(item.title, FALLBACK_BANNER.title),
-            image: resolveAssetUrl(item.mobile_image || item.image),
-            link: stringValue(item.link, FALLBACK_BANNER.link),
+            id: stringValue(item.id ?? item.banner_id, `banner-${index}`),
+            title: stringValue(item.title ?? item.name, FALLBACK_BANNER.title),
+            image: resolveAssetUrl(
+              item.mobile_image ?? item.mobileImage ?? item.image ?? item.image_url,
+            ),
+            link: stringValue(item.link ?? item.url, FALLBACK_BANNER.link),
           }));
         if (isMounted) setBanners(activeBanners);
       } catch (error) {

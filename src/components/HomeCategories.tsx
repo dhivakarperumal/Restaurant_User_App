@@ -28,6 +28,23 @@ function getString(value: unknown, fallback = "") {
     : fallback;
 }
 
+function extractArrayPayload(payload: unknown, preferredKeys: string[]) {
+  if (Array.isArray(payload)) return payload;
+
+  if (!isRecord(payload)) return [];
+
+  for (const key of preferredKeys) {
+    const candidate = payload[key];
+    if (Array.isArray(candidate)) return candidate;
+  }
+
+  for (const value of Object.values(payload)) {
+    if (Array.isArray(value)) return value;
+  }
+
+  return [];
+}
+
 function resolveImageUrl(value: unknown) {
   if (typeof value !== "string" || !value.trim()) return "";
   const image = value.trim();
@@ -109,10 +126,13 @@ export default function HomeCategories() {
 
     try {
       const response = await api.get("/categories");
-      const payload: unknown = response.data?.data ?? response.data;
-      if (!Array.isArray(payload)) {
-        throw new Error("The categories response was invalid.");
-      }
+      const payload = extractArrayPayload(response.data, [
+        "categories",
+        "items",
+        "results",
+        "data",
+        "list",
+      ]);
 
       const activeCategories = payload
         .filter(
@@ -121,13 +141,21 @@ export default function HomeCategories() {
             getString(category.status, "Active").toLowerCase() === "active",
         )
         .map((category, index) => {
-          const id = getString(category.category_id ?? category.id, `category-${index}`);
-          const name = getString(category.category_name, "Category");
+          const id = getString(
+            category.category_id ?? category.id ?? category.category_name,
+            `category-${index}`,
+          );
+          const name = getString(category.category_name ?? category.name, "Category");
           return {
             id,
             name,
-            image: resolveImageUrl(category.category_image),
-            filter: getString(category.category_id ?? category.category_name ?? category.id, id),
+            image: resolveImageUrl(
+              category.category_image ?? category.image ?? category.icon,
+            ),
+            filter: getString(
+              category.category_id ?? category.category_name ?? category.id ?? category.name,
+              id,
+            ),
           };
         });
 
