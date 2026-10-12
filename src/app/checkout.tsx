@@ -479,18 +479,10 @@ export default function CheckoutScreen() {
             <Pressable
               accessibilityRole="button"
               className="mt-7 min-h-12 w-full flex-row items-center justify-center rounded-xl bg-[#1A6A3B] px-5 active:bg-[#14542E]"
-              onPress={() => router.replace("/orders")}
-            >
-              <PackageCheck color="white" size={18} />
-              <Text className="ml-2 font-extrabold text-white">View orders</Text>
-            </Pressable>
-            <Pressable
-              accessibilityRole="button"
-              className="mt-3 min-h-12 w-full flex-row items-center justify-center rounded-xl border border-[#E7E0D8] px-5 active:bg-[#F5EFE5]"
               onPress={() => router.replace("/shop")}
             >
-              <ShoppingBag color="#1A6A3B" size={18} />
-              <Text className="ml-2 font-extrabold text-[#1A6A3B]">
+              <ShoppingBag color="white" size={18} />
+              <Text className="ml-2 font-extrabold text-white">
                 Continue browsing
               </Text>
             </Pressable>
