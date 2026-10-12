@@ -37,6 +37,13 @@ export default function RootLayout() {
 function RootTabs() {
   const insets = useSafeAreaInsets();
   const { itemCount } = useCart();
+  const tabIconContainerStyle = {
+    width: 42,
+    height: 30,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+    borderRadius: 12,
+  };
 
   return (
     <Tabs
@@ -45,12 +52,21 @@ function RootTabs() {
         headerShown: Boolean(headerTitles[route.name]),
         header: () => <TopHeader title={headerTitles[route.name] ?? route.name} />,
         headerStyle: { backgroundColor: "#F3F4F3" },
-        tabBarActiveTintColor: "#374151",
-        tabBarInactiveTintColor: "#6B7280",
+        tabBarActiveTintColor: "#1A6A3B",
+        tabBarInactiveTintColor: "#8A8172",
         tabBarShowLabel: true,
         tabBarIndicatorStyle: { display: "none" },
         tabBarBackground: () => (
-          <View style={[StyleSheet.absoluteFill, { backgroundColor: "#FFFFFF" }]}>
+          <View
+            style={[
+              StyleSheet.absoluteFill,
+              {
+                backgroundColor: "#FFFCF6",
+                borderTopColor: "#E7E0D8",
+                borderTopWidth: StyleSheet.hairlineWidth,
+              },
+            ]}
+          >
             <View
               style={{
                 position: "absolute",
@@ -58,7 +74,7 @@ function RootTabs() {
                 bottom: 0,
                 left: 0,
                 height: insets.bottom,
-                backgroundColor: "#0B2118",
+                backgroundColor: "#FFFCF6",
               }}
             />
           </View>
@@ -68,17 +84,17 @@ function RootTabs() {
             route.name === "login" || route.name.startsWith("delivery/")
               ? "none"
               : "flex",
-          backgroundColor: "#FFFFFF",
-          borderTopWidth: 0,
-          borderTopColor: "transparent",
+          backgroundColor: "#FFFCF6",
+          borderTopWidth: StyleSheet.hairlineWidth,
+          borderTopColor: "#E7E0D8",
           height: Platform.OS === "android" ? 72 + insets.bottom : 82 + insets.bottom,
           paddingBottom: Math.max(insets.bottom, 8),
           paddingTop: 8,
           elevation: 0,
-          shadowColor: "#000000",
-          shadowOpacity: 0,
-          shadowRadius: 0,
-          shadowOffset: { width: 0, height: 0 },
+          shadowColor: "#183B2A",
+          shadowOpacity: 0.08,
+          shadowRadius: 10,
+          shadowOffset: { width: 0, height: -3 },
         },
         tabBarLabelStyle: {
           fontSize: 11,
@@ -89,7 +105,7 @@ function RootTabs() {
           marginTop: 2,
         },
         tabBarBadgeStyle: {
-          backgroundColor: "#6B7280",
+          backgroundColor: "#E86D16",
           color: "#FFFFFF",
           fontSize: 10,
           minWidth: 18,
@@ -107,16 +123,61 @@ function RootTabs() {
 
           switch (route.name) {
             case "home":
-              return <House {...commonProps} />;
+              return (
+                <View
+                  style={[
+                    tabIconContainerStyle,
+                    focused && { backgroundColor: "#EAF2E8" },
+                  ]}
+                >
+                  <House {...commonProps} />
+                </View>
+              );
             case "explore":
             case "shop":
-              return <Search {...commonProps} />;
+              return (
+                <View
+                  style={[
+                    tabIconContainerStyle,
+                    focused && { backgroundColor: "#EAF2E8" },
+                  ]}
+                >
+                  <Search {...commonProps} />
+                </View>
+              );
             case "cart":
-              return <ShoppingCart {...commonProps} />;
+              return (
+                <View
+                  style={[
+                    tabIconContainerStyle,
+                    focused && { backgroundColor: "#EAF2E8" },
+                  ]}
+                >
+                  <ShoppingCart {...commonProps} />
+                </View>
+              );
             case "orders":
-              return <ShoppingBag {...commonProps} />;
+              return (
+                <View
+                  style={[
+                    tabIconContainerStyle,
+                    focused && { backgroundColor: "#EAF2E8" },
+                  ]}
+                >
+                  <ShoppingBag {...commonProps} />
+                </View>
+              );
             case "profile":
-              return <UserRound {...commonProps} />;
+              return (
+                <View
+                  style={[
+                    tabIconContainerStyle,
+                    focused && { backgroundColor: "#EAF2E8" },
+                  ]}
+                >
+                  <UserRound {...commonProps} />
+                </View>
+              );
             default:
               return null;
           }
