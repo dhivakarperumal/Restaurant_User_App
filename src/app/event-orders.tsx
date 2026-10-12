@@ -903,14 +903,30 @@ function MenuFoodRow({
             <Pressable
               accessibilityLabel={`Remove one ${getFoodName(food)} portion`}
               accessibilityRole="button"
-              className="h-9 w-9 items-center justify-center rounded-lg bg-[#F0EEE7]"
+              className="h-9 w-8 items-center justify-center rounded-lg bg-[#F0EEE7]"
               onPress={() => onQuantityChange(quantity - 1)}
             >
               <Minus color="#344035" size={15} />
             </Pressable>
+            <Pressable
+              accessibilityLabel={`Remove five ${getFoodName(food)} portions`}
+              accessibilityRole="button"
+              className="h-9 w-9 items-center justify-center rounded-lg bg-[#F0EEE7]"
+              onPress={() => onQuantityChange(quantity - 5)}
+            >
+              <Text className="text-[10px] font-extrabold text-[#344035]">-5</Text>
+            </Pressable>
+            <Pressable
+              accessibilityLabel={`Remove ten ${getFoodName(food)} portions`}
+              accessibilityRole="button"
+              className="h-9 w-9 items-center justify-center rounded-lg bg-[#F0EEE7]"
+              onPress={() => onQuantityChange(quantity - 10)}
+            >
+              <Text className="text-[10px] font-extrabold text-[#344035]">-10</Text>
+            </Pressable>
             <TextInput
               accessibilityLabel={`${getFoodName(food)} quantity`}
-              className="mx-2 h-11 w-20 rounded-lg border border-[#D9E6D9] py-0 text-center text-sm font-bold text-[#183B2A]"
+              className="mx-1 h-11 w-14 rounded-lg border border-[#D9E6D9] py-0 text-center text-sm font-bold text-[#183B2A]"
               keyboardType="number-pad"
               onChangeText={(value) =>
                 onQuantityChange(value ? Math.max(0, Number(value.replace(/[^\d]/g, ""))) : 0)
@@ -921,10 +937,26 @@ function MenuFoodRow({
             <Pressable
               accessibilityLabel={`Add one ${getFoodName(food)} portion`}
               accessibilityRole="button"
-              className="h-9 w-9 items-center justify-center rounded-lg bg-[#1A6A3B]"
+              className="h-9 w-8 items-center justify-center rounded-lg bg-[#1A6A3B]"
               onPress={() => onQuantityChange(quantity + 1)}
             >
               <Plus color="#FFFFFF" size={15} />
+            </Pressable>
+            <Pressable
+              accessibilityLabel={`Add five ${getFoodName(food)} portions`}
+              accessibilityRole="button"
+              className="h-9 w-9 items-center justify-center rounded-lg bg-[#1A6A3B]"
+              onPress={() => onQuantityChange(quantity + 5)}
+            >
+              <Text className="text-[10px] font-extrabold text-white">+5</Text>
+            </Pressable>
+            <Pressable
+              accessibilityLabel={`Add ten ${getFoodName(food)} portions`}
+              accessibilityRole="button"
+              className="h-9 w-9 items-center justify-center rounded-lg bg-[#1A6A3B]"
+              onPress={() => onQuantityChange(quantity + 10)}
+            >
+              <Text className="text-[10px] font-extrabold text-white">+10</Text>
             </Pressable>
           </>
         )}
