@@ -1,7 +1,14 @@
 import { useCallback, useEffect, useState } from "react";
 import { router } from "expo-router";
 import { ArrowRight, ImageIcon, Utensils } from "lucide-react-native";
-import { Image, Pressable, ScrollView, Text, View } from "react-native";
+import {
+  Image,
+  Pressable,
+  ScrollView,
+  Text,
+  View,
+  useWindowDimensions,
+} from "react-native";
 import api, { API_BASE_URL } from "../lib/api";
 
 type Cuisine = {
@@ -57,6 +64,9 @@ export default function HomeCuisines() {
   const [cuisines, setCuisines] = useState<Cuisine[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const { width: screenWidth } = useWindowDimensions();
+  const pageWidth = Math.max(0, screenWidth - 48);
+  const cardWidth = (pageWidth - 12) / 2;
 
   const fetchCuisines = useCallback(async () => {
     setLoading(true);
@@ -105,15 +115,22 @@ export default function HomeCuisines() {
       {loading ? (
         <ScrollView
           horizontal
+          pagingEnabled
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={{ paddingBottom: 6 }}
         >
-          {[0, 1, 2].map((item) => (
-            <View
-              key={item}
-              className="mr-3 h-[116px] w-40 animate-pulse overflow-hidden rounded-2xl bg-slate-200"
-            />
-          ))}
+          <View
+            className="flex-row"
+            style={{ width: pageWidth, gap: 12 }}
+          >
+            {[0, 1].map((item) => (
+              <View
+                key={item}
+                className="h-[152px] animate-pulse overflow-hidden rounded-2xl bg-slate-200"
+                style={{ width: cardWidth }}
+              />
+            ))}
+          </View>
         </ScrollView>
       ) : error ? (
         <View className="items-center rounded-2xl border border-rose-200 bg-rose-50 p-5">
@@ -129,11 +146,24 @@ export default function HomeCuisines() {
       ) : cuisines.length > 0 ? (
         <ScrollView
           horizontal
+          pagingEnabled
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={{ paddingBottom: 6 }}
         >
-          {cuisines.map((cuisine) => (
-            <CuisineCard key={cuisine.id} cuisine={cuisine} />
+          {Array.from({ length: Math.ceil(cuisines.length / 2) }, (_, pageIndex) => (
+            <View
+              key={pageIndex}
+              className="flex-row"
+              style={{ width: pageWidth, gap: 12 }}
+            >
+              {cuisines.slice(pageIndex * 2, pageIndex * 2 + 2).map((cuisine) => (
+                <CuisineCard
+                  key={cuisine.id}
+                  cuisine={cuisine}
+                  cardWidth={cardWidth}
+                />
+              ))}
+            </View>
           ))}
         </ScrollView>
       ) : (
@@ -147,14 +177,21 @@ export default function HomeCuisines() {
   );
 }
 
-function CuisineCard({ cuisine }: { cuisine: Cuisine }) {
+function CuisineCard({
+  cuisine,
+  cardWidth,
+}: {
+  cuisine: Cuisine;
+  cardWidth: number;
+}) {
   const [imageError, setImageError] = useState(false);
 
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={`Browse ${cuisine.name} cuisine`}
-      className="mr-3 h-[116px] w-40 overflow-hidden rounded-2xl bg-[#17251E] shadow-sm active:opacity-80"
+      className="h-[152px] overflow-hidden rounded-2xl border border-[#E7E0D8] bg-white shadow-sm active:opacity-80"
+      style={{ width: cardWidth }}
       onPress={() =>
         router.push({
           pathname: "/explore",
@@ -162,29 +199,31 @@ function CuisineCard({ cuisine }: { cuisine: Cuisine }) {
         })
       }
     >
-      {cuisine.image && !imageError ? (
-        <Image
-          accessible
-          accessibilityLabel={cuisine.name}
-          className="h-full w-full"
-          onError={() => setImageError(true)}
-          resizeMode="cover"
-          source={{ uri: cuisine.image }}
-        />
-      ) : (
-        <View className="h-full w-full items-center justify-center bg-[#315D2D]">
-          {cuisine.image ? (
-            <ImageIcon color="#FFFFFF" size={28} />
-          ) : (
-            <Utensils color="#FFFFFF" size={28} />
-          )}
-        </View>
-      )}
-      <View className="absolute inset-x-0 bottom-0 flex-row items-center justify-between bg-black/35 px-3 py-2">
-        <Text className="flex-1 text-sm font-extrabold text-white" numberOfLines={1}>
+      <View className="h-[108px] w-full items-center justify-center bg-[#F5EFE5]">
+        {cuisine.image && !imageError ? (
+          <Image
+            accessible
+            accessibilityLabel={cuisine.name}
+            className="h-full w-full"
+            onError={() => setImageError(true)}
+            resizeMode="contain"
+            source={{ uri: cuisine.image }}
+          />
+        ) : (
+          <View className="h-full w-full items-center justify-center bg-[#315D2D]">
+            {cuisine.image ? (
+              <ImageIcon color="#FFFFFF" size={28} />
+            ) : (
+              <Utensils color="#FFFFFF" size={28} />
+            )}
+          </View>
+        )}
+      </View>
+      <View className="flex-1 flex-row items-center justify-between px-3">
+        <Text className="flex-1 text-sm font-extrabold text-[#17251E]" numberOfLines={1}>
           {cuisine.name}
         </Text>
-        <View className="ml-2 h-7 w-7 items-center justify-center rounded-full bg-white">
+        <View className="ml-2 h-7 w-7 items-center justify-center rounded-full bg-[#F5EFE5]">
           <ArrowRight color="#203129" size={14} />
         </View>
       </View>
