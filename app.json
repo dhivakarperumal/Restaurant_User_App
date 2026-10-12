@@ -32,6 +32,13 @@
           "image": "./assets/images/adminlogo.png",
           "imageWidth": 180
         }
+      ],
+      [
+        "expo-navigation-bar",
+        {
+          "enforceContrast": false,
+          "style": "light"
+        }
       ]
     ],
     "experiments": {

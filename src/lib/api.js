@@ -25,8 +25,18 @@ export const setAuthToken = async (token) => {
 
   if (token) {
     await AsyncStorage.setItem("userToken", token);
+    if (typeof window !== "undefined" && window.localStorage) {
+      try {
+        window.localStorage.setItem("userToken", token);
+      } catch {}
+    }
   } else {
     await AsyncStorage.removeItem("userToken");
+    if (typeof window !== "undefined" && window.localStorage) {
+      try {
+        window.localStorage.removeItem("userToken");
+      } catch {}
+    }
   }
 };
 
@@ -35,7 +45,18 @@ export const getStoredToken = async () => {
     return cachedToken;
   }
 
-  const token = await AsyncStorage.getItem("userToken");
+  let token = null;
+  try {
+    token = await AsyncStorage.getItem("userToken");
+  } catch (error) {
+    console.warn("AsyncStorage.getItem(userToken) error:", error);
+  }
+
+  if (!token && typeof window !== "undefined" && window.localStorage) {
+    try {
+      token = window.localStorage.getItem("userToken");
+    } catch {}
+  }
 
   if (token) {
     cachedToken = token;
@@ -54,12 +75,28 @@ export const clearTokenCache = () => {
 
 export const saveUser = async (user) => {
   if (user) {
-    await AsyncStorage.setItem("userProfile", JSON.stringify(user));
+    const serialized = JSON.stringify(user);
+    await AsyncStorage.setItem("userProfile", serialized);
+    if (typeof window !== "undefined" && window.localStorage) {
+      try {
+        window.localStorage.setItem("userProfile", serialized);
+      } catch {}
+    }
   }
 };
 
 export const getStoredRole = async () => {
-  const role = await AsyncStorage.getItem("userRole");
+  let role = null;
+  try {
+    role = await AsyncStorage.getItem("userRole");
+  } catch {}
+
+  if (!role && typeof window !== "undefined" && window.localStorage) {
+    try {
+      role = window.localStorage.getItem("userRole");
+    } catch {}
+  }
+
   if (role) {
     return role;
   }
@@ -69,7 +106,16 @@ export const getStoredRole = async () => {
 };
 
 export const getStoredUser = async () => {
-  const user = await AsyncStorage.getItem("userProfile");
+  let user = null;
+  try {
+    user = await AsyncStorage.getItem("userProfile");
+  } catch {}
+
+  if (!user && typeof window !== "undefined" && window.localStorage) {
+    try {
+      user = window.localStorage.getItem("userProfile");
+    } catch {}
+  }
 
   if (!user) {
     return null;
@@ -160,27 +206,52 @@ export const loginWithIdentifier = async (identifier, password) => {
       responseBody.data && typeof responseBody.data === "object"
         ? responseBody.data
         : responseBody;
-    const role = data.user?.role ?? data.role;
+    const role =
+      data.user?.role ??
+      data.role ??
+      responseBody.user?.role ??
+      responseBody.role;
 
-    const token = data.token ?? data.accessToken ?? data.access_token;
+    const token =
+      data.token ??
+      data.accessToken ??
+      data.access_token ??
+      responseBody.token ??
+      responseBody.accessToken ??
+      responseBody.access_token;
+
     if (typeof token === "string" && token.trim()) {
       await setAuthToken(token.trim());
     }
 
     if (role) {
       await AsyncStorage.setItem("userRole", String(role));
+      if (typeof window !== "undefined" && window.localStorage) {
+        try {
+          window.localStorage.setItem("userRole", String(role));
+        } catch {}
+      }
     }
 
-    if (data.user || role) {
+    const userObj =
+      (data.user && typeof data.user === "object" ? data.user : null) ??
+      (responseBody.user && typeof responseBody.user === "object"
+        ? responseBody.user
+        : null) ??
+      (data && typeof data === "object" ? data : null);
+
+    if (userObj || role) {
       await saveUser({
-        ...(data.user && typeof data.user === "object" ? data.user : {}),
+        ...(userObj && typeof userObj === "object" ? userObj : {}),
         ...(role ? { role } : {}),
       });
     }
 
     return {
       ...data,
-      message: data.message || "Login successful",
+      token,
+      role,
+      message: data.message || responseBody.message || "Login successful",
     };
   } catch (error) {
     throw error;
@@ -210,6 +281,13 @@ export const registerUser = async ({ username, email, phone, password }) => {
 export const logoutUser = async () => {
   try {
     await AsyncStorage.multiRemove(["userToken", "userProfile", "userRole"]);
+    if (typeof window !== "undefined" && window.localStorage) {
+      try {
+        window.localStorage.removeItem("userToken");
+        window.localStorage.removeItem("userProfile");
+        window.localStorage.removeItem("userRole");
+      } catch {}
+    }
   } finally {
     clearTokenCache();
   }

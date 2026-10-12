@@ -34,6 +34,7 @@ function RootTabs() {
 
   return (
     <Tabs
+      initialRouteName="index"
       screenOptions={({ route }) => ({
         headerShown: Boolean(headerTitles[route.name]),
         header: () => <TopHeader title={headerTitles[route.name] ?? route.name} />,
@@ -116,8 +117,8 @@ function RootTabs() {
         },
       })}
     >
-      <Tabs.Screen name="login" options={{ title: "Login", href: null }} />
       <Tabs.Screen name="index" options={{ href: null }} />
+      <Tabs.Screen name="login" options={{ title: "Login", href: null }} />
       <Tabs.Screen
         name="delivery/index"
         options={{ title: "Delivery", href: null }}

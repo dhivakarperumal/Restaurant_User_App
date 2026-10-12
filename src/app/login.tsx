@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { router } from "expo-router";
 import { Eye, EyeOff } from "lucide-react-native";
 import {
@@ -15,6 +15,8 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
   getApiErrorMessage,
+  getStoredRole,
+  getStoredToken,
   isLoggedIn,
   loginWithIdentifier,
 } from "../lib/api";
@@ -26,6 +28,37 @@ export default function LoginScreen() {
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [isCheckingSession, setIsCheckingSession] = useState(true);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const checkExistingSession = async () => {
+      try {
+        const token = await getStoredToken();
+        if (token) {
+          const role = await getStoredRole();
+          const target = getDashboardRoute(role) ?? "/home";
+          if (isMounted) {
+            router.replace(target);
+            return;
+          }
+        }
+      } catch (error) {
+        console.error("Failed to check existing session on login screen:", error);
+      } finally {
+        if (isMounted) {
+          setIsCheckingSession(false);
+        }
+      }
+    };
+
+    void checkExistingSession();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const handleLogin = async () => {
     const trimmedIdentifier = identifier.trim();
@@ -62,6 +95,14 @@ export default function LoginScreen() {
       setIsSubmitting(false);
     }
   };
+
+  if (isCheckingSession) {
+    return (
+      <SafeAreaView className="flex-1 items-center justify-center bg-[#F7F8F3]">
+        <ActivityIndicator accessibilityLabel="Checking session" color="#8EA66B" size="large" />
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView className="flex-1 bg-[#F7F8F3]">
