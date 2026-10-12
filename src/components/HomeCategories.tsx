@@ -32,9 +32,19 @@ const resolveImageUrl = (image: unknown): string => {
   if (!image || typeof image !== "string") return "";
   const trimmed = image.trim();
   if (!trimmed) return "";
-  if (/^https?:\/\//i.test(trimmed) || trimmed.startsWith("data:")) return trimmed;
-  const baseUrl = API_BASE_URL.replace(/\/api\/?$/i, "").replace(/\/+$/, "");
-  return `${baseUrl}/${trimmed.replace(/^\/+/, "")}`;
+
+  const backendUrl = API_BASE_URL.replace(/\/api\/?$/i, "").replace(/\/+$/, "");
+
+  if (/^data:/i.test(trimmed)) return trimmed;
+
+  if (/^https?:\/\//i.test(trimmed)) {
+    return trimmed.replace(
+      /^https?:\/\/(?:localhost|127(?:\.\d{1,3}){3})(?::\d+)?/i,
+      backendUrl,
+    );
+  }
+
+  return `${backendUrl}/${trimmed.replace(/^\/+/, "")}`;
 };
 
 export default function HomeCategories() {
@@ -45,9 +55,9 @@ export default function HomeCategories() {
   const [error, setError] = useState("");
   const { width: screenWidth } = useWindowDimensions();
 
-  // Width for each category card on mobile
-  const cardWidth = Math.min(156, Math.max(136, (screenWidth - 64) / 2.3));
-  const cardSpacing = 14;
+  // Consistent card width across all categories
+  const cardWidth = Math.min(148, Math.max(132, (screenWidth - 48) / 2.4));
+  const cardSpacing = 12;
   const scrollStep = (cardWidth + cardSpacing) * 2;
 
   const fetchCategories = useCallback(async () => {
@@ -142,7 +152,7 @@ export default function HomeCategories() {
     <View className="mt-8">
       {/* Header Section */}
       <View className="mb-4 flex-row items-end justify-between">
-        <View className="flex-1 pr-3">
+        <View className="flex-1 pr-2">
           <Text className="text-[11px] font-extrabold uppercase tracking-[2px] text-[#E86D16]">
             Popular Categories
           </Text>
@@ -152,16 +162,37 @@ export default function HomeCategories() {
           </View>
         </View>
 
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="See all categories"
-          className="mb-1 flex-row items-center rounded-full bg-white px-3 py-1.5 border border-[#E7E0D8]"
-          onPress={() => router.push("/explore")}
-          style={({ pressed }) => ({ opacity: pressed ? 0.75 : 1 })}
-        >
-          <Text className="text-xs font-bold text-[#1A6A3B]">See all</Text>
-          <ArrowRight color="#1A6A3B" size={13} className="ml-1" />
-        </Pressable>
+        <View className="flex-row items-center gap-1.5">
+          {categories.length > 2 && (
+            <>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Scroll categories left"
+                onPress={handleScrollLeft}
+                className="h-8 w-8 items-center justify-center rounded-full border border-[#E7E0D8] bg-white shadow-sm active:bg-[#FFF8ED]"
+              >
+                <ChevronLeft color="#203129" size={16} />
+              </Pressable>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Scroll categories right"
+                onPress={handleScrollRight}
+                className="h-8 w-8 items-center justify-center rounded-full border border-[#E7E0D8] bg-white shadow-sm active:bg-[#FFF8ED]"
+              >
+                <ChevronRight color="#203129" size={16} />
+              </Pressable>
+            </>
+          )}
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="See all categories"
+            className="flex-row items-center rounded-full border border-[#E7E0D8] bg-white px-3 py-1.5 active:bg-slate-50"
+            onPress={() => router.push("/explore")}
+          >
+            <Text className="text-xs font-bold text-[#1A6A3B]">See all</Text>
+            <ArrowRight color="#1A6A3B" size={12} className="ml-1" />
+          </Pressable>
+        </View>
       </View>
 
       {/* Body States */}
@@ -174,8 +205,8 @@ export default function HomeCategories() {
           {[1, 2, 3, 4].map((item) => (
             <View
               key={item}
-              className="mr-3.5 rounded-2xl border-2 border-slate-200 bg-white p-2.5 shadow-sm"
-              style={{ width: cardWidth }}
+              className="mr-3 rounded-2xl border-2 border-slate-200 bg-white p-2 shadow-sm"
+              style={{ width: cardWidth, minWidth: cardWidth, maxWidth: cardWidth }}
             >
               <View className="h-24 w-full rounded-xl bg-slate-200" />
               <View className="mx-auto mt-3 h-4 w-3/4 rounded bg-slate-200" />
@@ -194,47 +225,22 @@ export default function HomeCategories() {
           </Pressable>
         </View>
       ) : categories.length > 0 ? (
-        <View className="relative">
-          {/* Controls: Left & Right navigation chevrons for easy browsing */}
-          {categories.length > 2 && (
-            <View className="mb-2 flex-row justify-end gap-2 pr-1">
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Scroll categories left"
-                onPress={handleScrollLeft}
-                className="h-8 w-8 items-center justify-center rounded-full border border-[#E7E0D8] bg-white shadow-sm active:bg-[#FFF8ED]"
-              >
-                <ChevronLeft color="#203129" size={18} />
-              </Pressable>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Scroll categories right"
-                onPress={handleScrollRight}
-                className="h-8 w-8 items-center justify-center rounded-full border border-[#E7E0D8] bg-white shadow-sm active:bg-[#FFF8ED]"
-              >
-                <ChevronRight color="#203129" size={18} />
-              </Pressable>
-            </View>
-          )}
-
-          {/* Categories List */}
-          <ScrollView
-            ref={scrollViewRef}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            onScroll={(event) => setScrollOffset(event.nativeEvent.contentOffset.x)}
-            scrollEventThrottle={16}
-            contentContainerStyle={{ paddingRight: 12, paddingBottom: 6 }}
-          >
-            {categories.map((category) => (
-              <CategoryCard
-                key={category.id}
-                category={category}
-                width={cardWidth}
-              />
-            ))}
-          </ScrollView>
-        </View>
+        <ScrollView
+          ref={scrollViewRef}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          onScroll={(event) => setScrollOffset(event.nativeEvent.contentOffset.x)}
+          scrollEventThrottle={16}
+          contentContainerStyle={{ paddingRight: 8, paddingBottom: 6 }}
+        >
+          {categories.map((category) => (
+            <CategoryCard
+              key={category.id}
+              category={category}
+              width={cardWidth}
+            />
+          ))}
+        </ScrollView>
       ) : (
         <View className="rounded-2xl bg-white py-8 px-4 border border-[#E5E5E5] items-center">
           <Text className="text-center text-sm font-medium text-slate-500">
@@ -259,7 +265,7 @@ function CategoryCard({
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={`Browse ${category.name}`}
-      className="mr-3.5 overflow-hidden rounded-2xl border-2 border-[#E5E5E5] bg-white p-2.5 shadow-sm active:border-[#D8C7A7]"
+      className="mr-3 overflow-hidden rounded-2xl border-2 border-[#E5E5E5] bg-white p-2 shadow-sm active:border-[#D8C7A7]"
       onPress={() =>
         router.push({
           pathname: "/explore",
@@ -268,11 +274,16 @@ function CategoryCard({
       }
       style={({ pressed }) => ({
         width,
+        minWidth: width,
+        maxWidth: width,
         transform: [{ scale: pressed ? 0.96 : 1 }],
       })}
     >
-      {/* Image container */}
-      <View className="h-24 w-full overflow-hidden rounded-xl bg-[#F5EFE5] items-center justify-center">
+      {/* 4:3 Aspect Ratio Container */}
+      <View
+        className="w-full overflow-hidden rounded-xl bg-[#F5EFE5] items-center justify-center"
+        style={{ height: 96 }}
+      >
         {category.image && !imageError ? (
           <Image
             accessible
@@ -284,14 +295,14 @@ function CategoryCard({
           />
         ) : (
           <View className="items-center justify-center">
-            <ImageIcon color="#A05C2A" size={30} strokeWidth={1.7} />
+            <ImageIcon color="#A05C2A" size={28} strokeWidth={1.8} />
           </View>
         )}
       </View>
 
       {/* Category Name */}
       <Text
-        className="mt-2.5 truncate px-1 text-center text-xs font-extrabold text-[#202020]"
+        className="mt-2.5 truncate px-1 text-center text-xs font-bold text-[#202020]"
         numberOfLines={1}
       >
         {category.name}
