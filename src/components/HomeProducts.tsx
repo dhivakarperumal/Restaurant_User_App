@@ -12,10 +12,10 @@ import FoodProductCard from "./common/FoodProductCard";
 export default function HomeProducts() {
   const [foods, setFoods] = useState<FoodProduct[]>([]);
   const [selectedFood, setSelectedFood] = useState<FoodProduct | null>(null);
-  const [wishlist, setWishlist] = useState<string[]>([]);
+  const [actionError, setActionError] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const { addItem } = useCart();
+  const { addItem, items: cartItems, wishlist, toggleWishlist } = useCart();
   const { width: screenWidth } = useWindowDimensions();
   const pageWidth = Math.max(0, screenWidth - 48);
   const cardWidth = (pageWidth - 12) / 2;
@@ -50,11 +50,14 @@ export default function HomeProducts() {
     [foods],
   );
 
-  const toggleWishlist = (food: FoodProduct) => {
-    const id = getFoodId(food);
-    setWishlist((current) =>
-      current.includes(id) ? current.filter((item) => item !== id) : [...current, id],
-    );
+  const handleToggleWishlist = async (food: FoodProduct) => {
+    setActionError("");
+    try {
+      await toggleWishlist(food);
+    } catch (requestError) {
+      console.error("Failed to update home wishlist:", requestError);
+      setActionError("We could not save your favorites. Please try again.");
+    }
   };
 
   return (
@@ -112,9 +115,12 @@ export default function HomeProducts() {
                     key={getFoodId(food)}
                     food={food}
                     width={cardWidth}
-                    isInWishlist={wishlist.includes(getFoodId(food))}
+                    isInWishlist={wishlist.some((item) => getFoodId(item) === getFoodId(food))}
+                    cartQuantity={cartItems
+                      .filter((item) => getFoodId(item.food) === getFoodId(food))
+                      .reduce((total, item) => total + item.quantity, 0)}
                     onSelect={setSelectedFood}
-                    onToggleWishlist={toggleWishlist}
+                    onToggleWishlist={(item) => void handleToggleWishlist(item)}
                   />
                 ))}
               </View>
@@ -130,10 +136,16 @@ export default function HomeProducts() {
         </View>
       )}
 
+      {actionError ? (
+        <Text accessibilityRole="alert" className="mt-2 text-center text-xs font-semibold text-rose-700">
+          {actionError}
+        </Text>
+      ) : null}
+
       <Pressable
         accessibilityRole="button"
         className="mt-3 flex-row items-center justify-center py-2"
-        onPress={() => router.push("/explore")}
+        onPress={() => router.push("/shop")}
       >
         <Text className="text-sm font-bold text-[#1A6A3B]">View the full menu</Text>
         <ArrowRight color="#1A6A3B" size={16} className="ml-2" />

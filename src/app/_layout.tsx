@@ -15,7 +15,8 @@ import "../../global.css";
 
 const headerTitles: Record<string, string> = {
   home: "Home",
-  explore: "Explore",
+  explore: "Shop",
+  shop: "Shop",
   cart: "Cart",
   orders: "Orders",
   profile: "Profile",
@@ -108,6 +109,7 @@ function RootTabs() {
             case "home":
               return <House {...commonProps} />;
             case "explore":
+            case "shop":
               return <Search {...commonProps} />;
             case "cart":
               return <ShoppingCart {...commonProps} />;
@@ -122,7 +124,8 @@ function RootTabs() {
         tabBarLabel: ({ color }) => {
           const labels: Record<string, string> = {
             home: "Home",
-            explore: "Explore",
+            explore: "Shop",
+            shop: "Shop",
             cart: "Cart",
             orders: "Orders",
             profile: "Profile",
@@ -159,7 +162,8 @@ function RootTabs() {
         options={{ href: null }}
       />
       <Tabs.Screen name="home" options={{ title: "Home" }} />
-      <Tabs.Screen name="explore" options={{ title: "Explore" }} />
+      <Tabs.Screen name="explore" options={{ href: null }} />
+      <Tabs.Screen name="shop" options={{ title: "Shop" }} />
       <Tabs.Screen name="cart" options={{ title: "Cart" }} />
       <Tabs.Screen name="orders" options={{ title: "Orders" }} />
       <Tabs.Screen name="profile" options={{ title: "Profile" }} />

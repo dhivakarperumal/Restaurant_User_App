@@ -10,8 +10,19 @@ export function getFoodName(food: FoodProduct): string {
 }
 
 export function getFoodPrice(food: FoodProduct): number {
-  const price = Number(food.final_price ?? food.price ?? food.mrp ?? 0);
+  const price = Number(food.final_price || food.price || food.mrp || 0);
   return Number.isFinite(price) ? price : 0;
+}
+
+export function getFoodDiscountPercentage(food: FoodProduct): number {
+  const mrp = Number(food.mrp ?? 0);
+  const price = Number(food.final_price ?? food.mrp ?? 0);
+  if (mrp <= price || mrp <= 0) return 0;
+
+  const declaredDiscount = Number(food.discount ?? 0);
+  return declaredDiscount > 0
+    ? declaredDiscount
+    : ((mrp - price) / mrp) * 100;
 }
 
 export function getFoodImage(food: FoodProduct): string {
@@ -45,7 +56,7 @@ export function getFoodImage(food: FoodProduct): string {
   return `${backendUrl}/${value.replace(/^\/+/, "")}`;
 }
 
-export function getActiveFoods(payload: unknown): FoodProduct[] {
+export function getMenuFoods(payload: unknown): FoodProduct[] {
   const rawFoods = Array.isArray(payload)
     ? payload
     : typeof payload === "object" && payload !== null && "data" in payload
@@ -60,7 +71,11 @@ export function getActiveFoods(payload: unknown): FoodProduct[] {
     (food): food is FoodProduct =>
       typeof food === "object" &&
       food !== null &&
-      food.is_available !== false &&
+      food.is_menu_visible !== false &&
       String(food.status || "Active").toLowerCase() === "active",
   );
+}
+
+export function getActiveFoods(payload: unknown): FoodProduct[] {
+  return getMenuFoods(payload).filter((food) => food.is_available !== false);
 }

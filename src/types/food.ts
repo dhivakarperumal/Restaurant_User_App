@@ -17,13 +17,18 @@ export type FoodProduct = {
   food_name?: string;
   name?: string;
   description?: string;
+  category_id?: string | number;
   category_name?: string;
+  cuisine_id?: string | number;
   cuisine_name?: string;
+  subcategory_name?: string;
   food_type?: string;
   status?: string;
   is_available?: boolean;
   is_spicy?: boolean;
   featured?: boolean;
+  is_menu_visible?: boolean;
+  created_at?: string | number;
   mrp?: number | string;
   final_price?: number | string;
   price?: number | string;

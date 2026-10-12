@@ -244,7 +244,7 @@ function CategoryCard({
         accessibilityLabel={`Browse ${category.name}`}
         onPress={() =>
           router.push({
-            pathname: "/explore",
+            pathname: "/shop",
             params: { category: category.filter },
           })
         }

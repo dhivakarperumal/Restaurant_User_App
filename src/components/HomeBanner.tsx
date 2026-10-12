@@ -26,7 +26,7 @@ const FALLBACK_BANNER: Banner = {
   subtitle: "FRESHLY MADE, JUST FOR YOU",
   description: "Discover something delicious today.",
   image: "",
-  link: "/explore",
+  link: "/shop",
 };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -77,13 +77,16 @@ function getBannerDestination(link: string) {
 
   switch (normalized) {
     case "/home":
+    case "/shop":
+      return "/shop";
     case "/explore":
+      return "/shop";
     case "/cart":
     case "/orders":
     case "/profile":
       return normalized;
     default:
-      return "/explore";
+      return "/shop";
   }
 }
 
@@ -236,7 +239,7 @@ export default function HomeBanner() {
                   accessibilityRole="button"
                   accessibilityLabel="Explore menu"
                   className="ml-2.5 min-h-11 items-center justify-center rounded-2xl border border-white/60 bg-black/25 px-3.5 backdrop-blur-sm"
-                  onPress={() => router.push("/explore")}
+                  onPress={() => router.push("/shop")}
                   style={({ pressed }) => ({ opacity: pressed ? 0.75 : 1 })}
                 >
                   <Text className="text-xs font-bold text-white">Explore menu</Text>
