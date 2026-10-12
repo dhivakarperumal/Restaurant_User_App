@@ -901,12 +901,12 @@ function MenuFoodRow({
         ) : (
           <>
             <Pressable
-              accessibilityLabel={`Remove one ${getFoodName(food)} portion`}
+              accessibilityLabel={`Remove ten ${getFoodName(food)} portions`}
               accessibilityRole="button"
-              className="h-9 w-8 items-center justify-center rounded-lg bg-[#F0EEE7]"
-              onPress={() => onQuantityChange(quantity - 1)}
+              className="h-9 w-9 items-center justify-center rounded-lg bg-[#F0EEE7]"
+              onPress={() => onQuantityChange(quantity - 10)}
             >
-              <Minus color="#344035" size={15} />
+              <Text className="text-[10px] font-extrabold text-[#344035]">-10</Text>
             </Pressable>
             <Pressable
               accessibilityLabel={`Remove five ${getFoodName(food)} portions`}
@@ -917,12 +917,12 @@ function MenuFoodRow({
               <Text className="text-[10px] font-extrabold text-[#344035]">-5</Text>
             </Pressable>
             <Pressable
-              accessibilityLabel={`Remove ten ${getFoodName(food)} portions`}
+              accessibilityLabel={`Remove one ${getFoodName(food)} portion`}
               accessibilityRole="button"
-              className="h-9 w-9 items-center justify-center rounded-lg bg-[#F0EEE7]"
-              onPress={() => onQuantityChange(quantity - 10)}
+              className="h-9 w-8 items-center justify-center rounded-lg bg-[#F0EEE7]"
+              onPress={() => onQuantityChange(quantity - 1)}
             >
-              <Text className="text-[10px] font-extrabold text-[#344035]">-10</Text>
+              <Minus color="#344035" size={15} />
             </Pressable>
             <TextInput
               accessibilityLabel={`${getFoodName(food)} quantity`}
