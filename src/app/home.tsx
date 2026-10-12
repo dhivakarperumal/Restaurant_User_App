@@ -1,5 +1,6 @@
 import { ScrollView } from "react-native";
 import HomeBanner from "../components/HomeBanner";
+import HomeCategories from "../components/HomeCategories";
 
 export default function HomeScreen() {
   return (
@@ -13,6 +14,7 @@ export default function HomeScreen() {
       }}
     >
       <HomeBanner />
+      <HomeCategories />
     </ScrollView>
   );
 }
