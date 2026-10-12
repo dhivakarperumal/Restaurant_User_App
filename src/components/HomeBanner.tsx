@@ -191,7 +191,7 @@ export default function HomeBanner() {
           source={banner.image ? { uri: banner.image } : undefined}
         >
           {/* Dark Overlay for readability */}
-          <View className="absolute inset-0 bg-black/45" />
+          <View className="absolute inset-0 bg-black/30" />
           <View className="absolute -right-12 -top-12 h-48 w-48 rounded-full border-[28px] border-white/10" />
 
           {/* Subtitle Badge */}
