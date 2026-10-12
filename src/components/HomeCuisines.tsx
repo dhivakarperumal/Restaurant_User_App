@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { router } from "expo-router";
-import { ArrowRight, ImageIcon, Utensils } from "lucide-react-native";
+import { ImageIcon, Utensils } from "lucide-react-native";
 import {
   Image,
   Pressable,
@@ -190,7 +190,7 @@ function CuisineCard({
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={`Browse ${cuisine.name} cuisine`}
-      className="h-[152px] overflow-hidden rounded-2xl border border-[#E7E0D8] bg-white shadow-sm active:opacity-80"
+      className="h-[152px] overflow-hidden rounded-2xl border border-[#E7E0D8] bg-[#F5EFE5] shadow-sm active:opacity-80"
       style={{ width: cardWidth }}
       onPress={() =>
         router.push({
@@ -199,34 +199,24 @@ function CuisineCard({
         })
       }
     >
-      <View className="h-[108px] w-full items-center justify-center bg-[#F5EFE5]">
-        {cuisine.image && !imageError ? (
-          <Image
-            accessible
-            accessibilityLabel={cuisine.name}
-            className="h-full w-full"
-            onError={() => setImageError(true)}
-            resizeMode="contain"
-            source={{ uri: cuisine.image }}
-          />
-        ) : (
-          <View className="h-full w-full items-center justify-center bg-[#315D2D]">
-            {cuisine.image ? (
-              <ImageIcon color="#FFFFFF" size={28} />
-            ) : (
-              <Utensils color="#FFFFFF" size={28} />
-            )}
-          </View>
-        )}
-      </View>
-      <View className="flex-1 flex-row items-center justify-between px-3">
-        <Text className="flex-1 text-sm font-extrabold text-[#17251E]" numberOfLines={1}>
-          {cuisine.name}
-        </Text>
-        <View className="ml-2 h-7 w-7 items-center justify-center rounded-full bg-[#F5EFE5]">
-          <ArrowRight color="#203129" size={14} />
+      {cuisine.image && !imageError ? (
+        <Image
+          accessible
+          accessibilityLabel={cuisine.name}
+          className="h-full w-full"
+          onError={() => setImageError(true)}
+          resizeMode="contain"
+          source={{ uri: cuisine.image }}
+        />
+      ) : (
+        <View className="h-full w-full items-center justify-center bg-[#315D2D]">
+          {cuisine.image ? (
+            <ImageIcon color="#FFFFFF" size={28} />
+          ) : (
+            <Utensils color="#FFFFFF" size={28} />
+          )}
         </View>
-      </View>
+      )}
     </Pressable>
   );
 }
