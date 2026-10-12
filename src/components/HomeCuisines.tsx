@@ -126,7 +126,7 @@ export default function HomeCuisines() {
             {[0, 1].map((item) => (
               <View
                 key={item}
-                className="h-[152px] animate-pulse overflow-hidden rounded-2xl bg-slate-200"
+                className="h-[152px] overflow-hidden rounded-2xl bg-slate-200"
                 style={{ width: cardWidth }}
               />
             ))}

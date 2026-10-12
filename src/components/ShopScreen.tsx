@@ -765,7 +765,7 @@ export default function ShopScreen() {
           {[0, 1, 2, 3].map((item) => (
             <View
               key={item}
-              className="h-[278px] animate-pulse rounded-2xl bg-slate-200"
+              className="h-[278px] rounded-2xl bg-slate-200"
               style={{ width: cardWidth }}
             />
           ))}

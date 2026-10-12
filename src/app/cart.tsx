@@ -102,7 +102,7 @@ export default function CartScreen() {
       ) : null}
 
       {!isHydrated || isCartLoading ? (
-        <View className="mt-6 h-24 animate-pulse rounded-2xl bg-slate-200" />
+        <View className="mt-6 h-24 rounded-2xl bg-slate-200" />
       ) : cartError ? null : items.length === 0 ? (
         <View className="mt-6 items-center rounded-2xl border border-dashed border-slate-300 bg-white px-5 py-12">
           <UtensilsCrossed color="#94A3B8" size={32} />
