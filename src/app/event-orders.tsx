@@ -910,11 +910,12 @@ function MenuFoodRow({
             </Pressable>
             <TextInput
               accessibilityLabel={`${getFoodName(food)} quantity`}
-              className="mx-2 h-9 w-20 rounded-lg border border-[#D9E6D9] text-center text-sm font-bold text-[#183B2A]"
+              className="mx-2 h-11 w-20 rounded-lg border border-[#D9E6D9] py-0 text-center text-sm font-bold text-[#183B2A]"
               keyboardType="number-pad"
               onChangeText={(value) =>
                 onQuantityChange(value ? Math.max(0, Number(value.replace(/[^\d]/g, ""))) : 0)
               }
+              textAlignVertical="center"
               value={String(quantity)}
             />
             <Pressable
