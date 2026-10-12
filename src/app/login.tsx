@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { router } from "expo-router";
-import { Eye, EyeOff, UtensilsCrossed } from "lucide-react-native";
+import { Eye, EyeOff } from "lucide-react-native";
 import {
   ActivityIndicator,
+  Image,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -74,9 +75,13 @@ export default function LoginScreen() {
         >
           <View className="w-full self-center" style={{ maxWidth: 440 }}>
             <View className="mb-10 items-center">
-              <View className="mb-5 h-16 w-16 items-center justify-center rounded-2xl bg-[#8EA66B]">
-                <UtensilsCrossed color="#FFFFFF" size={30} strokeWidth={2} />
-              </View>
+              <Image
+                accessible
+                accessibilityLabel="Buy Food restaurant logo"
+                className="mb-5 h-32 w-32"
+                resizeMode="contain"
+                source={require("../../assets/images/adminlogo.png")}
+              />
               <Text className="text-3xl font-bold text-slate-900">Welcome back</Text>
               <Text className="mt-2 text-center text-base text-slate-500">
                 Sign in to find something delicious.

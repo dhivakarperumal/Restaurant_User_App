@@ -4,24 +4,22 @@
     "slug": "restaurant-app",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/adminlogo.png",
     "scheme": "userdelivery",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "icon": "./assets/expo.icon"
+      "icon": "./assets/images/adminlogo.png"
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#dc2626",
-        "foregroundImage": "./assets/images/android-icon-foreground.png",
-        "backgroundImage": "./assets/images/android-icon-background.png",
-        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+        "backgroundColor": "#FFFFFF",
+        "foregroundImage": "./assets/images/adminlogo.png"
       },
       "predictiveBackGestureEnabled": false
     },
     "web": {
       "output": "static",
-      "favicon": "./assets/images/favicon.png",
+      "favicon": "./assets/images/adminlogo.png",
       "bundler": "metro"
     
     },
@@ -30,9 +28,9 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#dc2626",
-          "image": "./assets/images/splash-icon.png",
-          "imageWidth": 76
+          "backgroundColor": "#FFFFFF",
+          "image": "./assets/images/adminlogo.png",
+          "imageWidth": 180
         }
       ]
     ],

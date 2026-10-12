@@ -1,6 +1,6 @@
 import { router } from "expo-router";
 import { Settings } from "lucide-react-native";
-import { Pressable, Text, View } from "react-native";
+import { Image, Pressable, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 type TopHeaderProps = {
@@ -14,12 +14,16 @@ export default function TopHeader({ title }: TopHeaderProps) {
       edges={["top"]}
     >
       <View className="flex-row items-center justify-between">
-        <View className="flex-1">
-          <Text className="text-[11px] font-bold uppercase tracking-[2px] text-[#82966A]">
-            Restaurant
-          </Text>
+        <View className="flex-1 flex-row items-center">
+          <Image
+            accessible
+            accessibilityLabel="Buy Food restaurant logo"
+            className="mr-3 h-12 w-12"
+            resizeMode="contain"
+            source={require("../../../../assets/images/adminlogo.png")}
+          />
           <Text
-            className="mt-0.5 text-[28px] font-extrabold leading-8 text-slate-900"
+            className="flex-1 text-[28px] font-extrabold leading-8 text-slate-900"
             numberOfLines={1}
           >
             {title}
