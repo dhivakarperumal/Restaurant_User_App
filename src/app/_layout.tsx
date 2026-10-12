@@ -9,10 +9,10 @@ import {
 import { NavigationBar } from "expo-navigation-bar";
 import { Platform, StyleSheet, Text, View } from "react-native";
 import { SafeAreaProvider, useSafeAreaInsets } from "react-native-safe-area-context";
+import { CartProvider, useCart } from "../contexts/CartContext";
 import TopHeader from "./user/Navigations/TopHeader";
 import "../../global.css";
 
-const cartItems = 3;
 const headerTitles: Record<string, string> = {
   home: "Home",
   explore: "Explore",
@@ -26,13 +26,16 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <NavigationBar style="dark" />
-      <RootTabs />
+      <CartProvider>
+        <RootTabs />
+      </CartProvider>
     </SafeAreaProvider>
   );
 }
 
 function RootTabs() {
   const insets = useSafeAreaInsets();
+  const { itemCount } = useCart();
 
   return (
     <Tabs
@@ -93,7 +96,7 @@ function RootTabs() {
           borderRadius: 9,
         },
         tabBarBadge:
-          route.name === "cart" && cartItems > 0 ? String(cartItems) : undefined,
+          route.name === "cart" && itemCount > 0 ? String(itemCount) : undefined,
         tabBarIcon: ({ color, size, focused }) => {
           const commonProps = {
             color,

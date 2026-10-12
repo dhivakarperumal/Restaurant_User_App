@@ -2,6 +2,7 @@ import { ScrollView } from "react-native";
 import HomeBanner from "../components/HomeBanner";
 import HomeCategories from "../components/HomeCategories";
 import HomeCuisines from "../components/HomeCuisines";
+import HomeProducts from "../components/HomeProducts";
 
 export default function HomeScreen() {
   return (
@@ -17,6 +18,7 @@ export default function HomeScreen() {
       <HomeBanner />
       <HomeCategories />
       <HomeCuisines />
+      <HomeProducts />
     </ScrollView>
   );
 }
