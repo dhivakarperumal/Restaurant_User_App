@@ -1,6 +1,5 @@
 import { useState } from "react";
 import {
-  Alert,
   Image,
   Pressable,
   ScrollView,
@@ -15,11 +14,13 @@ import {
   UtensilsCrossed,
 } from "lucide-react-native";
 import { router } from "expo-router";
+import { useCustomAlert } from "../contexts/CustomAlertContext";
 import { getFoodImage, getFoodName } from "../lib/foods";
 import { useCart } from "../contexts/CartContext";
 import type { CartItem } from "../types/food";
 
 export default function CartScreen() {
+  const { showAlert } = useCustomAlert();
   const {
     items,
     itemCount,
@@ -54,20 +55,25 @@ export default function CartScreen() {
   };
 
   const confirmClearCart = () => {
-    Alert.alert("Clear your cart?", "This will remove all items from your cart.", [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Clear cart",
-        style: "destructive",
-        onPress: () => {
-          setError("");
-          void clearCart().catch((requestError: unknown) => {
-            console.error("Failed to clear cart:", requestError);
-            setError("We could not clear your cart. Please try again.");
-          });
+    showAlert({
+      title: "Clear your cart?",
+      message: "This will remove all items from your cart.",
+      variant: "confirm",
+      actions: [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Clear cart",
+          style: "destructive",
+          onPress: () => {
+            setError("");
+            void clearCart().catch((requestError: unknown) => {
+              console.error("Failed to clear cart:", requestError);
+              setError("We could not clear your cart. Please try again.");
+            });
+          },
         },
-      },
-    ]);
+      ],
+    });
   };
 
   const total = items.reduce(

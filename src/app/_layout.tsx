@@ -12,6 +12,7 @@ import { NavigationBar } from "expo-navigation-bar";
 import { Platform, StyleSheet, Text, View } from "react-native";
 import { SafeAreaProvider, useSafeAreaInsets } from "react-native-safe-area-context";
 import { CartProvider, useCart } from "../contexts/CartContext";
+import { CustomAlertProvider } from "../contexts/CustomAlertContext";
 import TopHeader from "./user/Navigations/TopHeader";
 import "../../global.css";
 
@@ -32,10 +33,12 @@ const headerTitles: Record<string, string> = {
 export default function RootLayout() {
   return (
     <SafeAreaProvider>
-      <NavigationBar style="dark" />
-      <CartProvider>
-        <RootTabs />
-      </CartProvider>
+      <CustomAlertProvider>
+        <NavigationBar style="dark" />
+        <CartProvider>
+          <RootTabs />
+        </CartProvider>
+      </CustomAlertProvider>
     </SafeAreaProvider>
   );
 }

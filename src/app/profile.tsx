@@ -24,7 +24,6 @@ import type { LucideIcon } from "lucide-react-native";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   Modal,
   Pressable,
   RefreshControl,
@@ -33,6 +32,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { useCustomAlert } from "../contexts/CustomAlertContext";
 import api, {
   getApiErrorMessage,
   getStoredToken,
@@ -356,6 +356,7 @@ function ActionButton({
 }
 
 export default function ProfileScreen() {
+  const { showAlert } = useCustomAlert();
   const [activeTab, setActiveTab] = useState<AccountTab>("profile");
   const [account, setAccount] = useState<AccountUser | null>(null);
   const [profile, setProfile] = useState({ username: "", mobile_number: "", email: "" });
@@ -665,30 +666,35 @@ export default function ProfileScreen() {
       setFormError("This saved address has no ID, so it cannot be deleted.");
       return;
     }
-    Alert.alert("Delete saved address?", "This address will be removed from your account.", [
-      { text: "Keep address", style: "cancel" },
-      {
-        text: "Delete",
-        style: "destructive",
-        onPress: () => {
-          void (async () => {
-            setIsSaving(true);
-            setFormError("");
-            try {
-              await api.delete(`/orders/addresses/${encodeURIComponent(String(addressId))}`);
-              setAddresses((current) =>
-                current.filter((entry) => String(entry.id) !== String(addressId)),
-              );
-              setSuccessMessage("Address deleted.");
-            } catch (error) {
-              setFormError(getApiErrorMessage(error, "Could not delete this address."));
-            } finally {
-              setIsSaving(false);
-            }
-          })();
+    showAlert({
+      title: "Delete saved address?",
+      message: "This address will be removed from your account.",
+      variant: "confirm",
+      actions: [
+        { text: "Keep address", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: () => {
+            void (async () => {
+              setIsSaving(true);
+              setFormError("");
+              try {
+                await api.delete(`/orders/addresses/${encodeURIComponent(String(addressId))}`);
+                setAddresses((current) =>
+                  current.filter((entry) => String(entry.id) !== String(addressId)),
+                );
+                setSuccessMessage("Address deleted.");
+              } catch (error) {
+                setFormError(getApiErrorMessage(error, "Could not delete this address."));
+              } finally {
+                setIsSaving(false);
+              }
+            })();
+          },
         },
-      },
-    ]);
+      ],
+    });
   };
 
   const changePassword = async () => {
@@ -808,7 +814,7 @@ export default function ProfileScreen() {
               accessibilityLabel="Log out"
               accessibilityRole="button"
               className="h-10 w-10 items-center justify-center rounded-full bg-white/10"
-              onPress={() => confirmLogout()}
+              onPress={() => confirmLogout(showAlert)}
             >
               <LogOut color="#FFE2D8" size={18} />
             </Pressable>
@@ -1352,7 +1358,7 @@ export default function ProfileScreen() {
           <Pressable
             accessibilityRole="button"
             className="mt-4 min-h-12 flex-row items-center justify-center rounded-xl border border-[#F3C9C5] bg-white"
-            onPress={() => confirmLogout()}
+            onPress={() => confirmLogout(showAlert)}
           >
             <LogOut color="#A33424" size={17} />
             <Text className="ml-2 text-sm font-bold text-[#A33424]">Sign out</Text>

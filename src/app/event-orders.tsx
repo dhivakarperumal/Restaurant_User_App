@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   Image,
   Pressable,
   RefreshControl,
@@ -29,6 +28,7 @@ import api, {
   getStoredToken,
   getStoredUser,
 } from "../lib/api";
+import { useCustomAlert } from "../contexts/CustomAlertContext";
 import type { FoodProduct } from "../types/food";
 
 const EVENT_TYPES = [
@@ -239,6 +239,7 @@ function ChoiceRow({
 }
 
 export default function EventOrdersScreen() {
+  const { showAlert } = useCustomAlert();
   const [form, setForm] = useState<EventForm>({
     customer_name: "",
     customer_phone: "",
@@ -513,12 +514,14 @@ export default function EventOrdersScreen() {
 
   const respondToQuote = (order: EventOrder, action: "accept" | "reject") => {
     const orderLabel = getText(order, ["event_order_number", "order_number"]) || order.orderKey;
-    Alert.alert(
-      action === "accept" ? "Accept this quotation?" : "Reject this quotation?",
-      action === "accept"
-        ? "Your event order will be confirmed and sent to the kitchen."
-        : "This will cancel the event order.",
-      [
+    showAlert({
+      title: action === "accept" ? "Accept this quotation?" : "Reject this quotation?",
+      message:
+        action === "accept"
+          ? "Your event order will be confirmed and sent to the kitchen."
+          : "This will cancel the event order.",
+      variant: "confirm",
+      actions: [
         { text: "Keep quotation", style: "cancel" },
         {
           text: action === "accept" ? "Accept quote" : "Reject quote",
@@ -539,11 +542,16 @@ export default function EventOrdersScreen() {
                   );
                 }
                 await loadOrders();
-                Alert.alert(
-                  action === "accept" ? "Quotation accepted" : "Quotation rejected",
-                  getText(body ?? {}, ["message"]) ||
+                showAlert({
+                  title:
+                    action === "accept"
+                      ? "Quotation accepted"
+                      : "Quotation rejected",
+                  message:
+                    getText(body ?? {}, ["message"]) ||
                     `Event order #${orderLabel} was updated.`,
-                );
+                  variant: "success",
+                });
               } catch (error) {
                 setOrdersError(
                   getApiErrorMessage(error, "Could not update the quotation."),
@@ -555,7 +563,7 @@ export default function EventOrdersScreen() {
           },
         },
       ],
-    );
+    });
   };
 
   return (
