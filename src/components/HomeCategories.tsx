@@ -7,6 +7,7 @@ import {
   ScrollView,
   Text,
   View,
+  useWindowDimensions,
 } from "react-native";
 import api, { API_BASE_URL } from "../lib/api";
 
@@ -17,9 +18,7 @@ type Category = {
   filter: string;
 };
 
-const CARD_WIDTH = 138;
-const CARD_SPACING = 12;
-const SCROLL_STEP = (CARD_WIDTH + CARD_SPACING) * 2;
+const CARD_GAP = 10;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
@@ -56,6 +55,15 @@ export default function HomeCategories() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const { width: screenWidth } = useWindowDimensions();
+
+  // Exactly 3 categories visible per view
+  // Home screen has paddingHorizontal: 24 (total 48px)
+  const availableWidth = screenWidth - 48;
+  const cardWidth = Math.max(96, Math.floor((availableWidth - 2 * CARD_GAP) / 3));
+  const cardHeight = Math.round(cardWidth * 1.18);
+  const imageHeight = Math.round(cardWidth * 0.72);
+  const scrollStep = (cardWidth + CARD_GAP) * 3;
 
   const fetchCategories = useCallback(async () => {
     setLoading(true);
@@ -134,13 +142,13 @@ export default function HomeCategories() {
   }, [fetchCategories]);
 
   const handleScrollLeft = () => {
-    const nextOffset = Math.max(0, scrollOffset - SCROLL_STEP);
+    const nextOffset = Math.max(0, scrollOffset - scrollStep);
     scrollViewRef.current?.scrollTo({ x: nextOffset, animated: true });
     setScrollOffset(nextOffset);
   };
 
   const handleScrollRight = () => {
-    const nextOffset = scrollOffset + SCROLL_STEP;
+    const nextOffset = scrollOffset + scrollStep;
     scrollViewRef.current?.scrollTo({ x: nextOffset, animated: true });
     setScrollOffset(nextOffset);
   };
@@ -160,7 +168,7 @@ export default function HomeCategories() {
         </View>
 
         <View className="flex-row items-center gap-1.5">
-          {categories.length > 2 && (
+          {categories.length > 3 && (
             <>
               <Pressable
                 accessibilityRole="button"
@@ -199,13 +207,23 @@ export default function HomeCategories() {
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={{ paddingRight: 8, paddingBottom: 6 }}
         >
-          {[1, 2, 3, 4].map((item) => (
+          {[1, 2, 3].map((item) => (
             <View
               key={item}
-              className="mr-3 h-[152px] w-[138px] shrink-0 items-center justify-between rounded-[18px] border-2 border-slate-200 bg-white p-2 shadow-sm"
+              className="shrink-0 items-center justify-between rounded-2xl border-2 border-slate-200 bg-white p-1.5 shadow-sm"
+              style={{
+                width: cardWidth,
+                minWidth: cardWidth,
+                maxWidth: cardWidth,
+                height: cardHeight,
+                marginRight: CARD_GAP,
+              }}
             >
-              <View className="h-[98px] w-full rounded-xl bg-slate-200" />
-              <View className="h-3.5 w-3/4 rounded-md bg-slate-200" />
+              <View
+                className="w-full rounded-xl bg-slate-200"
+                style={{ height: imageHeight }}
+              />
+              <View className="h-3 w-3/4 rounded-md bg-slate-200" />
             </View>
           ))}
         </ScrollView>
@@ -230,7 +248,13 @@ export default function HomeCategories() {
           contentContainerStyle={{ paddingRight: 8, paddingBottom: 6 }}
         >
           {categories.map((category) => (
-            <CategoryCard key={category.id} category={category} />
+            <CategoryCard
+              key={category.id}
+              category={category}
+              cardWidth={cardWidth}
+              cardHeight={cardHeight}
+              imageHeight={imageHeight}
+            />
           ))}
         </ScrollView>
       ) : (
@@ -244,11 +268,30 @@ export default function HomeCategories() {
   );
 }
 
-function CategoryCard({ category }: { category: Category }) {
+function CategoryCard({
+  category,
+  cardWidth,
+  cardHeight,
+  imageHeight,
+}: {
+  category: Category;
+  cardWidth: number;
+  cardHeight: number;
+  imageHeight: number;
+}) {
   const [imageError, setImageError] = useState(false);
 
   return (
-    <View className="mr-3 h-[152px] w-[138px] shrink-0">
+    <View
+      className="shrink-0"
+      style={{
+        width: cardWidth,
+        minWidth: cardWidth,
+        maxWidth: cardWidth,
+        height: cardHeight,
+        marginRight: CARD_GAP,
+      }}
+    >
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={`Browse ${category.name}`}
@@ -258,10 +301,13 @@ function CategoryCard({ category }: { category: Category }) {
             params: { category: category.filter },
           })
         }
-        className="h-full w-full items-center justify-between rounded-[18px] border-2 border-[#E5E5E5] bg-white p-2 shadow-sm active:border-[#D8C7A7] active:scale-95"
+        className="h-full w-full items-center justify-between rounded-2xl border-2 border-[#E5E5E5] bg-white p-1.5 shadow-sm active:border-[#D8C7A7] active:scale-95"
       >
-        {/* 4:3 Image Container */}
-        <View className="h-[98px] w-full items-center justify-center overflow-hidden rounded-xl bg-[#F5EFE5]">
+        {/* Aspect Ratio Image Container */}
+        <View
+          className="w-full items-center justify-center overflow-hidden rounded-xl bg-[#F5EFE5]"
+          style={{ height: imageHeight }}
+        >
           {category.image && !imageError ? (
             <Image
               accessible
@@ -273,15 +319,15 @@ function CategoryCard({ category }: { category: Category }) {
             />
           ) : (
             <View className="h-full w-full items-center justify-center">
-              <ImageIcon color="#A05C2A" size={28} strokeWidth={1.8} />
+              <ImageIcon color="#A05C2A" size={24} strokeWidth={1.8} />
             </View>
           )}
         </View>
 
         {/* Title Container */}
-        <View className="h-[26px] w-full items-center justify-center px-0.5">
+        <View className="h-6 w-full items-center justify-center px-0.5">
           <Text
-            className="text-center text-xs font-extrabold text-[#202020]"
+            className="text-center text-[11px] font-extrabold text-[#202020]"
             numberOfLines={1}
             ellipsizeMode="tail"
           >
