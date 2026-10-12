@@ -6,7 +6,8 @@ import {
   ShoppingCart,
   UserRound,
 } from "lucide-react-native";
-import { Platform, Text } from "react-native";
+import { NavigationBar } from "expo-navigation-bar";
+import { Platform, StyleSheet, Text, View } from "react-native";
 import { SafeAreaProvider, useSafeAreaInsets } from "react-native-safe-area-context";
 import TopHeader from "./user/Navigations/TopHeader";
 import "../../global.css";
@@ -24,6 +25,7 @@ const headerTitles: Record<string, string> = {
 export default function RootLayout() {
   return (
     <SafeAreaProvider>
+      <NavigationBar style="dark" />
       <RootTabs />
     </SafeAreaProvider>
   );
@@ -43,6 +45,20 @@ function RootTabs() {
         tabBarInactiveTintColor: "#6B7280",
         tabBarShowLabel: true,
         tabBarIndicatorStyle: { display: "none" },
+        tabBarBackground: () => (
+          <View style={[StyleSheet.absoluteFill, { backgroundColor: "#FFFFFF" }]}>
+            <View
+              style={{
+                position: "absolute",
+                right: 0,
+                bottom: 0,
+                left: 0,
+                height: insets.bottom,
+                backgroundColor: "#0B2118",
+              }}
+            />
+          </View>
+        ),
         tabBarStyle: {
           display:
             route.name === "login" || route.name.startsWith("delivery/")
