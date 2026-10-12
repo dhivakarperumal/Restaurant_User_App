@@ -88,6 +88,7 @@ function RootTabs() {
         tabBarStyle: {
           display:
             route.name === "login" ||
+            route.name === "register" ||
             route.name === "checkout" ||
             route.name.startsWith("delivery/")
               ? "none"
@@ -233,6 +234,7 @@ function RootTabs() {
     >
       <Tabs.Screen name="index" options={{ href: null }} />
       <Tabs.Screen name="login" options={{ title: "Login", href: null }} />
+      <Tabs.Screen name="register" options={{ title: "Register", href: null }} />
       <Tabs.Screen
         name="delivery/index"
         options={{ title: "Delivery", href: null }}

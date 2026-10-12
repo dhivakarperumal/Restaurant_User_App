@@ -263,15 +263,50 @@ export const loginWithIdentifier = async (identifier, password) => {
 ========================= */
 
 export const registerUser = async ({ username, email, phone, password }) => {
-  const response = await api.post("/auth/register", {
+  const response = await api.post("/users/register", {
     username: String(username || "").trim(),
+    firstName: String(username || "").trim(),
     email: String(email || "").trim(),
     phone: String(phone || "").trim(),
-    role: "admin",
+    mobile_number: String(phone || "").trim(),
+    role: "user",
     password: String(password || ""),
   });
 
-  return response.data || {};
+  const responseBody = response.data || {};
+  const data =
+    responseBody.data && typeof responseBody.data === "object"
+      ? responseBody.data
+      : responseBody;
+  const user =
+    (data.user && typeof data.user === "object" ? data.user : null) ||
+    (responseBody.user && typeof responseBody.user === "object"
+      ? responseBody.user
+      : null);
+  const token =
+    data.token ??
+    data.accessToken ??
+    data.access_token ??
+    responseBody.token ??
+    responseBody.accessToken ??
+    responseBody.access_token;
+  const role = user?.role ?? data.role ?? responseBody.role ?? "user";
+
+  if (typeof token === "string" && token.trim()) {
+    await setAuthToken(token.trim());
+  }
+
+  await AsyncStorage.setItem("userRole", String(role));
+  if (typeof window !== "undefined" && window.localStorage) {
+    try {
+      window.localStorage.setItem("userRole", String(role));
+    } catch {}
+  }
+  if (user) {
+    await saveUser({ ...user, role });
+  }
+
+  return { ...data, user, token, role };
 };
 
 /* =========================

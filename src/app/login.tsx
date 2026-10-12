@@ -202,7 +202,14 @@ export default function LoginScreen() {
             </View>
 
             <Text className="mt-7 text-center text-sm text-slate-500">
-              Good food, just a sign in away.
+              New to Buy Foods?{" "}
+              <Text
+                accessibilityRole="link"
+                className="font-semibold text-[#1A6A3B]"
+                onPress={() => router.push("/register")}
+              >
+                Create an account
+              </Text>
             </Text>
           </View>
         </ScrollView>
