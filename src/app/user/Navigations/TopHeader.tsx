@@ -1,6 +1,6 @@
 import { router } from "expo-router";
-import { LogOut, UserRound, UserRoundPen } from "lucide-react-native";
-import { useState } from "react";
+import { LogOut, UserRoundPen } from "lucide-react-native";
+import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Image,
@@ -13,16 +13,75 @@ import {
   SafeAreaView,
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
+import { getStoredUser } from "../../../lib/api";
 import { confirmLogout } from "../../../lib/logout";
 
 type TopHeaderProps = {
   title: string;
 };
 
+type AccountDetails = {
+  name: string;
+  email: string;
+  initial: string;
+};
+
+function getTextValue(user: Record<string, unknown>, keys: string[]) {
+  for (const key of keys) {
+    const value = user[key];
+    if (typeof value === "string" && value.trim()) {
+      return value.trim();
+    }
+  }
+  return "";
+}
+
 export default function TopHeader({ title }: TopHeaderProps) {
   const insets = useSafeAreaInsets();
   const [isMenuVisible, setIsMenuVisible] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [account, setAccount] = useState<AccountDetails>({
+    name: "",
+    email: "",
+    initial: "",
+  });
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadAccountDetails = async () => {
+      try {
+        const storedUser = await getStoredUser();
+        if (!isMounted || !storedUser || typeof storedUser !== "object") {
+          return;
+        }
+
+        const profile =
+          "user" in storedUser &&
+          storedUser.user &&
+          typeof storedUser.user === "object"
+            ? (storedUser.user as Record<string, unknown>)
+            : (storedUser as Record<string, unknown>);
+        const firstName = getTextValue(profile, ["first_name", "firstName"]);
+        const lastName = getTextValue(profile, ["last_name", "lastName"]);
+        const email = getTextValue(profile, ["email", "email_address"]);
+        const name =
+          getTextValue(profile, ["name", "full_name", "fullName", "username"]) ||
+          [firstName, lastName].filter(Boolean).join(" ");
+        const initial = (name || email).charAt(0).toUpperCase();
+
+        setAccount({ name, email, initial });
+      } catch (error) {
+        console.error("Failed to load the stored account details:", error);
+      }
+    };
+
+    void loadAccountDetails();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   return (
     <SafeAreaView
@@ -57,7 +116,9 @@ export default function TopHeader({ title }: TopHeaderProps) {
           {isLoggingOut ? (
             <ActivityIndicator color="#1A6A3B" />
           ) : (
-            <UserRound color="#1A6A3B" size={21} strokeWidth={2.2} />
+            <Text className="text-base font-extrabold text-[#1A6A3B]">
+              {account.initial || "U"}
+            </Text>
           )}
         </Pressable>
       </View>
@@ -81,14 +142,19 @@ export default function TopHeader({ title }: TopHeaderProps) {
           >
             <View className="flex-row items-center border-b border-[#EEE8DD] bg-[#F5EFE5] px-4 py-3.5">
               <View className="mr-3 h-10 w-10 items-center justify-center rounded-full bg-white">
-                <UserRound color="#1A6A3B" size={20} />
+                <Text className="text-base font-extrabold text-[#1A6A3B]">
+                  {account.initial || "U"}
+                </Text>
               </View>
               <View className="flex-1">
                 <Text className="text-sm font-extrabold text-[#183B2A]">
-                  Your account
+                  {account.name || "Your account"}
                 </Text>
-                <Text className="mt-0.5 text-xs text-[#81786B]">
-                  Manage your profile
+                <Text
+                  className="mt-0.5 text-xs text-[#81786B]"
+                  numberOfLines={1}
+                >
+                  {account.email || "Account details unavailable"}
                 </Text>
               </View>
             </View>
