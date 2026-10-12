@@ -1,12 +1,23 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { router } from "expo-router";
 import { ArrowRight, Sparkles } from "lucide-react-native";
-import { ImageBackground, Pressable, Text, View } from "react-native";
+import {
+  ImageBackground,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
+  Pressable,
+  ScrollView,
+  Text,
+  View,
+  useWindowDimensions,
+} from "react-native";
 import api, { API_BASE_URL } from "../lib/api";
 
 type Banner = {
   id: string;
   title: string;
+  subtitle: string;
+  description: string;
   image: string;
   link: string;
 };
@@ -14,6 +25,8 @@ type Banner = {
 const FALLBACK_BANNER: Banner = {
   id: "welcome",
   title: "Taste Good Food Every Day",
+  subtitle: "FRESHLY MADE, JUST FOR YOU",
+  description: "Discover something delicious today.",
   image: "",
   link: "/explore",
 };
@@ -78,6 +91,13 @@ function getBannerDestination(link: string) {
 
 export default function HomeBanner() {
   const [banners, setBanners] = useState<Banner[]>([]);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const scrollViewRef = useRef<ScrollView>(null);
+  const { width: screenWidth } = useWindowDimensions();
+
+  // HomeScreen paddingHorizontal: 24 (total 48px)
+  const bannerWidth = Math.max(280, screenWidth - 48);
+  const bannerHeight = 310;
 
   useEffect(() => {
     let isMounted = true;
@@ -98,15 +118,32 @@ export default function HomeBanner() {
             (item): item is Record<string, unknown> =>
               isRecord(item) && item.active !== false,
           )
-          .map((item, index) => ({
-            id: stringValue(item.id ?? item.banner_id, `banner-${index}`),
-            title: stringValue(item.title ?? item.name, FALLBACK_BANNER.title),
-            image: resolveAssetUrl(
-              item.mobile_image ?? item.mobileImage ?? item.image ?? item.image_url,
-            ),
-            link: stringValue(item.link ?? item.url, FALLBACK_BANNER.link),
-          }));
-        if (isMounted) setBanners(activeBanners);
+          .map((item, index) => {
+            const rawImage =
+              stringValue(item.mobile_image) ||
+              stringValue(item.mobileImage) ||
+              stringValue(item.image) ||
+              stringValue(item.image_url);
+
+            return {
+              id: stringValue(item.id ?? item.banner_id, `banner-${index}`),
+              title: stringValue(item.title ?? item.name, FALLBACK_BANNER.title),
+              subtitle: stringValue(
+                item.subtitle,
+                "FRESHLY MADE, JUST FOR YOU",
+              ),
+              description: stringValue(
+                item.description,
+                "Discover something delicious today.",
+              ),
+              image: resolveAssetUrl(rawImage),
+              link: stringValue(item.link ?? item.url, FALLBACK_BANNER.link),
+            };
+          });
+
+        if (isMounted && activeBanners.length > 0) {
+          setBanners(activeBanners);
+        }
       } catch (error) {
         console.error("Failed to load home banners:", error);
       }
@@ -118,63 +155,127 @@ export default function HomeBanner() {
     };
   }, []);
 
-  const banner = banners[0] ?? FALLBACK_BANNER;
+  const displayBanners = banners.length > 0 ? banners : [FALLBACK_BANNER];
+
+  // Auto-play timer for sliding through banners
+  useEffect(() => {
+    if (displayBanners.length <= 1) return;
+
+    const interval = setInterval(() => {
+      setActiveIndex((prevIndex) => {
+        const nextIndex = (prevIndex + 1) % displayBanners.length;
+        scrollViewRef.current?.scrollTo({
+          x: nextIndex * bannerWidth,
+          animated: true,
+        });
+        return nextIndex;
+      });
+    }, 4500);
+
+    return () => clearInterval(interval);
+  }, [displayBanners.length, bannerWidth]);
+
+  const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const offsetX = event.nativeEvent.contentOffset.x;
+    const index = Math.round(offsetX / bannerWidth);
+    if (index >= 0 && index < displayBanners.length && index !== activeIndex) {
+      setActiveIndex(index);
+    }
+  };
 
   return (
-    <ImageBackground
-      accessible
-      accessibilityLabel={banner.title}
-      className="h-[300px] justify-between overflow-hidden rounded-[28px] bg-[#183B2A]"
-      imageStyle={{ borderRadius: 28 }}
-      resizeMode="cover"
-      source={banner.image ? { uri: banner.image } : undefined}
-    >
-      <View className="absolute inset-0 bg-black/45" />
-      <View className="absolute -right-12 -top-12 h-48 w-48 rounded-full border-[28px] border-white/10" />
-      <View className="px-5 pt-5">
-        <View className="self-start flex-row items-center rounded-full bg-white/20 px-3 py-2">
-          <Sparkles color="#FFD29A" size={14} strokeWidth={2.2} />
-          <Text className="ml-2 text-[10px] font-extrabold tracking-[1.4px] text-white">
-            FRESHLY MADE, JUST FOR YOU
-          </Text>
-        </View>
-      </View>
-      <View className="px-5 pb-5">
-        <Text
-          className="text-[28px] font-black leading-[34px] tracking-[-0.8px] text-white"
-          numberOfLines={2}
-        >
-          {banner.title}
-        </Text>
-        <Text className="mt-2 text-sm leading-5 text-white/85">
-          Discover something delicious today.
-        </Text>
+    <View style={{ width: bannerWidth, height: bannerHeight }} className="overflow-hidden rounded-[28px]">
+      <ScrollView
+        ref={scrollViewRef}
+        horizontal
+        pagingEnabled
+        showsHorizontalScrollIndicator={false}
+        onMomentumScrollEnd={handleScroll}
+        scrollEventThrottle={16}
+        className="w-full h-full"
+      >
+        {displayBanners.map((banner) => (
+          <View key={banner.id} style={{ width: bannerWidth, height: bannerHeight }}>
+            <ImageBackground
+              accessible
+              accessibilityLabel={banner.title}
+              className="h-full w-full justify-between overflow-hidden rounded-[28px] bg-[#183B2A]"
+              imageStyle={{ borderRadius: 28 }}
+              resizeMode="cover"
+              source={banner.image ? { uri: banner.image } : undefined}
+            >
+              {/* Dark Overlay for readability */}
+              <View className="absolute inset-0 bg-black/45" />
+              <View className="absolute -right-12 -top-12 h-48 w-48 rounded-full border-[28px] border-white/10" />
 
-        <View className="mt-5 flex-row items-center">
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Order now"
-            className="min-h-12 flex-row items-center justify-center rounded-2xl bg-[#F47716] px-5"
-            onPress={() => router.push(getBannerDestination(banner.link))}
-            style={({ pressed }) => ({
-              opacity: pressed ? 0.88 : 1,
-              transform: [{ scale: pressed ? 0.98 : 1 }],
-            })}
-          >
-            <Text className="text-sm font-extrabold text-white">Order now</Text>
-            <ArrowRight color="#FFFFFF" size={16} className="ml-2" />
-          </Pressable>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Explore menu"
-            className="ml-3 min-h-12 items-center justify-center rounded-2xl border border-white/60 bg-black/15 px-4"
-            onPress={() => router.push("/explore")}
-            style={({ pressed }) => ({ opacity: pressed ? 0.75 : 1 })}
-          >
-            <Text className="text-sm font-bold text-white">Explore menu</Text>
-          </Pressable>
-        </View>
-      </View>
-    </ImageBackground>
+              {/* Subtitle Badge */}
+              <View className="px-5 pt-5">
+                <View className="self-start flex-row items-center rounded-full bg-white/20 px-3 py-1.5 backdrop-blur-sm">
+                  <Sparkles color="#FFD29A" size={13} strokeWidth={2.2} />
+                  <Text className="ml-1.5 text-[10px] font-extrabold uppercase tracking-[1.4px] text-white">
+                    {banner.subtitle}
+                  </Text>
+                </View>
+              </View>
+
+              {/* Bottom Content */}
+              <View className="px-5 pb-5">
+                <Text
+                  className="text-[26px] font-black leading-[32px] tracking-[-0.6px] text-white"
+                  numberOfLines={2}
+                >
+                  {banner.title}
+                </Text>
+                <Text className="mt-1.5 text-xs font-medium leading-4 text-white/85" numberOfLines={2}>
+                  {banner.description}
+                </Text>
+
+                <View className="mt-4 flex-row items-center justify-between">
+                  <View className="flex-row items-center">
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel="Order now"
+                      className="min-h-11 flex-row items-center justify-center rounded-2xl bg-[#F47716] px-4 shadow-sm"
+                      onPress={() => router.push(getBannerDestination(banner.link))}
+                      style={({ pressed }) => ({
+                        opacity: pressed ? 0.88 : 1,
+                        transform: [{ scale: pressed ? 0.97 : 1 }],
+                      })}
+                    >
+                      <Text className="text-xs font-extrabold text-white">Order now</Text>
+                      <ArrowRight color="#FFFFFF" size={14} className="ml-1.5" />
+                    </Pressable>
+
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel="Explore menu"
+                      className="ml-2.5 min-h-11 items-center justify-center rounded-2xl border border-white/60 bg-black/25 px-3.5 backdrop-blur-sm"
+                      onPress={() => router.push("/explore")}
+                      style={({ pressed }) => ({ opacity: pressed ? 0.75 : 1 })}
+                    >
+                      <Text className="text-xs font-bold text-white">Explore menu</Text>
+                    </Pressable>
+                  </View>
+
+                  {/* Pagination Dots */}
+                  {displayBanners.length > 1 && (
+                    <View className="flex-row items-center gap-1.5 pr-1">
+                      {displayBanners.map((_, dotIdx) => (
+                        <View
+                          key={dotIdx}
+                          className={`h-2 rounded-full ${
+                            dotIdx === activeIndex ? "w-5 bg-[#F47716]" : "w-2 bg-white/50"
+                          }`}
+                        />
+                      ))}
+                    </View>
+                  )}
+                </View>
+              </View>
+            </ImageBackground>
+          </View>
+        ))}
+      </ScrollView>
+    </View>
   );
 }
