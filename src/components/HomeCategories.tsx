@@ -7,7 +7,6 @@ import {
   ScrollView,
   Text,
   View,
-  useWindowDimensions,
 } from "react-native";
 import api, { API_BASE_URL } from "../lib/api";
 
@@ -17,6 +16,10 @@ type Category = {
   image: string;
   filter: string;
 };
+
+const CARD_WIDTH = 138;
+const CARD_SPACING = 12;
+const SCROLL_STEP = (CARD_WIDTH + CARD_SPACING) * 2;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
@@ -53,13 +56,6 @@ export default function HomeCategories() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const { width: screenWidth } = useWindowDimensions();
-
-  // Consistent card width and height across all categories
-  const cardWidth = Math.round(Math.min(144, Math.max(130, (screenWidth - 48) / 2.4)));
-  const cardHeight = 148;
-  const cardSpacing = 12;
-  const scrollStep = (cardWidth + cardSpacing) * 2;
 
   const fetchCategories = useCallback(async () => {
     setLoading(true);
@@ -138,19 +134,19 @@ export default function HomeCategories() {
   }, [fetchCategories]);
 
   const handleScrollLeft = () => {
-    const nextOffset = Math.max(0, scrollOffset - scrollStep);
+    const nextOffset = Math.max(0, scrollOffset - SCROLL_STEP);
     scrollViewRef.current?.scrollTo({ x: nextOffset, animated: true });
     setScrollOffset(nextOffset);
   };
 
   const handleScrollRight = () => {
-    const nextOffset = scrollOffset + scrollStep;
+    const nextOffset = scrollOffset + SCROLL_STEP;
     scrollViewRef.current?.scrollTo({ x: nextOffset, animated: true });
     setScrollOffset(nextOffset);
   };
 
   return (
-    <View className="mt-8">
+    <View className="mt-7">
       {/* Header Section */}
       <View className="mb-4 flex-row items-end justify-between">
         <View className="flex-1 pr-2">
@@ -201,32 +197,24 @@ export default function HomeCategories() {
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ paddingRight: 8 }}
+          contentContainerStyle={{ paddingRight: 8, paddingBottom: 6 }}
         >
           {[1, 2, 3, 4].map((item) => (
             <View
               key={item}
-              className="mr-3 rounded-2xl border-2 border-slate-200 bg-white p-2.5 shadow-sm justify-between"
-              style={{
-                width: cardWidth,
-                minWidth: cardWidth,
-                maxWidth: cardWidth,
-                height: cardHeight,
-                minHeight: cardHeight,
-                maxHeight: cardHeight,
-              }}
+              className="mr-3 h-[152px] w-[138px] shrink-0 items-center justify-between rounded-[18px] border-2 border-slate-200 bg-white p-2 shadow-sm"
             >
-              <View className="h-24 w-full rounded-xl bg-slate-200" />
-              <View className="mx-auto h-4 w-3/4 rounded bg-slate-200" />
+              <View className="h-[98px] w-full rounded-xl bg-slate-200" />
+              <View className="h-3.5 w-3/4 rounded-md bg-slate-200" />
             </View>
           ))}
         </ScrollView>
       ) : error ? (
-        <View className="rounded-2xl border border-rose-200 bg-rose-50 p-5 text-center">
+        <View className="rounded-2xl border border-rose-200 bg-rose-50 p-5 items-center">
           <Text className="text-center text-sm font-semibold text-rose-800">{error}</Text>
           <Pressable
             accessibilityRole="button"
-            className="mt-3 self-center rounded-xl bg-rose-600 px-4 py-2"
+            className="mt-3 rounded-xl bg-rose-600 px-4 py-2"
             onPress={() => void fetchCategories()}
           >
             <Text className="text-xs font-bold text-white">Try again</Text>
@@ -242,16 +230,11 @@ export default function HomeCategories() {
           contentContainerStyle={{ paddingRight: 8, paddingBottom: 6 }}
         >
           {categories.map((category) => (
-            <CategoryCard
-              key={category.id}
-              category={category}
-              width={cardWidth}
-              height={cardHeight}
-            />
+            <CategoryCard key={category.id} category={category} />
           ))}
         </ScrollView>
       ) : (
-        <View className="rounded-2xl bg-white py-8 px-4 border border-[#E5E5E5] items-center">
+        <View className="rounded-2xl border border-[#E5E5E5] bg-white py-8 px-4 items-center">
           <Text className="text-center text-sm font-medium text-slate-500">
             Categories will appear here soon.
           </Text>
@@ -261,70 +244,51 @@ export default function HomeCategories() {
   );
 }
 
-function CategoryCard({
-  category,
-  width,
-  height,
-}: {
-  category: Category;
-  width: number;
-  height: number;
-}) {
+function CategoryCard({ category }: { category: Category }) {
   const [imageError, setImageError] = useState(false);
 
   return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={`Browse ${category.name}`}
-      className="mr-3 overflow-hidden rounded-2xl border-2 border-[#E5E5E5] bg-white p-2.5 shadow-sm active:border-[#D8C7A7]"
-      onPress={() =>
-        router.push({
-          pathname: "/explore",
-          params: { category: category.filter },
-        })
-      }
-      style={({ pressed }) => ({
-        width,
-        minWidth: width,
-        maxWidth: width,
-        height,
-        minHeight: height,
-        maxHeight: height,
-        justifyContent: "space-between",
-        transform: [{ scale: pressed ? 0.96 : 1 }],
-      })}
-    >
-      {/* 4:3 Aspect Ratio Image Container */}
-      <View
-        className="w-full overflow-hidden rounded-xl bg-[#F5EFE5] items-center justify-center"
-        style={{ height: 96, width: "100%" }}
+    <View className="mr-3 h-[152px] w-[138px] shrink-0">
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={`Browse ${category.name}`}
+        onPress={() =>
+          router.push({
+            pathname: "/explore",
+            params: { category: category.filter },
+          })
+        }
+        className="h-full w-full items-center justify-between rounded-[18px] border-2 border-[#E5E5E5] bg-white p-2 shadow-sm active:border-[#D8C7A7] active:scale-95"
       >
-        {category.image && !imageError ? (
-          <Image
-            accessible
-            accessibilityLabel={category.name}
-            className="h-full w-full"
-            onError={() => setImageError(true)}
-            resizeMode="cover"
-            source={{ uri: category.image }}
-          />
-        ) : (
-          <View className="items-center justify-center">
-            <ImageIcon color="#A05C2A" size={28} strokeWidth={1.8} />
-          </View>
-        )}
-      </View>
+        {/* 4:3 Image Container */}
+        <View className="h-[98px] w-full items-center justify-center overflow-hidden rounded-xl bg-[#F5EFE5]">
+          {category.image && !imageError ? (
+            <Image
+              accessible
+              accessibilityLabel={category.name}
+              className="h-full w-full"
+              onError={() => setImageError(true)}
+              resizeMode="cover"
+              source={{ uri: category.image }}
+            />
+          ) : (
+            <View className="h-full w-full items-center justify-center">
+              <ImageIcon color="#A05C2A" size={28} strokeWidth={1.8} />
+            </View>
+          )}
+        </View>
 
-      {/* Category Name fixed-height container */}
-      <View className="h-7 w-full items-center justify-center px-1">
-        <Text
-          className="text-center text-xs font-bold text-[#202020]"
-          numberOfLines={1}
-          ellipsizeMode="tail"
-        >
-          {category.name}
-        </Text>
-      </View>
-    </Pressable>
+        {/* Title Container */}
+        <View className="h-[26px] w-full items-center justify-center px-0.5">
+          <Text
+            className="text-center text-xs font-extrabold text-[#202020]"
+            numberOfLines={1}
+            ellipsizeMode="tail"
+          >
+            {category.name}
+          </Text>
+        </View>
+      </Pressable>
+    </View>
   );
 }
