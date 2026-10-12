@@ -2,9 +2,9 @@ import { useCallback, useEffect, useState } from "react";
 import { router } from "expo-router";
 import { ArrowRight, ImageIcon } from "lucide-react-native";
 import {
-  FlatList,
   Image,
   Pressable,
+  ScrollView,
   Text,
   View,
   useWindowDimensions,
@@ -250,17 +250,19 @@ export default function HomeCategories() {
       </View>
 
       {isLoading ? (
-        <View className="flex-row">
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ paddingRight: 8 }}
+        >
           {[0, 1, 2].map((item) => (
             <View
               key={item}
-              className="mr-4 h-[172px] rounded-[24px] bg-white p-3"
+              className="mr-4 h-[172px] overflow-hidden rounded-[24px] bg-slate-200"
               style={{ width: cardWidth }}
-            >
-              <View className="h-full rounded-[18px] bg-slate-200" />
-            </View>
+            />
           ))}
-        </View>
+        </ScrollView>
       ) : errorMessage ? (
         <View className="rounded-xl border border-rose-200 bg-rose-50 p-4">
           <Text className="text-sm font-semibold text-rose-800">
@@ -277,18 +279,17 @@ export default function HomeCategories() {
           </Pressable>
         </View>
       ) : categories.length > 0 ? (
-        <FlatList
-          contentContainerStyle={{ paddingRight: 8 }}
-          data={categories}
+        <ScrollView
           horizontal
-          keyExtractor={(category) => category.id}
-          renderItem={({ item }) => (
-            <View className="mr-4">
-              <CategoryCard category={item} width={cardWidth} />
-            </View>
-          )}
           showsHorizontalScrollIndicator={false}
-        />
+          contentContainerStyle={{ paddingRight: 8 }}
+        >
+          {categories.map((category) => (
+            <View key={category.id} className="mr-4">
+              <CategoryCard category={category} width={cardWidth} />
+            </View>
+          ))}
+        </ScrollView>
       ) : (
         <Text className="rounded-2xl bg-white py-5 text-center text-sm text-slate-500">
           Categories will appear here soon.
