@@ -55,8 +55,9 @@ export default function HomeCategories() {
   const [error, setError] = useState("");
   const { width: screenWidth } = useWindowDimensions();
 
-  // Consistent card width across all categories
-  const cardWidth = Math.min(148, Math.max(132, (screenWidth - 48) / 2.4));
+  // Consistent card width and height across all categories
+  const cardWidth = Math.round(Math.min(144, Math.max(130, (screenWidth - 48) / 2.4)));
+  const cardHeight = 148;
   const cardSpacing = 12;
   const scrollStep = (cardWidth + cardSpacing) * 2;
 
@@ -205,11 +206,18 @@ export default function HomeCategories() {
           {[1, 2, 3, 4].map((item) => (
             <View
               key={item}
-              className="mr-3 rounded-2xl border-2 border-slate-200 bg-white p-2 shadow-sm"
-              style={{ width: cardWidth, minWidth: cardWidth, maxWidth: cardWidth }}
+              className="mr-3 rounded-2xl border-2 border-slate-200 bg-white p-2.5 shadow-sm justify-between"
+              style={{
+                width: cardWidth,
+                minWidth: cardWidth,
+                maxWidth: cardWidth,
+                height: cardHeight,
+                minHeight: cardHeight,
+                maxHeight: cardHeight,
+              }}
             >
               <View className="h-24 w-full rounded-xl bg-slate-200" />
-              <View className="mx-auto mt-3 h-4 w-3/4 rounded bg-slate-200" />
+              <View className="mx-auto h-4 w-3/4 rounded bg-slate-200" />
             </View>
           ))}
         </ScrollView>
@@ -238,6 +246,7 @@ export default function HomeCategories() {
               key={category.id}
               category={category}
               width={cardWidth}
+              height={cardHeight}
             />
           ))}
         </ScrollView>
@@ -255,9 +264,11 @@ export default function HomeCategories() {
 function CategoryCard({
   category,
   width,
+  height,
 }: {
   category: Category;
   width: number;
+  height: number;
 }) {
   const [imageError, setImageError] = useState(false);
 
@@ -265,7 +276,7 @@ function CategoryCard({
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={`Browse ${category.name}`}
-      className="mr-3 overflow-hidden rounded-2xl border-2 border-[#E5E5E5] bg-white p-2 shadow-sm active:border-[#D8C7A7]"
+      className="mr-3 overflow-hidden rounded-2xl border-2 border-[#E5E5E5] bg-white p-2.5 shadow-sm active:border-[#D8C7A7]"
       onPress={() =>
         router.push({
           pathname: "/explore",
@@ -276,13 +287,17 @@ function CategoryCard({
         width,
         minWidth: width,
         maxWidth: width,
+        height,
+        minHeight: height,
+        maxHeight: height,
+        justifyContent: "space-between",
         transform: [{ scale: pressed ? 0.96 : 1 }],
       })}
     >
-      {/* 4:3 Aspect Ratio Container */}
+      {/* 4:3 Aspect Ratio Image Container */}
       <View
         className="w-full overflow-hidden rounded-xl bg-[#F5EFE5] items-center justify-center"
-        style={{ height: 96 }}
+        style={{ height: 96, width: "100%" }}
       >
         {category.image && !imageError ? (
           <Image
@@ -300,13 +315,16 @@ function CategoryCard({
         )}
       </View>
 
-      {/* Category Name */}
-      <Text
-        className="mt-2.5 truncate px-1 text-center text-xs font-bold text-[#202020]"
-        numberOfLines={1}
-      >
-        {category.name}
-      </Text>
+      {/* Category Name fixed-height container */}
+      <View className="h-7 w-full items-center justify-center px-1">
+        <Text
+          className="text-center text-xs font-bold text-[#202020]"
+          numberOfLines={1}
+          ellipsizeMode="tail"
+        >
+          {category.name}
+        </Text>
+      </View>
     </Pressable>
   );
 }
