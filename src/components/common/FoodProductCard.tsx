@@ -9,7 +9,7 @@ type FoodProductCardProps = {
   width: number;
   isInWishlist: boolean;
   cartQuantity?: number;
-  viewMode?: "grid" | "list" | "circle";
+  viewMode?: "grid" | "list";
   onSelect: (food: FoodProduct) => void;
   onCustomize: (food: FoodProduct) => void;
   onToggleWishlist: (food: FoodProduct) => void;
@@ -35,72 +35,6 @@ export default function FoodProductCard({
   const isAvailable =
     food.is_available !== false &&
     String(food.status || "Active").toLowerCase() === "active";
-
-  if (viewMode === "circle") {
-    const imageSize = Math.min(132, Math.max(0, width - 12));
-    return (
-      <View className="items-center" style={{ width }}>
-        <View className="relative" style={{ width: imageSize, height: imageSize }}>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={`View ${name}`}
-            className="h-full w-full items-center justify-center overflow-hidden rounded-full border-2 border-[#E7E0D8] bg-[#F5EFE5]"
-            onPress={() => onSelect(food)}
-          >
-            {image && !imageError ? (
-              <Image
-                accessible
-                accessibilityLabel={name}
-                className="h-full w-full rounded-full"
-                onError={() => setImageError(true)}
-                resizeMode="cover"
-                source={{ uri: image }}
-              />
-            ) : (
-              <UtensilsCrossed color="#A05C2A" size={32} />
-            )}
-            {!isAvailable ? (
-              <View
-                pointerEvents="none"
-                className="absolute inset-0 items-center justify-center rounded-full bg-black/45"
-              >
-                <Text className="text-center text-[9px] font-extrabold text-white">
-                  Unavailable
-                </Text>
-              </View>
-            ) : null}
-          </Pressable>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={isInWishlist ? `Remove ${name} from favorites` : `Add ${name} to favorites`}
-            className="absolute -right-1 -top-1 h-8 w-8 items-center justify-center rounded-full border border-white bg-white shadow-sm"
-            hitSlop={6}
-            onPress={() => onToggleWishlist(food)}
-          >
-            <Heart
-              color={isInWishlist ? "#E11D48" : "#64748B"}
-              fill={isInWishlist ? "#E11D48" : "transparent"}
-              size={15}
-            />
-          </Pressable>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={`Add ${name} to cart${cartQuantity > 0 ? `, ${cartQuantity} already in cart` : ""}`}
-            accessibilityState={{ disabled: !isAvailable }}
-            className={`absolute -bottom-1 -right-1 h-9 min-w-9 flex-row items-center justify-center rounded-full border-2 border-white px-2 shadow-sm ${isAvailable ? "bg-[#1A6A3B]" : "bg-slate-300"}`}
-            disabled={!isAvailable}
-            onPress={() => onCustomize(food)}
-          >
-            {isAvailable ? <Plus color="#FFFFFF" size={16} /> : null}
-            {isAvailable && cartQuantity > 0 ? (
-              <Text className="ml-0.5 text-[10px] font-bold text-white">{cartQuantity}</Text>
-            ) : null}
-          </Pressable>
-        </View>
-        <Text className="mt-2 text-xs font-black text-[#1A6A3B]">₹{price.toFixed(0)}</Text>
-      </View>
-    );
-  }
 
   if (viewMode === "list") {
     return (

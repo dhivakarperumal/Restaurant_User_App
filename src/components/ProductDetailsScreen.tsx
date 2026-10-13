@@ -60,6 +60,7 @@ function RecommendationSection({
   title,
   description,
   foods,
+  pageWidth,
   cardWidth,
   cartItems,
   wishlist,
@@ -70,6 +71,7 @@ function RecommendationSection({
   title: string;
   description: string;
   foods: FoodProduct[];
+  pageWidth: number;
   cardWidth: number;
   cartItems: ReturnType<typeof useCart>["items"];
   wishlist: FoodProduct[];
@@ -87,27 +89,35 @@ function RecommendationSection({
       </View>
       <ScrollView
         horizontal
-        contentContainerStyle={{ gap: 12, paddingHorizontal: 20, paddingBottom: 4 }}
+        pagingEnabled
+        contentContainerStyle={{ paddingBottom: 6 }}
         showsHorizontalScrollIndicator={false}
       >
-        {foods.map((item) => {
-          const itemId = getFoodId(item);
-          return (
-            <FoodProductCard
-              key={itemId}
-              food={item}
-              width={cardWidth}
-              viewMode="circle"
-              isInWishlist={wishlist.some((saved) => getFoodId(saved) === itemId)}
-              cartQuantity={cartItems
-                .filter((cartItem) => getFoodId(cartItem.food) === itemId)
-                .reduce((total, cartItem) => total + cartItem.quantity, 0)}
-              onSelect={onSelect}
-              onCustomize={onCustomize}
-              onToggleWishlist={onToggleWishlist}
-            />
-          );
-        })}
+        {Array.from({ length: Math.ceil(foods.length / 2) }, (_, pageIndex) => (
+          <View
+            key={pageIndex}
+            className="flex-row"
+            style={{ width: pageWidth, gap: 12, paddingHorizontal: 20 }}
+          >
+            {foods.slice(pageIndex * 2, pageIndex * 2 + 2).map((item) => {
+              const itemId = getFoodId(item);
+              return (
+                <FoodProductCard
+                  key={itemId}
+                  food={item}
+                  width={cardWidth}
+                  isInWishlist={wishlist.some((saved) => getFoodId(saved) === itemId)}
+                  cartQuantity={cartItems
+                    .filter((cartItem) => getFoodId(cartItem.food) === itemId)
+                    .reduce((total, cartItem) => total + cartItem.quantity, 0)}
+                  onSelect={onSelect}
+                  onCustomize={onCustomize}
+                  onToggleWishlist={onToggleWishlist}
+                />
+              );
+            })}
+          </View>
+        ))}
       </ScrollView>
     </View>
   );
@@ -257,7 +267,8 @@ function ProductDetailsContent({
         (food.cuisine_name &&
           item.cuisine_name?.toLowerCase() === food.cuisine_name.toLowerCase())),
   );
-  const recommendationCardWidth = Math.max(120, (screenWidth - 52) / 2);
+  const recommendationPageWidth = screenWidth;
+  const recommendationCardWidth = (recommendationPageWidth - 52) / 2;
 
   const toggleAddon = (option: FoodOption) => {
     setSelectedAddons((current) =>
@@ -582,6 +593,7 @@ function ProductDetailsContent({
             title="More in this category"
             description={`Explore more ${food.category_name || "menu"} favorites.`}
             foods={relatedByCategory}
+            pageWidth={recommendationPageWidth}
             cardWidth={recommendationCardWidth}
             cartItems={cartItems}
             wishlist={wishlist}
@@ -595,6 +607,7 @@ function ProductDetailsContent({
             title="More from this cuisine"
             description={`Discover more ${food.cuisine_name || "cuisine"} dishes.`}
             foods={relatedByCuisine}
+            pageWidth={recommendationPageWidth}
             cardWidth={recommendationCardWidth}
             cartItems={cartItems}
             wishlist={wishlist}
