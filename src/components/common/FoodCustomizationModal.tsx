@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import {
+  KeyboardAvoidingView,
   Modal,
+  Platform,
   Pressable,
   ScrollView,
   Text,
@@ -252,7 +254,10 @@ export default function FoodCustomizationModal({
       statusBarTranslucent
       onRequestClose={onClose}
     >
-      <View className="flex-1 justify-end bg-black/45">
+      <KeyboardAvoidingView
+        className="flex-1 justify-end bg-black/45"
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
         <View className="max-h-[90%] rounded-t-[28px] bg-white pb-8">
           <View className="flex-row items-center justify-between border-b border-slate-100 px-5 py-4">
             <View className="flex-1 pr-4">
@@ -276,6 +281,7 @@ export default function FoodCustomizationModal({
           <ScrollView
             className="shrink"
             contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 16, paddingBottom: 20 }}
+            keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
           >
             {addons.length > 0 && (
@@ -343,7 +349,7 @@ export default function FoodCustomizationModal({
               </Text>
               <TextInput
                 accessibilityLabel="Additional add-ons"
-                className="min-h-16 rounded-xl border border-slate-200 px-3 py-3 text-sm text-slate-700"
+                className="min-h-24 rounded-xl border border-slate-200 px-3 py-3 text-sm text-slate-700"
                 multiline
                 onChangeText={setAddonRequest}
                 placeholder="Enter extra add-ons, one per line (e.g. Extra sauce)"
@@ -362,7 +368,7 @@ export default function FoodCustomizationModal({
               </Text>
               <TextInput
                 accessibilityLabel="Additional customization"
-                className="min-h-16 rounded-xl border border-slate-200 px-3 py-3 text-sm text-slate-700"
+                className="min-h-24 rounded-xl border border-slate-200 px-3 py-3 text-sm text-slate-700"
                 multiline
                 onChangeText={setCustomizationRequest}
                 placeholder="e.g. Less oil, extra spicy, no onions"
@@ -413,7 +419,7 @@ export default function FoodCustomizationModal({
             </Pressable>
           </View>
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
