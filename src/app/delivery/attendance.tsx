@@ -241,6 +241,8 @@ export default function DeliveryAttendanceScreen() {
   }, [loadHistory, loadTodayData]);
 
   useEffect(() => {
+    // Start the initial API load and expose its loading state immediately.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void refreshAll();
   }, [refreshAll]);
 
