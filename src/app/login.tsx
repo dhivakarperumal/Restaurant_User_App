@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { router } from "expo-router";
-import { Eye, EyeOff } from "lucide-react-native";
+import { ArrowRight, Eye, EyeOff, LockKeyhole, UserRound } from "lucide-react-native";
 import {
   ActivityIndicator,
   Image,
@@ -105,57 +105,70 @@ export default function LoginScreen() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-[#F7F8F3]">
+    <SafeAreaView className="flex-1 bg-[#F6F5E9]">
+      <View pointerEvents="none" className="absolute -left-20 -top-24 h-64 w-64 rounded-full bg-[#174D32]" />
+      <View pointerEvents="none" className="absolute -right-24 -top-28 h-56 w-56 rounded-full bg-[#DDE8C7]" />
+      <View pointerEvents="none" className="absolute -bottom-28 -right-20 h-64 w-64 rounded-full bg-[#174D32]" />
+      <View pointerEvents="none" className="absolute -bottom-16 -left-16 h-40 w-40 rounded-full bg-[#E6EBCF]" />
       <KeyboardAvoidingView
         className="flex-1"
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
         <ScrollView
-          contentContainerStyle={{ flexGrow: 1, justifyContent: "center", padding: 24 }}
+          contentContainerStyle={{ flexGrow: 1, justifyContent: "center", paddingHorizontal: 24, paddingVertical: 28 }}
           keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
         >
-          <View className="w-full self-center" style={{ maxWidth: 440 }}>
-            <View className="mb-10 items-center">
+          <View className="w-full self-center" style={{ maxWidth: 480 }}>
+            <View className="mb-6 items-center">
               <Image
                 accessible
                 accessibilityLabel="Buy Food restaurant logo"
-                className="mb-5 h-32 w-32"
+                className="h-[76px] w-[76px] rounded-full"
                 resizeMode="contain"
                 source={require("../../assets/images/adminlogo.png")}
               />
-              <Text className="text-3xl font-bold text-slate-900">Welcome back</Text>
-              <Text className="mt-2 text-center text-base text-slate-500">
-                Sign in to find something delicious.
+              <Text className="mt-1 text-[25px] font-black tracking-tight text-[#145333]">
+                Buy Foods
+              </Text>
+              <Text className="mt-1 text-[10px] font-bold uppercase tracking-[4px] text-[#397653]">
+                Good food · Good mood
+              </Text>
+              <Text className="mt-5 text-center text-[34px] font-black leading-[40px] text-[#102D20]">
+                Welcome Back
+              </Text>
+              <Text className="mt-1 max-w-[320px] text-center text-base leading-6 text-[#62655F]">
+                Sign in to enjoy your favourite food, anytime, anywhere.
               </Text>
             </View>
 
-            <View className="rounded-3xl bg-white p-6 shadow-sm">
-              <Text className="mb-2 text-sm font-semibold text-slate-700">
-                Email or phone number
-              </Text>
-              <TextInput
-                accessibilityLabel="Email or phone number"
-                autoCapitalize="none"
-                autoComplete="username"
-                autoCorrect={false}
-                className="mb-5 rounded-xl border border-slate-200 bg-white px-4 py-4 text-base text-slate-900"
-                keyboardType="email-address"
-                onChangeText={setIdentifier}
-                onSubmitEditing={handleLogin}
-                placeholder="you@example.com"
-                placeholderTextColor="#94A3B8"
-                returnKeyType="next"
-                textContentType="username"
-                value={identifier}
-              />
+            <View className="rounded-[30px] border border-white/80 bg-white/95 p-5 shadow-xl shadow-[#173B27]/10">
+              <View className="mb-3 flex-row items-center rounded-2xl bg-[#F0F4E9] px-4">
+                <UserRound color="#35433B" size={21} />
+                <TextInput
+                  accessibilityLabel="Email or phone number"
+                  autoCapitalize="none"
+                  autoComplete="username"
+                  autoCorrect={false}
+                  className="ml-3 min-h-[62px] flex-1 py-3 text-base text-slate-900"
+                  keyboardType="email-address"
+                  onChangeText={setIdentifier}
+                  onSubmitEditing={handleLogin}
+                  placeholder="Email or phone number"
+                  placeholderTextColor="#858A83"
+                  returnKeyType="next"
+                  textContentType="username"
+                  value={identifier}
+                />
+              </View>
 
-              <Text className="mb-2 text-sm font-semibold text-slate-700">Password</Text>
-              <View className="mb-4 flex-row items-center rounded-xl border border-slate-200 bg-white pr-4">
+              <View className="mb-4 flex-row items-center rounded-2xl bg-[#F0F4E9] px-4">
+                <LockKeyhole color="#35433B" size={21} />
                 <TextInput
                   accessibilityLabel="Password"
                   autoCapitalize="none"
                   autoComplete="password"
-                  className="flex-1 px-4 py-4 text-base text-slate-900"
+                  className="ml-3 min-h-[62px] flex-1 py-3 text-base text-slate-900"
                   onChangeText={setPassword}
                   onSubmitEditing={handleLogin}
                   placeholder="Enter your password"
@@ -168,7 +181,8 @@ export default function LoginScreen() {
                 <Pressable
                   accessibilityLabel={isPasswordVisible ? "Hide password" : "Show password"}
                   accessibilityRole="button"
-                  hitSlop={10}
+                  className="h-11 w-9 items-center justify-center"
+                  hitSlop={8}
                   onPress={() => setIsPasswordVisible((visible) => !visible)}
                 >
                   {isPasswordVisible ? (
@@ -180,14 +194,14 @@ export default function LoginScreen() {
               </View>
 
               {errorMessage ? (
-                <Text accessibilityRole="alert" className="mb-4 text-sm text-red-600">
+                <Text accessibilityRole="alert" className="mb-4 px-1 text-sm font-medium text-red-600">
                   {errorMessage}
                 </Text>
               ) : null}
 
               <Pressable
                 accessibilityRole="button"
-                className={`mt-2 min-h-14 flex-row items-center justify-center rounded-xl bg-[#8EA66B] px-5 ${
+                className={`min-h-[62px] flex-row items-center justify-center rounded-full bg-[#17663D] px-5 shadow-lg shadow-[#145333]/20 ${
                   isSubmitting ? "opacity-70" : "active:opacity-80"
                 }`}
                 disabled={isSubmitting}
@@ -196,21 +210,25 @@ export default function LoginScreen() {
                 {isSubmitting ? (
                   <ActivityIndicator color="#FFFFFF" />
                 ) : (
-                  <Text className="text-base font-semibold text-white">Sign in</Text>
+                  <>
+                    <Text className="text-lg font-extrabold text-white">Sign in</Text>
+                    <ArrowRight color="#FFFFFF" size={23} strokeWidth={2.5} style={{ marginLeft: 12 }} />
+                  </>
                 )}
               </Pressable>
             </View>
 
-            <Text className="mt-7 text-center text-sm text-slate-500">
-              New to Buy Foods?{" "}
-              <Text
+            <View className="mt-6 items-center">
+              <Text className="text-base text-[#62655F]">New to Buy Foods?</Text>
+              <Pressable
                 accessibilityRole="link"
-                className="font-semibold text-[#1A6A3B]"
+                className="mt-1 min-h-11 flex-row items-center justify-center px-3"
                 onPress={() => router.push("/register")}
               >
-                Create an account
-              </Text>
-            </Text>
+                <Text className="text-lg font-extrabold text-[#145333]">Create an account</Text>
+                <ArrowRight color="#145333" size={19} strokeWidth={2.5} style={{ marginLeft: 7 }} />
+              </Pressable>
+            </View>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
