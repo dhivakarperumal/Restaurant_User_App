@@ -94,6 +94,7 @@ function RootTabs() {
             route.name === "login" ||
             route.name === "register" ||
             route.name === "checkout" ||
+            route.name === "product/[id]" ||
             route.name.startsWith("delivery/")
               ? "none"
               : "flex",
@@ -279,6 +280,7 @@ function RootTabs() {
       <Tabs.Screen name="checkout" options={{ href: null }} />
       <Tabs.Screen name="orders" options={{ href: null }} />
       <Tabs.Screen name="profile" options={{ title: "Profile" }} />
+      <Tabs.Screen name="product/[id]" options={{ title: "Product", href: null }} />
     </Tabs>
   );
 }

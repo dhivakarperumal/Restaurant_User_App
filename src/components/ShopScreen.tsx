@@ -31,7 +31,6 @@ import {
 } from "../lib/foods";
 import { useCart } from "../contexts/CartContext";
 import type { FoodProduct } from "../types/food";
-import FoodCustomizationModal from "./common/FoodCustomizationModal";
 import FoodProductCard from "./common/FoodProductCard";
 
 type ShopCategory = {
@@ -124,7 +123,6 @@ export default function ShopScreen() {
     category?: string | string[];
     cuisine?: string | string[];
     search?: string | string[];
-    food?: string | string[];
   }>();
   const [foods, setFoods] = useState<FoodProduct[]>([]);
   const [categories, setCategories] = useState<ShopCategory[]>([]);
@@ -148,9 +146,8 @@ export default function ShopScreen() {
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
   const [currentPage, setCurrentPage] = useState(1);
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const [selectedFood, setSelectedFood] = useState<FoodProduct | null>(null);
   const [actionError, setActionError] = useState("");
-  const { addItem, items: cartItems, wishlist, toggleWishlist } = useCart();
+  const { items: cartItems, wishlist, toggleWishlist } = useCart();
   const { width: screenWidth } = useWindowDimensions();
   const pageWidth = Math.max(0, screenWidth - 48);
   const cardWidth = (pageWidth - 12) / 2;
@@ -224,13 +221,6 @@ export default function ShopScreen() {
     void fetchMenuData();
   }, [fetchMenuData]);
 
-  useEffect(() => {
-    const foodId = firstParam(params.food);
-    if (!foodId || foods.length === 0) return;
-    const matchedFood = foods.find((food) => getFoodId(food) === foodId);
-    if (matchedFood) setSelectedFood(matchedFood);
-  }, [foods, params.food]);
-
   const setSearchFilter = (value: string) => {
     setSearchQuery(value);
     setCurrentPage(1);
@@ -250,13 +240,7 @@ export default function ShopScreen() {
   };
 
   const selectFood = (food: FoodProduct) => {
-    setSelectedFood(food);
-    router.setParams({ food: getFoodId(food) });
-  };
-
-  const closeFoodModal = () => {
-    setSelectedFood(null);
-    router.setParams({ food: undefined });
+    router.push({ pathname: "/product/[id]", params: { id: getFoodId(food) } });
   };
 
   const filteredFoods = useMemo(() => {
@@ -435,7 +419,6 @@ export default function ShopScreen() {
   };
 
   const openCustomizer = (food: FoodProduct) => selectFood(food);
-  const closeModal = () => closeFoodModal();
 
   return (
     <ScrollView
@@ -850,12 +833,6 @@ export default function ShopScreen() {
         </View>
       ) : null}
 
-      <FoodCustomizationModal
-        key={selectedFood ? getFoodId(selectedFood) : "no-food-selected"}
-        food={selectedFood}
-        onClose={closeModal}
-        onAdd={addItem}
-      />
     </ScrollView>
   );
 }
