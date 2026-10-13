@@ -133,9 +133,9 @@ export default function LoginScreen() {
         />
         <Image
           accessible={false}
-          className="absolute -bottom-6 -right-7 h-40 w-40"
+          className="absolute bottom-0 right-0 h-40 w-40"
           resizeMode="contain"
-          source={require("../../assets/images/login3.png")}
+          source={require("../../assets/images/login5.png")}
         />
       </View>
       <KeyboardAvoidingView
