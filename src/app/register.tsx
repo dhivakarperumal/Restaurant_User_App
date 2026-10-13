@@ -1,6 +1,15 @@
 import { useState } from "react";
 import { router } from "expo-router";
-import { Check, Eye, EyeOff, LockKeyhole, Mail, Phone, UserRound } from "lucide-react-native";
+import {
+  ArrowRight,
+  Check,
+  Eye,
+  EyeOff,
+  LockKeyhole,
+  Mail,
+  Phone,
+  UserRound,
+} from "lucide-react-native";
 import {
   ActivityIndicator,
   Image,
@@ -104,8 +113,8 @@ export default function RegisterScreen() {
 
   if (isRegistered) {
     return (
-      <SafeAreaView className="flex-1 items-center justify-center bg-[#F7F8F3] px-6">
-        <View className="w-full max-w-[440px] items-center rounded-3xl bg-white p-7 shadow-sm">
+      <SafeAreaView className="flex-1 items-center justify-center bg-[#F6F5E9] px-6">
+        <View className="w-full max-w-[440px] items-center rounded-[30px] border border-white/80 bg-white/95 p-7 shadow-xl shadow-[#173B27]/10">
           <View className="h-16 w-16 items-center justify-center rounded-full bg-emerald-50">
             <Check color="#16803C" size={32} />
           </View>
@@ -117,10 +126,11 @@ export default function RegisterScreen() {
           </Text>
           <Pressable
             accessibilityRole="button"
-            className="mt-6 min-h-14 w-full items-center justify-center rounded-xl bg-[#1A6A3B] px-5"
+            className="mt-6 min-h-[60px] w-full flex-row items-center justify-center rounded-full bg-[#17663D] px-5"
             onPress={() => router.replace("/login")}
           >
-            <Text className="text-base font-semibold text-white">Go to sign in</Text>
+            <Text className="text-base font-extrabold text-white">Go to sign in</Text>
+            <ArrowRight color="#FFFFFF" size={20} strokeWidth={2.5} style={{ marginLeft: 8 }} />
           </Pressable>
         </View>
       </SafeAreaView>
@@ -128,45 +138,62 @@ export default function RegisterScreen() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-[#F7F8F3]">
+    <SafeAreaView className="flex-1 bg-[#F6F5E9]">
+      <View pointerEvents="none" className="absolute -left-20 -top-24 h-64 w-64 rounded-full bg-[#174D32]" />
+      <View pointerEvents="none" className="absolute -right-24 -top-28 h-56 w-56 rounded-full bg-[#DDE8C7]" />
+      <View pointerEvents="none" className="absolute -bottom-28 -right-20 h-64 w-64 rounded-full bg-[#174D32]" />
+      <View pointerEvents="none" className="absolute -bottom-16 -left-16 h-40 w-40 rounded-full bg-[#E6EBCF]" />
       <KeyboardAvoidingView
         className="flex-1"
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
         <ScrollView
-          contentContainerStyle={{ flexGrow: 1, justifyContent: "center", padding: 24 }}
+          contentContainerStyle={{
+            flexGrow: 1,
+            justifyContent: "center",
+            paddingHorizontal: 24,
+            paddingVertical: 24,
+          }}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <View className="w-full self-center" style={{ maxWidth: 440 }}>
-            <View className="mb-7 items-center">
+          <View className="w-full self-center" style={{ maxWidth: 480 }}>
+            <View className="mb-5 items-center">
               <Image
                 accessible
                 accessibilityLabel="Buy Food restaurant logo"
-                className="mb-4 h-24 w-24"
+                className="h-[68px] w-[68px] rounded-full"
                 resizeMode="contain"
                 source={require("../../assets/images/adminlogo.png")}
               />
-              <Text className="text-3xl font-bold text-slate-900">Create account</Text>
-              <Text className="mt-2 text-center text-sm text-slate-500">
-                Join Buy Foods for fresh food and easy ordering.
+              <Text className="mt-1 text-[24px] font-black tracking-tight text-[#145333]">
+                Buy Foods
+              </Text>
+              <Text className="mt-1 text-[10px] font-bold uppercase tracking-[4px] text-[#397653]">
+                Good food · Good mood
+              </Text>
+              <Text className="mt-4 text-center text-[32px] font-black leading-[36px] text-[#102D20]">
+                Create Your Account
+              </Text>
+              <Text className="mt-1 max-w-[330px] text-center text-base leading-6 text-[#62655F]">
+                Join us and explore delicious food, special offers and more!
               </Text>
             </View>
 
-            <View className="rounded-3xl bg-white p-6 shadow-sm">
+            <View className="rounded-[30px] border border-white/80 bg-white/95 p-4 shadow-xl shadow-[#173B27]/10">
               <FormField
                 error={errors.name}
-                icon={<UserRound color="#64748B" size={18} />}
+                icon={<UserRound color="#145333" size={22} />}
                 label="Full name"
               >
                 <TextInput
                   accessibilityLabel="Full name"
                   autoCapitalize="words"
                   autoComplete="name"
-                  className="flex-1 py-4 text-base text-slate-900"
+                  className="min-h-7 p-0 text-sm text-slate-900"
                   onChangeText={(value) => updateField("name", value)}
                   placeholder="Enter your full name"
-                  placeholderTextColor="#94A3B8"
+                  placeholderTextColor="#92978F"
                   returnKeyType="next"
                   textContentType="name"
                   value={name}
@@ -175,7 +202,7 @@ export default function RegisterScreen() {
 
               <FormField
                 error={errors.email}
-                icon={<Mail color="#64748B" size={18} />}
+                icon={<Mail color="#145333" size={22} />}
                 label="Email address"
               >
                 <TextInput
@@ -183,11 +210,11 @@ export default function RegisterScreen() {
                   autoCapitalize="none"
                   autoComplete="email"
                   autoCorrect={false}
-                  className="flex-1 py-4 text-base text-slate-900"
+                  className="min-h-7 p-0 text-sm text-slate-900"
                   keyboardType="email-address"
                   onChangeText={(value) => updateField("email", value)}
                   placeholder="you@example.com"
-                  placeholderTextColor="#94A3B8"
+                  placeholderTextColor="#92978F"
                   returnKeyType="next"
                   textContentType="emailAddress"
                   value={email}
@@ -196,17 +223,17 @@ export default function RegisterScreen() {
 
               <FormField
                 error={errors.phone}
-                icon={<Phone color="#64748B" size={18} />}
+                icon={<Phone color="#145333" size={22} />}
                 label="Phone number"
               >
                 <TextInput
                   accessibilityLabel="Phone number"
                   autoComplete="tel"
-                  className="flex-1 py-4 text-base text-slate-900"
+                  className="min-h-7 p-0 text-sm text-slate-900"
                   keyboardType="phone-pad"
                   onChangeText={(value) => updateField("phone", value)}
                   placeholder="Enter your phone number"
-                  placeholderTextColor="#94A3B8"
+                  placeholderTextColor="#92978F"
                   returnKeyType="next"
                   textContentType="telephoneNumber"
                   value={phone}
@@ -215,17 +242,17 @@ export default function RegisterScreen() {
 
               <FormField
                 error={errors.password}
-                icon={<LockKeyhole color="#64748B" size={18} />}
-                label="Password"
+                icon={<LockKeyhole color="#145333" size={22} />}
+                label="Create a password"
               >
                 <TextInput
                   accessibilityLabel="Password"
                   autoCapitalize="none"
                   autoComplete="new-password"
-                  className="flex-1 py-4 text-base text-slate-900"
+                  className="min-h-7 flex-1 p-0 text-sm text-slate-900"
                   onChangeText={(value) => updateField("password", value)}
                   placeholder="At least 6 characters"
-                  placeholderTextColor="#94A3B8"
+                  placeholderTextColor="#92978F"
                   returnKeyType="next"
                   secureTextEntry={!isPasswordVisible}
                   textContentType="newPassword"
@@ -234,7 +261,8 @@ export default function RegisterScreen() {
                 <Pressable
                   accessibilityLabel={isPasswordVisible ? "Hide password" : "Show password"}
                   accessibilityRole="button"
-                  hitSlop={10}
+                  className="h-9 w-9 items-center justify-center"
+                  hitSlop={8}
                   onPress={() => setIsPasswordVisible((visible) => !visible)}
                 >
                   {isPasswordVisible ? (
@@ -247,18 +275,18 @@ export default function RegisterScreen() {
 
               <FormField
                 error={errors.confirmPassword}
-                icon={<LockKeyhole color="#64748B" size={18} />}
+                icon={<LockKeyhole color="#145333" size={22} />}
                 label="Confirm password"
               >
                 <TextInput
                   accessibilityLabel="Confirm password"
                   autoCapitalize="none"
                   autoComplete="new-password"
-                  className="flex-1 py-4 text-base text-slate-900"
+                  className="min-h-7 flex-1 p-0 text-sm text-slate-900"
                   onChangeText={(value) => updateField("confirmPassword", value)}
                   onSubmitEditing={handleRegister}
                   placeholder="Re-enter your password"
-                  placeholderTextColor="#94A3B8"
+                  placeholderTextColor="#92978F"
                   returnKeyType="go"
                   secureTextEntry={!isConfirmPasswordVisible}
                   textContentType="newPassword"
@@ -269,7 +297,8 @@ export default function RegisterScreen() {
                     isConfirmPasswordVisible ? "Hide confirm password" : "Show confirm password"
                   }
                   accessibilityRole="button"
-                  hitSlop={10}
+                  className="h-9 w-9 items-center justify-center"
+                  hitSlop={8}
                   onPress={() => setIsConfirmPasswordVisible((visible) => !visible)}
                 >
                   {isConfirmPasswordVisible ? (
@@ -281,7 +310,7 @@ export default function RegisterScreen() {
               </FormField>
 
               {errorMessage ? (
-                <Text accessibilityRole="alert" className="mb-3 text-sm text-red-600">
+                <Text accessibilityRole="alert" className="mb-3 px-1 text-sm font-medium text-red-600">
                   {errorMessage}
                 </Text>
               ) : null}
@@ -289,7 +318,7 @@ export default function RegisterScreen() {
               <Pressable
                 accessibilityRole="button"
                 accessibilityState={{ disabled: isSubmitting }}
-                className={`mt-2 min-h-14 flex-row items-center justify-center rounded-xl bg-[#1A6A3B] px-5 ${
+                className={`mt-1 min-h-[60px] flex-row items-center justify-center rounded-full bg-[#17663D] px-5 shadow-lg shadow-[#145333]/20 ${
                   isSubmitting ? "opacity-70" : "active:opacity-80"
                 }`}
                 disabled={isSubmitting}
@@ -298,21 +327,25 @@ export default function RegisterScreen() {
                 {isSubmitting ? (
                   <ActivityIndicator color="#FFFFFF" />
                 ) : (
-                  <Text className="text-base font-semibold text-white">Create account</Text>
+                  <>
+                    <Text className="text-base font-extrabold text-white">Create Account</Text>
+                    <ArrowRight color="#FFFFFF" size={21} strokeWidth={2.5} style={{ marginLeft: 9 }} />
+                  </>
                 )}
               </Pressable>
             </View>
 
-            <Text className="mt-6 text-center text-sm text-slate-500">
-              Already have an account?{" "}
-              <Text
+            <View className="mt-5 flex-row flex-wrap items-center justify-center">
+              <Text className="text-sm text-[#62655F]">Already have an account?</Text>
+              <Pressable
                 accessibilityRole="link"
-                className="font-semibold text-[#1A6A3B]"
+                className="min-h-11 flex-row items-center justify-center px-2"
                 onPress={() => router.replace("/login")}
               >
-                Sign in
-              </Text>
-            </Text>
+                <Text className="text-base font-extrabold text-[#145333]">Sign in</Text>
+                <ArrowRight color="#145333" size={17} strokeWidth={2.5} style={{ marginLeft: 5 }} />
+              </Pressable>
+            </View>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -332,15 +365,21 @@ function FormField({
   label: string;
 }) {
   return (
-    <View className="mb-4">
-      <Text className="mb-2 text-sm font-semibold text-slate-700">{label}</Text>
+    <View className="mb-3">
       <View
-        className={`flex-row items-center rounded-xl border bg-white px-4 ${
-          error ? "border-red-400" : "border-slate-200"
+        className={`min-h-[70px] flex-row items-center rounded-2xl border px-2 ${
+          error ? "border-red-400 bg-red-50" : "border-transparent bg-[#F0F4E9]"
         }`}
       >
-        <View className="mr-3">{icon}</View>
-        {children}
+        <View className="mr-3 h-[52px] w-[52px] items-center justify-center rounded-2xl bg-[#F7F8EF]">
+          {icon}
+        </View>
+        <View className="min-w-0 flex-1 py-2 pr-2">
+          <Text className="mb-0.5 text-sm font-semibold text-[#747A73]">{label}</Text>
+          <View className="flex-row items-center">
+            <View className="min-w-0 flex-1">{children}</View>
+          </View>
+        </View>
       </View>
       {error ? (
         <Text accessibilityRole="alert" className="mt-1 text-xs text-red-600">
