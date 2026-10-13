@@ -2,9 +2,9 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Pressable,
+  Platform,
   RefreshControl,
   ScrollView,
-  Share,
   Text,
   TextInput,
   View,
@@ -457,17 +457,45 @@ export default function DeliveryAttendanceScreen() {
     ]);
     const csv = [headers, ...rows]
       .map((row) => row.map(csvCell).join(","))
-      .join("\n");
+      .join("\r\n");
     try {
-      await Share.share({
-        title: "My attendance history",
-        message: csv,
+      const filename = `attendance-history-${new Date().toISOString().slice(0, 10)}.csv`;
+      const fileContents = `\uFEFF${csv}`;
+
+      if (Platform.OS === "web") {
+        const blob = new Blob([fileContents], { type: "text/csv;charset=utf-8" });
+        const fileUrl = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = fileUrl;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        setTimeout(() => URL.revokeObjectURL(fileUrl), 1000);
+        return;
+      }
+
+      const [{ File, Paths }, Sharing] = await Promise.all([
+        import("expo-file-system"),
+        import("expo-sharing"),
+      ]);
+      const file = new File(Paths.cache, filename);
+      file.create({ overwrite: true });
+      file.write(fileContents);
+
+      if (!(await Sharing.isAvailableAsync())) {
+        throw new Error("File sharing is not available on this device.");
+      }
+      await Sharing.shareAsync(file.uri, {
+        dialogTitle: "Save attendance history",
+        mimeType: "text/csv",
+        UTI: "public.comma-separated-values-text",
       });
     } catch (error: unknown) {
       console.error("Failed to share attendance history:", error);
       showAlert({
         title: "Could not export history",
-        message: getApiErrorMessage(error, "Unable to share the attendance CSV."),
+        message: getApiErrorMessage(error, "Unable to download the attendance Excel file."),
         variant: "error",
       });
     }
