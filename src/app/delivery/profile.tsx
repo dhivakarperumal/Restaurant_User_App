@@ -1,5 +1,5 @@
-import DeliveryPlaceholderScreen from "../../components/delivery/DeliveryPlaceholderScreen";
+import DeliveryProfileContent from "../../components/delivery/DeliveryProfileScreen";
 
 export default function DeliveryProfileScreen() {
-  return <DeliveryPlaceholderScreen page="profile" />;
+  return <DeliveryProfileContent />;
 }

@@ -1,5 +1,5 @@
-import DeliveryPlaceholderScreen from "../../components/delivery/DeliveryPlaceholderScreen";
+import DeliveryEarningsContent from "../../components/delivery/DeliveryEarningsScreen";
 
 export default function DeliveryEarningsScreen() {
-  return <DeliveryPlaceholderScreen page="earnings" />;
+  return <DeliveryEarningsContent />;
 }
