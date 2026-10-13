@@ -365,7 +365,7 @@ function FormField({
         }`}
       >
         {icon}
-        <View className="min-w-0 flex-1">{children}</View>
+        <View className="min-w-0 flex-1 flex-row items-center">{children}</View>
       </View>
       {error ? (
         <Text accessibilityRole="alert" className="mt-1 text-xs text-red-600">
