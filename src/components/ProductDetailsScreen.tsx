@@ -17,6 +17,7 @@ import {
   Text,
   TextInput,
   View,
+  useWindowDimensions,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useCart } from "../contexts/CartContext";
@@ -208,6 +209,7 @@ function ProductDetailsContent({
   } = useCart();
   const [customizingFood, setCustomizingFood] = useState<FoodProduct | null>(null);
   const [recommendationError, setRecommendationError] = useState("");
+  const { width: screenWidth } = useWindowDimensions();
   const addons = useMemo(() => parseAddonChoices(food.addons), [food]);
   const customizationGroups = useMemo(
     () => parseCustomizationGroups(food.customizations),
@@ -255,7 +257,7 @@ function ProductDetailsContent({
         (food.cuisine_name &&
           item.cuisine_name?.toLowerCase() === food.cuisine_name.toLowerCase())),
   );
-  const recommendationCardWidth = 96;
+  const recommendationCardWidth = Math.max(120, (screenWidth - 52) / 2);
 
   const toggleAddon = (option: FoodOption) => {
     setSelectedAddons((current) =>
