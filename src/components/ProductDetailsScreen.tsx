@@ -256,7 +256,7 @@ function ProductDetailsContent({
         (food.cuisine_name &&
           item.cuisine_name?.toLowerCase() === food.cuisine_name.toLowerCase())),
   );
-  const recommendationCardWidth = Math.min(220, Math.max(170, screenWidth * 0.58));
+  const recommendationCardWidth = (Math.max(0, screenWidth - 48) - 12) / 2;
 
   const toggleAddon = (option: FoodOption) => {
     setSelectedAddons((current) =>
