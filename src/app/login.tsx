@@ -115,7 +115,7 @@ export default function LoginScreen() {
       <View pointerEvents="none" className="absolute inset-0 overflow-hidden">
         <Image
           accessible={false}
-          className="absolute -left-7 -top-6 h-44 w-36"
+          className="absolute left-0 -top-6 h-44 w-36"
           resizeMode="contain"
           source={require("../../assets/images/login1.png")}
         />
@@ -127,15 +127,15 @@ export default function LoginScreen() {
         />
         <Image
           accessible={false}
-          className="absolute -bottom-6 -left-7 h-40 w-40"
+          className="absolute -bottom-0 -left-0 h-40 w-40"
           resizeMode="contain"
-          source={require("../../assets/images/login1.png")}
+          source={require("../../assets/images/login4.png")}
         />
         <Image
           accessible={false}
           className="absolute -bottom-6 -right-7 h-40 w-40"
           resizeMode="contain"
-          source={require("../../assets/images/login1.png")}
+          source={require("../../assets/images/login3.png")}
         />
       </View>
       <KeyboardAvoidingView
