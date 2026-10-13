@@ -3,10 +3,8 @@ import { router, useLocalSearchParams } from "expo-router";
 import {
   ArrowLeft,
   Check,
-  Clock3,
   Minus,
   Plus,
-  Star,
   UtensilsCrossed,
 } from "lucide-react-native";
 import {
@@ -19,11 +17,14 @@ import {
   Text,
   TextInput,
   View,
+  useWindowDimensions,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useCart } from "../contexts/CartContext";
 import { parseAddonChoices, parseCustomizationGroups } from "../lib/foodOptions";
 import api from "../lib/api";
+import FoodCustomizationModal from "./common/FoodCustomizationModal";
+import FoodProductCard from "./common/FoodProductCard";
 import {
   getFoodDiscountPercentage,
   getFoodId,
@@ -55,10 +56,67 @@ function getFoodImages(food: FoodProduct): string[] {
   });
 }
 
+function RecommendationSection({
+  title,
+  description,
+  foods,
+  cardWidth,
+  cartItems,
+  wishlist,
+  onSelect,
+  onCustomize,
+  onToggleWishlist,
+}: {
+  title: string;
+  description: string;
+  foods: FoodProduct[];
+  cardWidth: number;
+  cartItems: ReturnType<typeof useCart>["items"];
+  wishlist: FoodProduct[];
+  onSelect: (food: FoodProduct) => void;
+  onCustomize: (food: FoodProduct) => void;
+  onToggleWishlist: (food: FoodProduct) => void;
+}) {
+  if (foods.length === 0) return null;
+
+  return (
+    <View className="mt-8">
+      <View className="mb-3 px-5">
+        <Text className="text-lg font-extrabold text-[#17251E]">{title}</Text>
+        <Text className="mt-1 text-xs text-slate-500">{description}</Text>
+      </View>
+      <ScrollView
+        horizontal
+        contentContainerStyle={{ gap: 12, paddingHorizontal: 20, paddingBottom: 4 }}
+        showsHorizontalScrollIndicator={false}
+      >
+        {foods.map((item) => {
+          const itemId = getFoodId(item);
+          return (
+            <FoodProductCard
+              key={itemId}
+              food={item}
+              width={cardWidth}
+              isInWishlist={wishlist.some((saved) => getFoodId(saved) === itemId)}
+              cartQuantity={cartItems
+                .filter((cartItem) => getFoodId(cartItem.food) === itemId)
+                .reduce((total, cartItem) => total + cartItem.quantity, 0)}
+              onSelect={onSelect}
+              onCustomize={onCustomize}
+              onToggleWishlist={onToggleWishlist}
+            />
+          );
+        })}
+      </ScrollView>
+    </View>
+  );
+}
+
 export default function ProductDetailsScreen() {
   const { id: idParam } = useLocalSearchParams<{ id?: string | string[] }>();
   const foodId = firstParam(idParam);
   const [food, setFood] = useState<FoodProduct | null>(null);
+  const [foods, setFoods] = useState<FoodProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
   const [retryCount, setRetryCount] = useState(0);
@@ -71,6 +129,7 @@ export default function ProductDetailsScreen() {
         const matchedFood = foods.find((item) => getFoodId(item) === foodId);
         if (!matchedFood) throw new Error("The requested menu item was not found.");
         if (active) {
+          setFoods(foods);
           setFood(matchedFood);
           setLoadError("");
         }
@@ -130,12 +189,26 @@ export default function ProductDetailsScreen() {
     );
   }
 
-  return <ProductDetailsContent key={foodId} food={food} />;
+  return <ProductDetailsContent key={foodId} food={food} foods={foods} />;
 }
 
-function ProductDetailsContent({ food }: { food: FoodProduct }) {
+function ProductDetailsContent({
+  food,
+  foods,
+}: {
+  food: FoodProduct;
+  foods: FoodProduct[];
+}) {
   const insets = useSafeAreaInsets();
-  const { addItem } = useCart();
+  const {
+    addItem,
+    items: cartItems,
+    wishlist,
+    toggleWishlist,
+  } = useCart();
+  const [customizingFood, setCustomizingFood] = useState<FoodProduct | null>(null);
+  const [recommendationError, setRecommendationError] = useState("");
+  const { width: screenWidth } = useWindowDimensions();
   const addons = useMemo(() => parseAddonChoices(food.addons), [food]);
   const customizationGroups = useMemo(
     () => parseCustomizationGroups(food.customizations),
@@ -164,6 +237,26 @@ function ProductDetailsContent({ food }: { food: FoodProduct }) {
   const available =
     food.is_available !== false &&
     String(food.status ?? "Active").toLowerCase() === "active";
+  const foodId = getFoodId(food);
+  const relatedByCategory = foods.filter(
+    (item) =>
+      getFoodId(item) !== foodId &&
+      ((food.category_id != null &&
+        item.category_id != null &&
+        String(item.category_id) === String(food.category_id)) ||
+        (food.category_name &&
+          item.category_name?.toLowerCase() === food.category_name.toLowerCase())),
+  );
+  const relatedByCuisine = foods.filter(
+    (item) =>
+      getFoodId(item) !== foodId &&
+      ((food.cuisine_id != null &&
+        item.cuisine_id != null &&
+        String(item.cuisine_id) === String(food.cuisine_id)) ||
+        (food.cuisine_name &&
+          item.cuisine_name?.toLowerCase() === food.cuisine_name.toLowerCase())),
+  );
+  const recommendationCardWidth = Math.min(220, Math.max(170, screenWidth * 0.58));
 
   const toggleAddon = (option: FoodOption) => {
     setSelectedAddons((current) =>
@@ -223,9 +316,36 @@ function ProductDetailsContent({ food }: { food: FoodProduct }) {
     }
   };
 
+  const handleRecommendationWishlist = async (item: FoodProduct) => {
+    setRecommendationError("");
+    try {
+      await toggleWishlist(item);
+    } catch (error) {
+      console.error("Failed to update product recommendation wishlist:", error);
+      setRecommendationError("We could not update your favorites. Please try again.");
+    }
+  };
+
   const imageUri = images[activeImage];
   const discount = getFoodDiscountPercentage(food);
   const isVeg = String(food.food_type ?? "").toLowerCase() === "veg";
+  const productDetails = [
+    food.category_name ? { label: "Category", value: food.category_name } : null,
+    food.subcategory_name ? { label: "Subcategory", value: food.subcategory_name } : null,
+    food.cuisine_name ? { label: "Cuisine", value: food.cuisine_name } : null,
+    food.food_type
+      ? { label: "Food type", value: isVeg ? "Vegetarian" : "Non-vegetarian" }
+      : null,
+    food.portion_size ? { label: "Portion", value: food.portion_size } : null,
+    Number(food.preparation_time) > 0
+      ? { label: "Preparation time", value: `${food.preparation_time} min` }
+      : null,
+    Number(food.rating) > 0
+      ? { label: "Rating", value: `${Number(food.rating).toFixed(1)} / 5` }
+      : null,
+    food.is_spicy === true ? { label: "Spice level", value: "Spicy" } : null,
+    { label: "Availability", value: available ? "Available" : "Currently unavailable" },
+  ].filter((detail): detail is { label: string; value: string } => detail !== null);
 
   return (
     <KeyboardAvoidingView
@@ -294,50 +414,76 @@ function ProductDetailsContent({ food }: { food: FoodProduct }) {
 
           <View className="px-5 pb-6 pt-4">
             <View className="mb-3 flex-row flex-wrap items-center gap-2">
-              <View className="flex-row items-center rounded-full bg-emerald-50 px-2.5 py-1.5">
-                <View className={`mr-1.5 h-2.5 w-2.5 rounded-sm border ${isVeg ? "border-emerald-700" : "border-rose-700"}`}>
-                  <View className={`m-[2px] h-1 w-1 rounded-full ${isVeg ? "bg-emerald-700" : "bg-rose-700"}`} />
+              {food.food_type ? (
+                <View className={`flex-row items-center rounded-full px-2.5 py-1.5 ${isVeg ? "bg-emerald-50" : "bg-rose-50"}`}>
+                  <View className={`mr-1.5 h-2.5 w-2.5 items-center justify-center rounded-sm border ${isVeg ? "border-emerald-700" : "border-rose-700"}`}>
+                    <View className={`h-1 w-1 rounded-full ${isVeg ? "bg-emerald-700" : "bg-rose-700"}`} />
+                  </View>
+                  <Text className={`text-xs font-bold ${isVeg ? "text-emerald-800" : "text-rose-800"}`}>
+                    {isVeg ? "Vegetarian" : "Non-vegetarian"}
+                  </Text>
                 </View>
-                <Text className="text-xs font-bold text-emerald-800">
-                  {food.category_name || "Main Course"}
-                </Text>
-              </View>
-              {food.cuisine_name ? (
-                <View className="rounded-full bg-slate-100 px-2.5 py-1.5">
-                  <Text className="text-xs font-semibold text-slate-600">{food.cuisine_name}</Text>
+              ) : null}
+              {food.is_spicy === true ? (
+                <View className="rounded-full bg-amber-50 px-2.5 py-1.5">
+                  <Text className="text-xs font-bold text-amber-800">Spicy</Text>
+                </View>
+              ) : null}
+              {food.featured === true ? (
+                <View className="rounded-full bg-orange-50 px-2.5 py-1.5">
+                  <Text className="text-xs font-bold text-orange-800">Chef&apos;s pick</Text>
                 </View>
               ) : null}
             </View>
 
             <Text className="text-2xl font-black leading-8 text-[#17251E]">
-              {getFoodName(food)}
+            {getFoodName(food)}
             </Text>
-            {food.description ? (
-              <Text className="mt-2 text-sm leading-6 text-slate-600">{food.description}</Text>
-            ) : null}
-
-            <View className="mt-4 flex-row flex-wrap items-center gap-4">
-              {food.portion_size ? (
-                <View className="flex-row items-center">
-                  <UtensilsCrossed color="#64748B" size={15} />
-                  <Text className="ml-2 text-sm text-slate-600">{food.portion_size}</Text>
-                </View>
-              ) : null}
-              {Number(food.preparation_time) > 0 ? (
-                <View className="flex-row items-center">
-                  <Clock3 color="#64748B" size={15} />
-                  <Text className="ml-2 text-sm text-slate-600">{food.preparation_time} min</Text>
-                </View>
-              ) : null}
-              {Number(food.rating) > 0 ? (
-                <View className="flex-row items-center">
-                  <Star color="#E7A626" fill="#E7A626" size={15} />
-                  <Text className="ml-1.5 text-sm font-semibold text-slate-600">
-                    {Number(food.rating).toFixed(1)}
+            <View className="mt-2 flex-row items-baseline">
+            <Text className="text-xl font-black text-[#1A6A3B]">
+              ₹{getFoodPrice(food).toFixed(2)}
+            </Text>
+            {Number(food.mrp) > getFoodPrice(food) ? (
+              <>
+                <Text className="ml-2 text-sm text-slate-400 line-through">
+                  ₹{Number(food.mrp).toFixed(2)}
+                </Text>
+                {discount > 0 ? (
+                  <Text className="ml-2 text-xs font-bold text-[#E86D16]">
+                    Save {Math.round(discount)}%
                   </Text>
-                </View>
-              ) : null}
+                ) : null}
+              </>
+            ) : null}
             </View>
+            {food.description ? (
+            <Text className="mt-2 text-sm leading-6 text-slate-600">{food.description}</Text>
+            ) : (
+            <Text className="mt-2 text-sm leading-6 text-slate-600">
+              Freshly prepared to order.
+            </Text>
+            )}
+
+            {productDetails.length > 0 ? (
+            <View className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+              <Text className="mb-3 text-base font-extrabold text-[#17251E]">
+                Food details
+              </Text>
+              <View className="flex-row flex-wrap">
+                {productDetails.map((detail) => (
+                  <View
+                    key={detail.label}
+                    className="mb-3 w-1/2 pr-2"
+                  >
+                    <Text className="text-xs text-slate-500">{detail.label}</Text>
+                    <Text className="mt-1 text-sm font-semibold text-slate-800">
+                      {detail.value}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+            ) : null}
 
             {addons.map((option) => {
               const selected = selectedAddons.some((item) => item.id === option.id);
@@ -426,6 +572,37 @@ function ProductDetailsContent({ food }: { food: FoodProduct }) {
               </Text>
             ) : null}
           </View>
+          {recommendationError ? (
+            <Text accessibilityRole="alert" className="mx-5 mt-4 text-sm font-semibold text-rose-700">
+              {recommendationError}
+            </Text>
+          ) : null}
+          <RecommendationSection
+            title="More in this category"
+            description={`Explore more ${food.category_name || "menu"} favorites.`}
+            foods={relatedByCategory}
+            cardWidth={recommendationCardWidth}
+            cartItems={cartItems}
+            wishlist={wishlist}
+            onSelect={(item) =>
+              router.push({ pathname: "/product/[id]", params: { id: getFoodId(item) } })
+            }
+            onCustomize={setCustomizingFood}
+            onToggleWishlist={(item) => void handleRecommendationWishlist(item)}
+          />
+          <RecommendationSection
+            title="More from this cuisine"
+            description={`Discover more ${food.cuisine_name || "cuisine"} dishes.`}
+            foods={relatedByCuisine}
+            cardWidth={recommendationCardWidth}
+            cartItems={cartItems}
+            wishlist={wishlist}
+            onSelect={(item) =>
+              router.push({ pathname: "/product/[id]", params: { id: getFoodId(item) } })
+            }
+            onCustomize={setCustomizingFood}
+            onToggleWishlist={(item) => void handleRecommendationWishlist(item)}
+          />
         </ScrollView>
 
         <View
@@ -468,6 +645,12 @@ function ProductDetailsContent({ food }: { food: FoodProduct }) {
             </Pressable>
           </View>
         </View>
+        <FoodCustomizationModal
+          key={customizingFood ? getFoodId(customizingFood) : "no-recommendation-selected"}
+          food={customizingFood}
+          onClose={() => setCustomizingFood(null)}
+          onAdd={addItem}
+        />
       </View>
     </KeyboardAvoidingView>
   );
