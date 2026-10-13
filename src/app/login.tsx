@@ -106,10 +106,38 @@ export default function LoginScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-[#F6F5E9]">
-      <View pointerEvents="none" className="absolute -left-20 -top-24 h-64 w-64 rounded-full bg-[#174D32]" />
-      <View pointerEvents="none" className="absolute -right-24 -top-28 h-56 w-56 rounded-full bg-[#DDE8C7]" />
-      <View pointerEvents="none" className="absolute -bottom-28 -right-20 h-64 w-64 rounded-full bg-[#174D32]" />
-      <View pointerEvents="none" className="absolute -bottom-16 -left-16 h-40 w-40 rounded-full bg-[#E6EBCF]" />
+      <View pointerEvents="none" className="absolute inset-0 overflow-hidden">
+        <View className="absolute -left-20 -top-24 h-64 w-64 rounded-full bg-[#174D32]" />
+        <View className="absolute -right-24 -top-28 h-56 w-56 rounded-full bg-[#DDE8C7]" />
+        <View className="absolute -bottom-28 -right-20 h-64 w-64 rounded-full bg-[#174D32]" />
+        <View className="absolute -bottom-16 -left-16 h-40 w-40 rounded-full bg-[#E6EBCF]" />
+      </View>
+      <View pointerEvents="none" className="absolute inset-0 overflow-hidden">
+        <Image
+          accessible={false}
+          className="absolute -left-7 -top-6 h-44 w-36"
+          resizeMode="contain"
+          source={require("../../assets/images/login1.png")}
+        />
+        <Image
+          accessible={false}
+          className="absolute -right-7 -top-7 h-44 w-36"
+          resizeMode="contain"
+          source={require("../../assets/images/login2.png")}
+        />
+        <Image
+          accessible={false}
+          className="absolute -bottom-6 -left-7 h-40 w-40"
+          resizeMode="contain"
+          source={require("../../assets/images/login1.png")}
+        />
+        <Image
+          accessible={false}
+          className="absolute -bottom-6 -right-7 h-40 w-40"
+          resizeMode="contain"
+          source={require("../../assets/images/login1.png")}
+        />
+      </View>
       <KeyboardAvoidingView
         className="flex-1"
         behavior={Platform.OS === "ios" ? "padding" : undefined}
