@@ -4,6 +4,7 @@ import {
   Pressable,
   ScrollView,
   Text,
+  TextInput,
   View,
 } from "react-native";
 import { Minus, Plus, X } from "lucide-react-native";
@@ -154,6 +155,8 @@ export default function FoodCustomizationModal({
   const [quantity, setQuantity] = useState(1);
   const [selectedAddons, setSelectedAddons] = useState<FoodOption[]>([]);
   const [selectedCustomizations, setSelectedCustomizations] = useState<FoodOption[]>([]);
+  const [addonRequest, setAddonRequest] = useState("");
+  const [customizationRequest, setCustomizationRequest] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
@@ -178,6 +181,8 @@ export default function FoodCustomizationModal({
           return option ? [{ ...option, groupName: group.name }] : [];
         }),
     );
+    setAddonRequest("");
+    setCustomizationRequest("");
     setError("");
   }, [food, customizationGroups]);
 
@@ -207,8 +212,28 @@ export default function FoodCustomizationModal({
         food,
         quantity,
         unitPrice,
-        selectedAddons,
-        selectedCustomizations,
+        selectedAddons: [
+          ...selectedAddons,
+          ...addonRequest
+            .split("\n")
+            .map((name, index) => ({
+              id: `requested-addon-${index}`,
+              name: name.trim(),
+              price: 0,
+            }))
+            .filter((option) => option.name),
+        ],
+        selectedCustomizations: [
+          ...selectedCustomizations,
+          ...(customizationRequest.trim()
+            ? [{
+                id: "requested-customization",
+                name: customizationRequest.trim(),
+                price: 0,
+                groupName: "Additional customization",
+              }]
+            : []),
+        ],
       });
       onClose();
     } catch (addError) {
@@ -312,11 +337,40 @@ export default function FoodCustomizationModal({
               </View>
             ))}
 
-            {addons.length === 0 && customizationGroups.length === 0 && (
-              <Text className="py-3 text-sm text-slate-500">
-                No additional options for this item.
+            <View className="mb-5">
+              <Text className="mb-2 text-sm font-bold text-slate-700">
+                Additional add-ons (optional)
               </Text>
-            )}
+              <TextInput
+                accessibilityLabel="Additional add-ons"
+                className="min-h-16 rounded-xl border border-slate-200 px-3 py-3 text-sm text-slate-700"
+                multiline
+                onChangeText={setAddonRequest}
+                placeholder="Enter extra add-ons, one per line (e.g. Extra sauce)"
+                placeholderTextColor="#94A3B8"
+                textAlignVertical="top"
+                value={addonRequest}
+              />
+              <Text className="mt-2 text-right text-xs text-slate-400">
+                Typed requests do not change the price.
+              </Text>
+            </View>
+
+            <View className="mb-2">
+              <Text className="mb-2 text-sm font-bold text-slate-700">
+                Additional customization (optional)
+              </Text>
+              <TextInput
+                accessibilityLabel="Additional customization"
+                className="min-h-16 rounded-xl border border-slate-200 px-3 py-3 text-sm text-slate-700"
+                multiline
+                onChangeText={setCustomizationRequest}
+                placeholder="e.g. Less oil, extra spicy, no onions"
+                placeholderTextColor="#94A3B8"
+                textAlignVertical="top"
+                value={customizationRequest}
+              />
+            </View>
 
             {error ? (
               <Text accessibilityRole="alert" className="mb-3 text-sm font-semibold text-rose-700">
