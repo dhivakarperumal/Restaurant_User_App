@@ -334,7 +334,7 @@ export default function DeliveryPartnerScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-[#F5F7F3]" edges={["top"]}>
+    <SafeAreaView className="flex-1 bg-[#F5F7F3]" edges={[]}>
       <ScrollView
         className="flex-1"
         contentContainerStyle={{ paddingHorizontal: 18, paddingTop: 12, paddingBottom: 24 }}
@@ -348,15 +348,12 @@ export default function DeliveryPartnerScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View className="mb-5 flex-row items-center justify-between">
-          <View className="flex-1 pr-2">
-            <Text className="text-[10px] font-extrabold uppercase tracking-[2px] text-[#39804F]">
-              Delivery Partner
-            </Text>
-            <Text className="mt-1 text-[25px] font-black text-[#17251E]">
+          <View className="flex-1 pr-3">
+            <Text className="text-lg font-extrabold text-[#17251E]">
               Your day, at a glance
             </Text>
-            <Text className="mt-1 text-sm leading-5 text-slate-500">
-              Live delivery duty status, assignments and earnings.
+            <Text className="mt-1 text-xs leading-5 text-slate-500">
+              Live duty status, assignments and earnings.
             </Text>
           </View>
           <Pressable
