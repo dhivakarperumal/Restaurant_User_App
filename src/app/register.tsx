@@ -184,13 +184,12 @@ export default function RegisterScreen() {
               <FormField
                 error={errors.name}
                 icon={<UserRound color="#145333" size={22} />}
-                label="Full name"
               >
                 <TextInput
                   accessibilityLabel="Full name"
                   autoCapitalize="words"
                   autoComplete="name"
-                  className="min-h-7 p-0 text-sm text-slate-900"
+                  className="ml-3 min-h-[62px] flex-1 py-3 text-base text-slate-900"
                   onChangeText={(value) => updateField("name", value)}
                   placeholder="Enter your full name"
                   placeholderTextColor="#92978F"
@@ -203,14 +202,13 @@ export default function RegisterScreen() {
               <FormField
                 error={errors.email}
                 icon={<Mail color="#145333" size={22} />}
-                label="Email address"
               >
                 <TextInput
                   accessibilityLabel="Email address"
                   autoCapitalize="none"
                   autoComplete="email"
                   autoCorrect={false}
-                  className="min-h-7 p-0 text-sm text-slate-900"
+                  className="ml-3 min-h-[62px] flex-1 py-3 text-base text-slate-900"
                   keyboardType="email-address"
                   onChangeText={(value) => updateField("email", value)}
                   placeholder="you@example.com"
@@ -224,12 +222,11 @@ export default function RegisterScreen() {
               <FormField
                 error={errors.phone}
                 icon={<Phone color="#145333" size={22} />}
-                label="Phone number"
               >
                 <TextInput
                   accessibilityLabel="Phone number"
                   autoComplete="tel"
-                  className="min-h-7 p-0 text-sm text-slate-900"
+                  className="ml-3 min-h-[62px] flex-1 py-3 text-base text-slate-900"
                   keyboardType="phone-pad"
                   onChangeText={(value) => updateField("phone", value)}
                   placeholder="Enter your phone number"
@@ -243,13 +240,12 @@ export default function RegisterScreen() {
               <FormField
                 error={errors.password}
                 icon={<LockKeyhole color="#145333" size={22} />}
-                label="Create a password"
               >
                 <TextInput
                   accessibilityLabel="Password"
                   autoCapitalize="none"
                   autoComplete="new-password"
-                  className="min-h-7 flex-1 p-0 text-sm text-slate-900"
+                  className="ml-3 min-h-[62px] flex-1 py-3 text-base text-slate-900"
                   onChangeText={(value) => updateField("password", value)}
                   placeholder="At least 6 characters"
                   placeholderTextColor="#92978F"
@@ -261,7 +257,7 @@ export default function RegisterScreen() {
                 <Pressable
                   accessibilityLabel={isPasswordVisible ? "Hide password" : "Show password"}
                   accessibilityRole="button"
-                  className="h-9 w-9 items-center justify-center"
+                  className="h-11 w-9 items-center justify-center"
                   hitSlop={8}
                   onPress={() => setIsPasswordVisible((visible) => !visible)}
                 >
@@ -276,13 +272,12 @@ export default function RegisterScreen() {
               <FormField
                 error={errors.confirmPassword}
                 icon={<LockKeyhole color="#145333" size={22} />}
-                label="Confirm password"
               >
                 <TextInput
                   accessibilityLabel="Confirm password"
                   autoCapitalize="none"
                   autoComplete="new-password"
-                  className="min-h-7 flex-1 p-0 text-sm text-slate-900"
+                  className="ml-3 min-h-[62px] flex-1 py-3 text-base text-slate-900"
                   onChangeText={(value) => updateField("confirmPassword", value)}
                   onSubmitEditing={handleRegister}
                   placeholder="Re-enter your password"
@@ -297,7 +292,7 @@ export default function RegisterScreen() {
                     isConfirmPasswordVisible ? "Hide confirm password" : "Show confirm password"
                   }
                   accessibilityRole="button"
-                  className="h-9 w-9 items-center justify-center"
+                  className="h-11 w-9 items-center justify-center"
                   hitSlop={8}
                   onPress={() => setIsConfirmPasswordVisible((visible) => !visible)}
                 >
@@ -357,29 +352,20 @@ function FormField({
   children,
   error,
   icon,
-  label,
 }: {
   children: React.ReactNode;
   error?: string;
   icon: React.ReactNode;
-  label: string;
 }) {
   return (
     <View className="mb-3">
       <View
-        className={`min-h-[70px] flex-row items-center rounded-2xl border px-2 ${
-          error ? "border-red-400 bg-red-50" : "border-transparent bg-[#F0F4E9]"
+        className={`min-h-[62px] flex-row items-center rounded-2xl px-4 ${
+          error ? "border border-red-400 bg-red-50" : "bg-[#F0F4E9]"
         }`}
       >
-        <View className="mr-3 h-[52px] w-[52px] items-center justify-center rounded-2xl bg-[#F7F8EF]">
-          {icon}
-        </View>
-        <View className="min-w-0 flex-1 py-2 pr-2">
-          <Text className="mb-0.5 text-sm font-semibold text-[#747A73]">{label}</Text>
-          <View className="flex-row items-center">
-            <View className="min-w-0 flex-1">{children}</View>
-          </View>
-        </View>
+        {icon}
+        <View className="min-w-0 flex-1">{children}</View>
       </View>
       {error ? (
         <Text accessibilityRole="alert" className="mt-1 text-xs text-red-600">
