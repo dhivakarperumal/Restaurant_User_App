@@ -17,7 +17,6 @@ import {
   Text,
   TextInput,
   View,
-  useWindowDimensions,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useCart } from "../contexts/CartContext";
@@ -97,6 +96,7 @@ function RecommendationSection({
               key={itemId}
               food={item}
               width={cardWidth}
+              viewMode="circle"
               isInWishlist={wishlist.some((saved) => getFoodId(saved) === itemId)}
               cartQuantity={cartItems
                 .filter((cartItem) => getFoodId(cartItem.food) === itemId)
@@ -208,7 +208,6 @@ function ProductDetailsContent({
   } = useCart();
   const [customizingFood, setCustomizingFood] = useState<FoodProduct | null>(null);
   const [recommendationError, setRecommendationError] = useState("");
-  const { width: screenWidth } = useWindowDimensions();
   const addons = useMemo(() => parseAddonChoices(food.addons), [food]);
   const customizationGroups = useMemo(
     () => parseCustomizationGroups(food.customizations),
@@ -256,7 +255,7 @@ function ProductDetailsContent({
         (food.cuisine_name &&
           item.cuisine_name?.toLowerCase() === food.cuisine_name.toLowerCase())),
   );
-  const recommendationCardWidth = (Math.max(0, screenWidth - 48) - 12) / 2;
+  const recommendationCardWidth = 96;
 
   const toggleAddon = (option: FoodOption) => {
     setSelectedAddons((current) =>
