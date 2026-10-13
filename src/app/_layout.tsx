@@ -28,7 +28,6 @@ const headerTitles: Record<string, string> = {
   checkout: "Checkout",
   orders: "Orders",
   profile: "Profile",
-  "delivery/index": "Delivery",
 };
 
 export default function RootLayout() {
@@ -95,6 +94,7 @@ function RootTabs() {
             route.name === "register" ||
             route.name === "checkout" ||
             route.name === "product/[id]" ||
+            route.name === "delivery" ||
             route.name.startsWith("delivery/")
               ? "none"
               : "flex",
@@ -251,16 +251,8 @@ function RootTabs() {
       <Tabs.Screen name="login" options={{ title: "Login", href: null }} />
       <Tabs.Screen name="register" options={{ title: "Register", href: null }} />
       <Tabs.Screen
-        name="delivery/index"
+        name="delivery"
         options={{ title: "Delivery", href: null }}
-      />
-      <Tabs.Screen
-        name="delivery/Navigations/Bottombar"
-        options={{ href: null }}
-      />
-      <Tabs.Screen
-        name="delivery/Navigations/TopHeader"
-        options={{ href: null }}
       />
       <Tabs.Screen
         name="user/Navigations/Bottombar"
