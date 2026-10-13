@@ -10,6 +10,7 @@ import {
   View,
 } from "react-native";
 import { Minus, Plus, X } from "lucide-react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { getFoodName, getFoodPrice } from "../../lib/foods";
 import type {
   FoodCustomizationGroup,
@@ -154,6 +155,7 @@ export default function FoodCustomizationModal({
   onClose,
   onAdd,
 }: FoodCustomizationModalProps) {
+  const insets = useSafeAreaInsets();
   const [quantity, setQuantity] = useState(1);
   const [selectedAddons, setSelectedAddons] = useState<FoodOption[]>([]);
   const [selectedCustomizations, setSelectedCustomizations] = useState<FoodOption[]>([]);
@@ -258,7 +260,10 @@ export default function FoodCustomizationModal({
         className="flex-1 justify-end bg-black/45"
         behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
-        <View className="max-h-[90%] rounded-t-[28px] bg-white pb-8">
+        <View
+          className="h-[90%] rounded-t-[28px] bg-white"
+          style={{ paddingBottom: Math.max(insets.bottom, 16) }}
+        >
           <View className="flex-row items-center justify-between border-b border-slate-100 px-5 py-4">
             <View className="flex-1 pr-4">
               <Text className="text-lg font-extrabold text-[#17251E]" numberOfLines={1}>
@@ -279,9 +284,10 @@ export default function FoodCustomizationModal({
           </View>
 
           <ScrollView
-            className="shrink"
+            className="flex-1"
             contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 16, paddingBottom: 20 }}
             keyboardShouldPersistTaps="handled"
+            keyboardDismissMode={Platform.OS === "ios" ? "interactive" : "on-drag"}
             showsVerticalScrollIndicator={false}
           >
             {addons.length > 0 && (
