@@ -6,14 +6,16 @@ import api from "../lib/api";
 import { getActiveFoods, getFoodId } from "../lib/foods";
 import { useCart } from "../contexts/CartContext";
 import type { FoodProduct } from "../types/food";
+import FoodCustomizationModal from "./common/FoodCustomizationModal";
 import FoodProductCard from "./common/FoodProductCard";
 
 export default function HomeProducts() {
   const [foods, setFoods] = useState<FoodProduct[]>([]);
+  const [selectedFood, setSelectedFood] = useState<FoodProduct | null>(null);
   const [actionError, setActionError] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const { items: cartItems, wishlist, toggleWishlist } = useCart();
+  const { addItem, items: cartItems, wishlist, toggleWishlist } = useCart();
   const { width: screenWidth } = useWindowDimensions();
   const pageWidth = Math.max(0, screenWidth - 48);
   const cardWidth = (pageWidth - 12) / 2;
@@ -120,6 +122,7 @@ export default function HomeProducts() {
                     onSelect={(item) =>
                       router.push({ pathname: "/product/[id]", params: { id: getFoodId(item) } })
                     }
+                    onCustomize={setSelectedFood}
                     onToggleWishlist={(item) => void handleToggleWishlist(item)}
                   />
                 ))}
@@ -151,6 +154,11 @@ export default function HomeProducts() {
         <ArrowRight color="#1A6A3B" size={16} className="ml-2" />
       </Pressable>
 
+      <FoodCustomizationModal
+        food={selectedFood}
+        onClose={() => setSelectedFood(null)}
+        onAdd={addItem}
+      />
     </View>
   );
 }

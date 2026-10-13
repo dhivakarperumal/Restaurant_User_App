@@ -3,12 +3,14 @@ import { router } from "expo-router";
 import { Heart, UtensilsCrossed } from "lucide-react-native";
 import { Pressable, ScrollView, Text, View, useWindowDimensions } from "react-native";
 import { useCart } from "../contexts/CartContext";
+import FoodCustomizationModal from "../components/common/FoodCustomizationModal";
 import FoodProductCard from "../components/common/FoodProductCard";
 import { getFoodId } from "../lib/foods";
 import type { FoodProduct } from "../types/food";
 
 export default function FavoritesScreen() {
-  const { items: cartItems, wishlist, toggleWishlist } = useCart();
+  const { addItem, items: cartItems, wishlist, toggleWishlist } = useCart();
+  const [selectedFood, setSelectedFood] = useState<FoodProduct | null>(null);
   const [actionError, setActionError] = useState("");
   const { width: screenWidth } = useWindowDimensions();
   const cardWidth = Math.max(0, screenWidth - 40);
@@ -61,6 +63,7 @@ export default function FavoritesScreen() {
                   onSelect={() =>
                     router.push({ pathname: "/product/[id]", params: { id: foodId } })
                   }
+                  onCustomize={setSelectedFood}
                   onToggleWishlist={(item) => void handleToggleWishlist(item)}
                 />
               );
@@ -94,7 +97,11 @@ export default function FavoritesScreen() {
           </Text>
         ) : null}
       </ScrollView>
-
+      <FoodCustomizationModal
+        food={selectedFood}
+        onClose={() => setSelectedFood(null)}
+        onAdd={addItem}
+      />
     </>
   );
 }

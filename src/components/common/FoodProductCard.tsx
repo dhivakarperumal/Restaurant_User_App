@@ -11,6 +11,7 @@ type FoodProductCardProps = {
   cartQuantity?: number;
   viewMode?: "grid" | "list";
   onSelect: (food: FoodProduct) => void;
+  onCustomize: (food: FoodProduct) => void;
   onToggleWishlist: (food: FoodProduct) => void;
 };
 
@@ -21,6 +22,7 @@ export default function FoodProductCard({
   cartQuantity = 0,
   viewMode = "grid",
   onSelect,
+  onCustomize,
   onToggleWishlist,
 }: FoodProductCardProps) {
   const [imageError, setImageError] = useState(false);
@@ -114,7 +116,7 @@ export default function FoodProductCard({
                 accessibilityState={{ disabled: !isAvailable }}
                 className={`h-8 flex-row items-center rounded-lg px-2.5 ${isAvailable ? "bg-[#1A6A3B]" : "bg-slate-300"}`}
                 disabled={!isAvailable}
-                onPress={() => onSelect(food)}
+                onPress={() => onCustomize(food)}
               >
                 {isAvailable ? <Plus color="#FFFFFF" size={15} /> : null}
                 <Text className="ml-1 text-[10px] font-bold text-white">
@@ -140,7 +142,7 @@ export default function FoodProductCard({
       <View className="relative h-[132px]">
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={`Customize ${name}`}
+          accessibilityLabel={`View ${name}`}
           className="h-full items-center justify-center overflow-hidden bg-[#F5EFE5]"
           onPress={() => onSelect(food)}
         >
@@ -205,9 +207,16 @@ export default function FoodProductCard({
             </View>
           )}
         </View>
-        <Text className="mt-1 text-sm font-extrabold text-[#17251E]" numberOfLines={1}>
-          {name}
-        </Text>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={`View details for ${name}`}
+          className="mt-1"
+          onPress={() => onSelect(food)}
+        >
+          <Text className="text-sm font-extrabold text-[#17251E]" numberOfLines={1}>
+            {name}
+          </Text>
+        </Pressable>
         <Text className="mt-1 min-h-8 text-[10px] leading-4 text-slate-500" numberOfLines={2}>
           {food.description || `${food.portion_size || "Standard"} portion, prepared fresh.`}
         </Text>
@@ -233,7 +242,7 @@ export default function FoodProductCard({
             accessibilityState={{ disabled: !isAvailable }}
             className={`h-9 min-w-9 flex-row items-center justify-center rounded-xl px-2 active:opacity-75 ${isAvailable ? "bg-[#1A6A3B]" : "bg-slate-300"}`}
             disabled={!isAvailable}
-            onPress={() => onSelect(food)}
+            onPress={() => onCustomize(food)}
           >
             {isAvailable ? <Plus color="#FFFFFF" size={19} /> : null}
             {isAvailable && cartQuantity > 0 ? (

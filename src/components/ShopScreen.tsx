@@ -31,6 +31,7 @@ import {
 } from "../lib/foods";
 import { useCart } from "../contexts/CartContext";
 import type { FoodProduct } from "../types/food";
+import FoodCustomizationModal from "./common/FoodCustomizationModal";
 import FoodProductCard from "./common/FoodProductCard";
 
 type ShopCategory = {
@@ -146,8 +147,9 @@ export default function ShopScreen() {
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
   const [currentPage, setCurrentPage] = useState(1);
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [selectedFood, setSelectedFood] = useState<FoodProduct | null>(null);
   const [actionError, setActionError] = useState("");
-  const { items: cartItems, wishlist, toggleWishlist } = useCart();
+  const { addItem, items: cartItems, wishlist, toggleWishlist } = useCart();
   const { width: screenWidth } = useWindowDimensions();
   const pageWidth = Math.max(0, screenWidth - 48);
   const cardWidth = (pageWidth - 12) / 2;
@@ -418,9 +420,10 @@ export default function ShopScreen() {
     }
   };
 
-  const openCustomizer = (food: FoodProduct) => selectFood(food);
+  const openCustomizer = (food: FoodProduct) => setSelectedFood(food);
 
   return (
+    <>
     <ScrollView
       className="flex-1 bg-[#F3F4F3]"
       showsVerticalScrollIndicator={false}
@@ -776,7 +779,8 @@ export default function ShopScreen() {
                 viewMode={viewMode}
                 isInWishlist={wishlist.some((item) => getFoodId(item) === foodId)}
                 cartQuantity={cartQuantity(foodId)}
-                onSelect={openCustomizer}
+                onSelect={selectFood}
+                onCustomize={openCustomizer}
                 onToggleWishlist={(item) => void handleToggleWishlist(item)}
               />
             );
@@ -834,6 +838,13 @@ export default function ShopScreen() {
       ) : null}
 
     </ScrollView>
+    <FoodCustomizationModal
+      key={selectedFood ? getFoodId(selectedFood) : "no-food-selected"}
+      food={selectedFood}
+      onClose={() => setSelectedFood(null)}
+      onAdd={addItem}
+    />
+    </>
   );
 }
 
