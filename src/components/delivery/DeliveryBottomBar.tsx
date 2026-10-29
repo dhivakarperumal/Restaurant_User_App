@@ -10,11 +10,11 @@ import { router, usePathname } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const tabItems = [
-  { href: "/delivery", label: "Dashboard", Icon: LayoutDashboard },
-  { href: "/delivery/attendance", label: "Attendance", Icon: CalendarCheck2 },
-  { href: "/delivery/orders", label: "Orders", Icon: ClipboardList },
-  { href: "/delivery/earnings", label: "Earning", Icon: WalletCards },
-  { href: "/delivery/profile", label: "Profile", Icon: UserRound },
+  { href: "/DeliveryTab", label: "Dashboard", Icon: LayoutDashboard },
+  { href: "/DeliveryTab/attendance", label: "Attendance", Icon: CalendarCheck2 },
+  { href: "/DeliveryTab/orders", label: "Orders", Icon: ClipboardList },
+  { href: "/DeliveryTab/earnings", label: "Earning", Icon: WalletCards },
+  { href: "/DeliveryTab/profile", label: "Profile", Icon: UserRound },
 ] as const;
 
 export default function DeliveryBottomBar() {
@@ -30,7 +30,7 @@ export default function DeliveryBottomBar() {
     >
       {tabItems.map(({ href, label, Icon }) => {
         const focused =
-          href === "/delivery"
+          href === "/DeliveryTab"
             ? pathname === href || pathname === `${href}/`
             : pathname === href;
         const color = focused ? "#17663D" : "#829087";

@@ -194,7 +194,7 @@ function CuisineCard({
       style={{ width: cardWidth }}
       onPress={() =>
         router.push({
-          pathname: "/shop",
+          pathname: "/UsersTab/shop",
           params: { cuisine: cuisine.filter },
         })
       }

@@ -34,7 +34,7 @@ async function performLogout(
 
   try {
     await logoutUser();
-    router.replace("/login");
+    router.replace("/Auth/login");
   } catch (error) {
     console.error("Failed to clear the user session during logout:", error);
     showAlert({

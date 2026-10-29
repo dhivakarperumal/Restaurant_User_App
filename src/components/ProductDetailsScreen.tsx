@@ -598,7 +598,7 @@ function ProductDetailsContent({
             cartItems={cartItems}
             wishlist={wishlist}
             onSelect={(item) =>
-              router.push({ pathname: "/product/[id]", params: { id: getFoodId(item) } })
+              router.push({ pathname: "/UsersTab/product/[id]", params: { id: getFoodId(item) } })
             }
             onCustomize={setCustomizingFood}
             onToggleWishlist={(item) => void handleRecommendationWishlist(item)}
@@ -612,7 +612,7 @@ function ProductDetailsContent({
             cartItems={cartItems}
             wishlist={wishlist}
             onSelect={(item) =>
-              router.push({ pathname: "/product/[id]", params: { id: getFoodId(item) } })
+              router.push({ pathname: "/UsersTab/product/[id]", params: { id: getFoodId(item) } })
             }
             onCustomize={setCustomizingFood}
             onToggleWishlist={(item) => void handleRecommendationWishlist(item)}

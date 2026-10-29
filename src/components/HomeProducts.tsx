@@ -120,7 +120,7 @@ export default function HomeProducts() {
                       .filter((item) => getFoodId(item.food) === getFoodId(food))
                       .reduce((total, item) => total + item.quantity, 0)}
                     onSelect={(item) =>
-                      router.push({ pathname: "/product/[id]", params: { id: getFoodId(item) } })
+                      router.push({ pathname: "/UsersTab/product/[id]", params: { id: getFoodId(item) } })
                     }
                     onCustomize={setSelectedFood}
                     onToggleWishlist={(item) => void handleToggleWishlist(item)}
@@ -148,7 +148,7 @@ export default function HomeProducts() {
       <Pressable
         accessibilityRole="button"
         className="mt-3 flex-row items-center justify-center py-2"
-        onPress={() => router.push("/shop")}
+        onPress={() => router.push("/UsersTab/shop")}
       >
         <Text className="text-sm font-bold text-[#1A6A3B]">View the full menu</Text>
         <ArrowRight color="#1A6A3B" size={16} className="ml-2" />

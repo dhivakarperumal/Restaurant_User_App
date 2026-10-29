@@ -86,10 +86,10 @@ export default function DeliveryTopBar() {
         <View className="min-w-0 flex-1 flex-row items-center">
           <Image
             accessible
-            accessibilityLabel="Buy Foods logo"
+            accessibilityLabel="Buy Food logo"
             className="mr-3 h-10 w-10"
             resizeMode="contain"
-            source={require("../../../assets/images/adminlogo.png")}
+            source={require("../../../assets/images/logo.png")}
           />
           <View className="min-w-0 flex-1">
             <Text
@@ -164,7 +164,7 @@ export default function DeliveryTopBar() {
               className="min-h-12 flex-row items-center px-4 active:bg-[#F5EFE5]"
               onPress={() => {
                 setIsMenuVisible(false);
-                router.push("/delivery/profile");
+                router.push("/DeliveryTab/profile");
               }}
             >
               <UserRound color="#1A6A3B" size={18} />

@@ -69,7 +69,13 @@ function resolveAssetUrl(asset: unknown) {
   return `${backendUrl}/${value.replace(/^\/+/, "")}`;
 }
 
-function getBannerDestination(link: string) {
+type BannerDestination =
+  | "/UsersTab/shop"
+  | "/UsersTab/cart"
+  | "/UsersTab/orders"
+  | "/UsersTab/profile";
+
+function getBannerDestination(link: string): BannerDestination {
   const rawLink = stringValue(link, FALLBACK_BANNER.link);
   const normalized = /^https?:\/\//i.test(rawLink)
     ? new URL(rawLink).pathname
@@ -78,15 +84,16 @@ function getBannerDestination(link: string) {
   switch (normalized) {
     case "/home":
     case "/shop":
-      return "/shop";
     case "/explore":
-      return "/shop";
+      return "/UsersTab/shop";
     case "/cart":
+      return "/UsersTab/cart";
     case "/orders":
+      return "/UsersTab/orders";
     case "/profile":
-      return normalized;
+      return "/UsersTab/profile";
     default:
-      return "/shop";
+      return "/UsersTab/shop";
   }
 }
 
@@ -239,7 +246,7 @@ export default function HomeBanner() {
                   accessibilityRole="button"
                   accessibilityLabel="Explore menu"
                   className="ml-2.5 min-h-11 items-center justify-center rounded-2xl border border-white/60 bg-black/25 px-3.5 backdrop-blur-sm"
-                  onPress={() => router.push("/shop")}
+                  onPress={() => router.push("/UsersTab/shop")}
                   style={({ pressed }) => ({ opacity: pressed ? 0.75 : 1 })}
                 >
                   <Text className="text-xs font-bold text-white">Explore menu</Text>

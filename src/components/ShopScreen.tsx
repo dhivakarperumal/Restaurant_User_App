@@ -242,7 +242,7 @@ export default function ShopScreen() {
   };
 
   const selectFood = (food: FoodProduct) => {
-    router.push({ pathname: "/product/[id]", params: { id: getFoodId(food) } });
+    router.push({ pathname: "/UsersTab/product/[id]", params: { id: getFoodId(food) } });
   };
 
   const filteredFoods = useMemo(() => {

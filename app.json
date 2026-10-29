@@ -1,26 +1,26 @@
 {
   "expo": {
-    "name": "Restaurant App",
+    "name": "Buy Food",
     "slug": "restaurant-app",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/adminlogo.png",
+    "icon": "./assets/images/logo.png",
     "scheme": "userdelivery",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "icon": "./assets/images/adminlogo.png"
+      "icon": "./assets/images/logo.png"
     },
     "android": {
       "softwareKeyboardLayoutMode": "resize",
       "adaptiveIcon": {
         "backgroundColor": "#FFFFFF",
-        "foregroundImage": "./assets/images/adminlogo.png"
+        "foregroundImage": "./assets/images/logo.png"
       },
       "predictiveBackGestureEnabled": false
     },
     "web": {
       "output": "static",
-      "favicon": "./assets/images/adminlogo.png",
+      "favicon": "./assets/images/logo.png",
       "bundler": "metro"
     },
     "plugins": [
@@ -29,7 +29,7 @@
         "expo-splash-screen",
         {
           "backgroundColor": "#FFFFFF",
-          "image": "./assets/images/adminlogo.png",
+          "image": "./assets/images/logo.png",
           "imageWidth": 180
         }
       ],
@@ -41,7 +41,11 @@
         }
       ],
       "@react-native-community/datetimepicker",
-      "expo-sharing"
+      "expo-sharing",
+      "expo-font",
+      "expo-image",
+      "expo-status-bar",
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true,
