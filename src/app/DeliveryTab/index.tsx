@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { router } from "expo-router";
 import {
   ActivityIndicator,
@@ -29,7 +29,6 @@ import {
 } from "lucide-react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import api, { getApiErrorMessage } from "../../lib/api";
-import AuthLogoutButton from "../../components/AuthLogoutButton";
 import { useCustomAlert } from "../../contexts/CustomAlertContext";
 
 type Attendance = {
@@ -191,6 +190,10 @@ export default function DeliveryPartnerScreen() {
   const [history, setHistory] = useState<AttendanceRecord[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [historyError, setHistoryError] = useState("");
+  const [checkInBusy, setCheckInBusy] = useState(false);
+  const [checkInError, setCheckInError] = useState("");
+  const [showAttendancePrompt, setShowAttendancePrompt] = useState(false);
+  const hasLoadedDashboard = useRef(false);
 
   useEffect(() => {
     let active = true;
@@ -202,6 +205,12 @@ export default function DeliveryPartnerScreen() {
         if (!active) return;
         setDashboard(data);
         setErrorMessage("");
+        if (!hasLoadedDashboard.current) {
+          hasLoadedDashboard.current = true;
+          setShowAttendancePrompt(
+            !Boolean(data.isCheckedIn ?? (data.attendance?.check_in && !data.attendance.check_out)),
+          );
+        }
         if (data.attendance?.duration_seconds != null) {
           setLiveSeconds(Number(data.attendance.duration_seconds) || 0);
         }
@@ -240,6 +249,33 @@ export default function DeliveryPartnerScreen() {
     const interval = setInterval(() => setLiveSeconds((value) => value + 1), 1000);
     return () => clearInterval(interval);
   }, [isOnline, isCheckedIn]);
+
+  const checkInAndContinue = async () => {
+    if (checkInBusy) return;
+    setCheckInBusy(true);
+    setCheckInError("");
+    try {
+      const response = await api.post("/attendance/clock-in");
+      const root = response.data as Record<string, unknown>;
+      const record = root.data;
+      if (typeof record !== "object" || record === null) {
+        throw new Error("Clock-in response did not include attendance details.");
+      }
+      const attendanceRecord = record as Attendance;
+      setDashboard((current) =>
+        current
+          ? { ...current, attendance: attendanceRecord, isCheckedIn: true }
+          : current,
+      );
+      setLiveSeconds(Number(attendanceRecord.duration_seconds) || 0);
+      setShowAttendancePrompt(false);
+    } catch (error: unknown) {
+      console.error("Failed to check in delivery partner:", error);
+      setCheckInError(getApiErrorMessage(error, "Unable to check in. Please try again."));
+    } finally {
+      setCheckInBusy(false);
+    }
+  };
 
   const refreshDashboard = useCallback(() => {
     setRefreshing(true);
@@ -347,29 +383,7 @@ export default function DeliveryPartnerScreen() {
         }
         showsVerticalScrollIndicator={false}
       >
-        <View className="mb-5 flex-row items-center justify-between">
-          <View className="flex-1 pr-3">
-            <Text className="text-lg font-extrabold text-[#17251E]">
-              Your day, at a glance
-            </Text>
-            <Text className="mt-1 text-xs leading-5 text-slate-500">
-              Live duty status, assignments and earnings.
-            </Text>
-          </View>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Refresh dashboard"
-            className="h-11 w-11 items-center justify-center rounded-xl border border-[#DCE6DE] bg-white"
-            disabled={loading}
-            onPress={refreshDashboard}
-          >
-            {loading ? (
-              <ActivityIndicator color="#17663D" />
-            ) : (
-              <RefreshCw color="#53645A" size={18} />
-            )}
-          </Pressable>
-        </View>
+       
 
         <View
           className={`overflow-hidden rounded-[24px] border p-5 ${
@@ -608,7 +622,6 @@ export default function DeliveryPartnerScreen() {
           )}
         </View>
 
-        <AuthLogoutButton />
       </ScrollView>
 
       <Modal
@@ -692,6 +705,60 @@ export default function DeliveryPartnerScreen() {
                 ))}
               </ScrollView>
             )}
+          </View>
+        </View>
+      </Modal>
+      <Modal
+        animationType="fade"
+        onRequestClose={() => undefined}
+        transparent
+        visible={showAttendancePrompt && dashboard !== null}
+      >
+        <View className="flex-1 items-center justify-center bg-[#292D3A]/85 px-7">
+          <View
+            accessibilityViewIsModal
+            className="w-full max-w-[560px] items-center rounded-[20px] bg-white px-6 pb-8 pt-9"
+          >
+            <View className="h-[70px] w-[70px] items-center justify-center rounded-[22px] bg-[#D1FAE8]">
+              <CalendarCheck2 color="#00805A" size={34} strokeWidth={2.2} />
+            </View>
+            <Text className="mt-5 text-xs font-extrabold tracking-[2.5px] text-[#00805A]">
+              STAFF ATTENDANCE
+            </Text>
+            <Text className="mt-3 text-center text-[29px] font-black leading-[36px] text-[#111827]">
+              Mark your attendance
+            </Text>
+            <Text className="mt-2 text-center text-base leading-[25px] text-[#52627A]">
+              Check in to begin your shift. You can access the staff pages after your
+              attendance is recorded.
+            </Text>
+            {checkInError ? (
+              <Text
+                accessibilityRole="alert"
+                className="mt-4 text-center text-sm font-semibold text-red-700"
+              >
+                {checkInError}
+              </Text>
+            ) : null}
+            <Pressable
+              accessibilityRole="button"
+              className={`mt-8 min-h-[56px] w-full flex-row items-center justify-center rounded-2xl bg-[#00805A] px-4 ${
+                checkInBusy ? "opacity-70" : "active:opacity-80"
+              }`}
+              disabled={checkInBusy}
+              onPress={() => void checkInAndContinue()}
+            >
+              {checkInBusy ? (
+                <ActivityIndicator color="#FFFFFF" />
+              ) : (
+                <>
+                  <CalendarCheck2 color="#FFFFFF" size={20} strokeWidth={2.2} />
+                  <Text className="ml-3 text-base font-extrabold text-white">
+                    Check In &amp; Continue
+                  </Text>
+                </>
+              )}
+            </Pressable>
           </View>
         </View>
       </Modal>
