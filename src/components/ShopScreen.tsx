@@ -48,6 +48,7 @@ type ShopCuisine = {
 type FoodTypeFilter = "all" | "Veg" | "Non-Veg";
 type SortOption = "recommended" | "price-low" | "price-high" | "rating" | "prep-time";
 type ViewMode = "grid" | "list";
+type ShopAction = "add" | "buy";
 
 const PAGE_SIZE = 12;
 const OFFER_RANGES = [
@@ -149,6 +150,7 @@ export default function ShopScreen() {
   const [currentPage, setCurrentPage] = useState(1);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [selectedFood, setSelectedFood] = useState<FoodProduct | null>(null);
+  const [selectedAction, setSelectedAction] = useState<ShopAction>("add");
   const [actionError, setActionError] = useState("");
   const { addItem, items: cartItems, wishlist, toggleWishlist } = useCart();
   const { width: screenWidth } = useWindowDimensions();
@@ -421,7 +423,10 @@ export default function ShopScreen() {
     }
   };
 
-  const openCustomizer = (food: FoodProduct) => setSelectedFood(food);
+  const openCustomizer = (food: FoodProduct, action: ShopAction) => {
+    setSelectedAction(action);
+    setSelectedFood(food);
+  };
 
   return (
     <>
@@ -752,7 +757,7 @@ export default function ShopScreen() {
           {[0, 1, 2, 3].map((item) => (
             <View
               key={item}
-              className="h-[278px] rounded-2xl bg-slate-200"
+              className="h-[310px] rounded-2xl bg-slate-200"
               style={{ width: cardWidth }}
             />
           ))}
@@ -781,7 +786,8 @@ export default function ShopScreen() {
                 isInWishlist={wishlist.some((item) => getFoodId(item) === foodId)}
                 cartQuantity={cartQuantity(foodId)}
                 onSelect={selectFood}
-                onCustomize={openCustomizer}
+                onCustomize={(item) => openCustomizer(item, "add")}
+                onBuyNow={(item) => openCustomizer(item, "buy")}
                 onToggleWishlist={(item) => void handleToggleWishlist(item)}
               />
             );
@@ -840,10 +846,13 @@ export default function ShopScreen() {
 
     </ScrollView>
     <FoodCustomizationModal
-      key={selectedFood ? getFoodId(selectedFood) : "no-food-selected"}
+      key={`${selectedFood ? getFoodId(selectedFood) : "no-food-selected"}-${selectedAction}`}
       food={selectedFood}
+      action={selectedAction}
       onClose={() => setSelectedFood(null)}
       onAdd={addItem}
+      onBuyNow={addItem}
+      onBuyNowSuccess={() => router.push("/checkout")}
     />
     </>
   );

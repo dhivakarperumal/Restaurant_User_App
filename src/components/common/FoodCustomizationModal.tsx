@@ -15,6 +15,7 @@ import { parseAddonChoices, parseCustomizationGroups } from "../../lib/foodOptio
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { getFoodName, getFoodPrice } from "../../lib/foods";
 import type {
+  CustomizedFoodCartInput,
   FoodCustomizationGroup,
   FoodOption,
   FoodProduct,
@@ -22,20 +23,20 @@ import type {
 
 type FoodCustomizationModalProps = {
   food: FoodProduct | null;
+  action?: "add" | "buy";
   onClose: () => void;
-  onAdd: (input: {
-    food: FoodProduct;
-    quantity: number;
-    unitPrice: number;
-    selectedAddons: FoodOption[];
-    selectedCustomizations: FoodOption[];
-  }) => Promise<void>;
+  onAdd: (input: CustomizedFoodCartInput) => Promise<void>;
+  onBuyNow?: (input: CustomizedFoodCartInput) => Promise<void>;
+  onBuyNowSuccess?: () => void;
 };
 
 export default function FoodCustomizationModal({
   food,
+  action = "add",
   onClose,
   onAdd,
+  onBuyNow,
+  onBuyNowSuccess,
 }: FoodCustomizationModalProps) {
   const insets = useSafeAreaInsets();
   const [quantity, setQuantity] = useState(1);
@@ -89,12 +90,12 @@ export default function FoodCustomizationModal({
     ]);
   };
 
-  const handleAdd = async () => {
+  const handleSubmit = async () => {
     if (!food) return;
     setSaving(true);
     setError("");
     try {
-      await onAdd({
+      const input: CustomizedFoodCartInput = {
         food,
         quantity,
         unitPrice,
@@ -120,11 +121,26 @@ export default function FoodCustomizationModal({
               }]
             : []),
         ],
-      });
+      };
+      if (action === "buy" && onBuyNow) {
+        await onBuyNow(input);
+      } else {
+        await onAdd(input);
+      }
       onClose();
+      if (action === "buy") onBuyNowSuccess?.();
     } catch (addError) {
-      console.error("Failed to add customized food to cart:", addError);
-      setError("We could not save this item to your cart. Please try again.");
+      console.error(
+        action === "buy"
+          ? "Failed to start checkout for customized food:"
+          : "Failed to add customized food to cart:",
+        addError,
+      );
+      setError(
+        action === "buy"
+          ? "We could not start checkout. Please try again."
+          : "We could not save this item to your cart. Please try again.",
+      );
     } finally {
       setSaving(false);
     }
@@ -299,10 +315,16 @@ export default function FoodCustomizationModal({
               accessibilityRole="button"
               className={`h-12 flex-1 items-center justify-center rounded-xl ${saving ? "bg-slate-400" : "bg-brand-green-primary"}`}
               disabled={saving}
-              onPress={() => void handleAdd()}
+              onPress={() => void handleSubmit()}
             >
               <Text className="text-sm font-extrabold text-white">
-                {saving ? "Adding..." : `Add · ₹${(unitPrice * quantity).toFixed(2)}`}
+                {saving
+                  ? action === "buy"
+                    ? "Starting checkout..."
+                    : "Adding..."
+                  : action === "buy"
+                    ? `Buy now · ₹${(unitPrice * quantity).toFixed(2)}`
+                    : `Add to cart · ₹${(unitPrice * quantity).toFixed(2)}`}
               </Text>
             </Pressable>
           </View>

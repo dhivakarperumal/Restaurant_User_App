@@ -1,5 +1,13 @@
 import { useState } from "react";
-import { Clock3, Flame, Heart, Plus, Star, UtensilsCrossed } from "lucide-react-native";
+import {
+  Clock3,
+  Flame,
+  Heart,
+  Plus,
+  Star,
+  UtensilsCrossed,
+  Zap,
+} from "lucide-react-native";
 import { Image, Pressable, Text, View } from "react-native";
 import { getFoodImage, getFoodName, getFoodPrice } from "../../lib/foods";
 import type { FoodProduct } from "../../types/food";
@@ -13,6 +21,7 @@ type FoodProductCardProps = {
   viewMode?: "grid" | "list";
   onSelect: (food: FoodProduct) => void;
   onCustomize: (food: FoodProduct) => void;
+  onBuyNow?: (food: FoodProduct) => void;
   onToggleWishlist: (food: FoodProduct) => void;
 };
 
@@ -24,6 +33,7 @@ export default function FoodProductCard({
   viewMode = "grid",
   onSelect,
   onCustomize,
+  onBuyNow,
   onToggleWishlist,
 }: FoodProductCardProps) {
   const [imageError, setImageError] = useState(false);
@@ -115,7 +125,7 @@ export default function FoodProductCard({
                 accessibilityRole="button"
                 accessibilityLabel={`Customize ${name}`}
                 accessibilityState={{ disabled: !isAvailable }}
-                className={`h-8 flex-row items-center rounded-lg px-2.5 ${isAvailable ? "bg-brand-green-primary" : "bg-slate-300"}`}
+                className={`h-8 flex-row items-center rounded-lg px-2 ${isAvailable ? "bg-brand-green-primary" : "bg-slate-300"}`}
                 disabled={!isAvailable}
                 onPress={() => onCustomize(food)}
               >
@@ -123,11 +133,26 @@ export default function FoodProductCard({
                 <Text className="ml-1 text-[10px] font-bold text-white">
                   {isAvailable
                     ? cartQuantity > 0
-                      ? `Add (${cartQuantity})`
+                      ? `Add ${cartQuantity}`
                       : "Add"
                     : "Unavailable"}
                 </Text>
               </Pressable>
+              {onBuyNow ? (
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={`Buy ${name} now`}
+                  accessibilityState={{ disabled: !isAvailable }}
+                  className={`ml-1 h-8 flex-row items-center rounded-lg px-2 ${isAvailable ? "bg-brand-gold-bright" : "bg-slate-300"}`}
+                  disabled={!isAvailable}
+                  onPress={() => onBuyNow(food)}
+                >
+                  {isAvailable ? <Zap color={colors.green} size={13} /> : null}
+                  <Text className="ml-1 text-[10px] font-bold text-brand-green">
+                    Buy
+                  </Text>
+                </Pressable>
+              ) : null}
             </View>
           </View>
         </View>
@@ -222,11 +247,16 @@ export default function FoodProductCard({
           {food.description || `${food.portion_size || "Standard"} portion, prepared fresh.`}
         </Text>
 
-        <View className="mt-auto flex-row items-center justify-between pt-2">
-          <View>
-            <Text className="text-sm font-black text-brand-green-primary">₹{price.toFixed(0)}</Text>
+        <View className="mt-auto pt-2">
+          <View className="flex-row items-center justify-between">
+            <View>
+            <Text className="text-sm font-black text-brand-green-primary">
+              ₹{price.toFixed(0)}
+            </Text>
             {discount > 0 && mrp > price && (
-              <Text className="text-[9px] text-slate-400 line-through">₹{mrp.toFixed(0)}</Text>
+              <Text className="text-[9px] text-slate-400 line-through">
+                ₹{mrp.toFixed(0)}
+              </Text>
             )}
             {Number(food.preparation_time) > 0 && (
               <View className="mt-0.5 flex-row items-center">
@@ -236,22 +266,42 @@ export default function FoodProductCard({
                 </Text>
               </View>
             )}
-          </View>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={`Add ${name} to cart${cartQuantity > 0 ? `, ${cartQuantity} already in cart` : ""}`}
-            accessibilityState={{ disabled: !isAvailable }}
-            className={`h-9 min-w-9 flex-row items-center justify-center rounded-xl px-2 active:opacity-75 ${isAvailable ? "bg-brand-green-primary" : "bg-slate-300"}`}
-            disabled={!isAvailable}
-            onPress={() => onCustomize(food)}
-          >
-            {isAvailable ? <Plus color={colors["white"]} size={19} /> : null}
-            {isAvailable && cartQuantity > 0 ? (
-              <Text className="ml-1 text-[10px] font-bold text-white">{cartQuantity}</Text>
-            ) : !isAvailable ? (
-              <Text className="text-[9px] font-bold text-white">N/A</Text>
+            </View>
+            {cartQuantity > 0 ? (
+              <Text className="text-[9px] font-semibold text-slate-500">
+                {cartQuantity} in cart
+              </Text>
             ) : null}
-          </Pressable>
+          </View>
+          <View className="mt-2 flex-row gap-1.5">
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={`Add ${name} to cart${cartQuantity > 0 ? `, ${cartQuantity} already in cart` : ""}`}
+              accessibilityState={{ disabled: !isAvailable }}
+              className={`h-9 flex-1 flex-row items-center justify-center rounded-lg px-1 active:opacity-75 ${isAvailable ? "bg-brand-green-primary" : "bg-slate-300"}`}
+              disabled={!isAvailable}
+              onPress={() => onCustomize(food)}
+            >
+              {isAvailable ? <Plus color={colors["white"]} size={14} /> : null}
+              <Text className="ml-0.5 text-[10px] font-bold text-white">
+                {isAvailable ? "Add" : "Unavailable"}
+              </Text>
+            </Pressable>
+            {onBuyNow ? (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={`Buy ${name} now`}
+                accessibilityState={{ disabled: !isAvailable }}
+                className={`h-9 flex-1 flex-row items-center justify-center rounded-lg px-1 active:opacity-75 ${isAvailable ? "bg-brand-gold-bright" : "bg-slate-300"}`}
+                disabled={!isAvailable}
+                onPress={() => onBuyNow(food)}
+              >
+                <Text className="text-[10px] font-bold text-brand-green">
+                  Buy now
+                </Text>
+              </Pressable>
+            ) : null}
+          </View>
         </View>
       </View>
     </View>
