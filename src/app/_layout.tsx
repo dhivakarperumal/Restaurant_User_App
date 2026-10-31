@@ -1,5 +1,19 @@
 import { Stack } from "expo-router";
+import { NavigationBar } from "expo-navigation-bar";
+import { SafeAreaProvider } from "react-native-safe-area-context";
+import { CartProvider } from "../contexts/CartContext";
+import { CustomAlertProvider } from "../contexts/CustomAlertContext";
+import "../../global.css";
 
 export default function RootLayout() {
-  return <Stack screenOptions={{ headerShown: false }} />;
+  return (
+    <SafeAreaProvider>
+      <CustomAlertProvider>
+        <CartProvider>
+          <NavigationBar style="dark" />
+          <Stack screenOptions={{ headerShown: false }} />
+        </CartProvider>
+      </CustomAlertProvider>
+    </SafeAreaProvider>
+  );
 }

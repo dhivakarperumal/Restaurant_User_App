@@ -1,5 +1,4 @@
 import colors from "../../theme/colors.json";
-import { NavigationBar } from "expo-navigation-bar";
 import { Tabs } from "expo-router";
 import {
     House,
@@ -12,10 +11,8 @@ import {
     UserRound,
 } from "lucide-react-native";
 import { Platform, StyleSheet, Text, View } from "react-native";
-import { SafeAreaProvider, useSafeAreaInsets } from "react-native-safe-area-context";
-import { CartProvider, useCart } from "../../contexts/CartContext";
-import { CustomAlertProvider } from "../../contexts/CustomAlertContext";
-import "../../../global.css";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useCart } from "../../contexts/CartContext";
 import TopHeader from "../Navigations/TopHeader";
 
 const headerTitles: Record<string, string> = {
@@ -31,16 +28,7 @@ const headerTitles: Record<string, string> = {
 };
 
 export default function RootLayout() {
-  return (
-    <SafeAreaProvider>
-      <CustomAlertProvider>
-        <NavigationBar style="dark" />
-        <CartProvider>
-          <RootTabs />
-        </CartProvider>
-      </CustomAlertProvider>
-    </SafeAreaProvider>
-  );
+  return <RootTabs />;
 }
 
 function RootTabs() {
