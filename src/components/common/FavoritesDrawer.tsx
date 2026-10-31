@@ -1,6 +1,6 @@
 import colors from "../../theme/colors.json";
 import { router } from "expo-router";
-import { Heart, UtensilsCrossed, X } from "lucide-react-native";
+import { Heart, Trash2, UtensilsCrossed, X } from "lucide-react-native";
 import { useState } from "react";
 import {
   ActivityIndicator,
@@ -42,11 +42,11 @@ function FavoriteRow({
   ].filter((value): value is string => typeof value === "string" && Boolean(value));
 
   return (
-    <View className="mb-2.5 min-h-[88px] flex-row items-center rounded-2xl border border-brand-neutral-border-warm bg-white p-2.5 shadow-sm">
+    <View className="mb-2.5 min-h-[88px] flex-row items-center rounded-2xl border border-brand-neutral-border-warm bg-white p-2 shadow-sm">
       <Pressable
         accessibilityLabel={`View ${name}`}
         accessibilityRole="button"
-        className="h-[66px] w-[66px] items-center justify-center overflow-hidden rounded-xl bg-brand-surface-cream"
+        className="h-[68px] w-[68px] items-center justify-center overflow-hidden rounded-xl bg-brand-surface-cream"
         onPress={onOpen}
       >
         {image && !imageError ? (
@@ -66,34 +66,35 @@ function FavoriteRow({
       <View className="ml-2.5 min-w-0 flex-1">
         <Pressable accessibilityRole="button" onPress={onOpen}>
           <Text
-            className="text-xs font-extrabold text-brand-neutral-text-primary"
+            className="text-[11px] font-extrabold text-brand-neutral-text-primary"
             numberOfLines={1}
           >
             {name}
           </Text>
         </Pressable>
-        <Text className="mt-1 text-[9px] text-slate-500" numberOfLines={1}>
-          {details.join("  ") || "Menu favorite"}
+        <Text className="mt-0.5 text-[9px] text-brand-neutral-text-warm" numberOfLines={1}>
+          {details.join("  ·  ") || "Menu favorite"}
         </Text>
         <View className="mt-1.5 flex-row items-center justify-between">
-          <Text className="text-xs font-black text-brand-green-primary">
+          <Text className="text-[11px] font-black text-brand-green-primary">
             ₹{getFoodPrice(food).toFixed(2)}
           </Text>
           <Pressable
             accessibilityLabel={`Remove ${name} from favorites`}
             accessibilityRole="button"
-            className="px-1 py-1"
+            className="flex-row items-center rounded-lg bg-brand-rose-surface px-2 py-1"
             hitSlop={6}
             onPress={onRemove}
           >
-            <Text className="text-[10px] font-bold text-brand-danger-strong">
+            <Trash2 color={colors["danger-strong"]} size={10} />
+            <Text className="ml-1 text-[9px] font-bold text-brand-danger-strong">
               Remove
             </Text>
           </Pressable>
         </View>
       </View>
 
-      <View className={`ml-1 h-3.5 w-3.5 items-center justify-center rounded border ${isVeg ? "border-emerald-600" : "border-rose-600"}`}>
+      <View className={`ml-1 self-start mt-1 h-3.5 w-3.5 items-center justify-center rounded border ${isVeg ? "border-emerald-600" : "border-rose-600"}`}>
         <View className={`h-1.5 w-1.5 rounded-full ${isVeg ? "bg-emerald-600" : "bg-rose-600"}`} />
       </View>
     </View>
@@ -151,37 +152,44 @@ export default function FavoritesDrawer({
         />
         <View
           accessibilityViewIsModal
-          className="h-full border-l border-brand-neutral-border-warm bg-white shadow-2xl"
+          className="h-full border-l border-brand-neutral-border-warm bg-brand-surface-modal shadow-2xl"
           style={{
             width: Math.min(400, windowWidth * 0.94),
             paddingTop: insets.top,
             paddingBottom: insets.bottom,
           }}
         >
-          <View className="min-h-[54px] flex-row items-center border-b border-brand-neutral-border px-4">
-            <Heart color={colors.heart} size={18} />
-            <Text className="ml-2 text-sm font-extrabold text-brand-neutral-text-forest">
-              Favorites
-            </Text>
-            <View className="ml-2 min-w-5 items-center rounded-full bg-brand-surface-cream px-1.5 py-0.5">
-              <Text className="text-[9px] font-bold text-brand-neutral-text-primary">
-                {wishlist.length}
+          <View className="flex-row items-center border-b border-brand-neutral-border-cream bg-brand-gold-white px-4 py-3">
+            <View className="h-10 w-10 items-center justify-center rounded-full bg-brand-gold-soft">
+              <Heart color={colors.heart} fill={colors.heart} size={17} />
+            </View>
+            <View className="ml-2.5 flex-1">
+              <Text className="font-serif text-[15px] font-extrabold text-brand-neutral-text-forest">
+                My Favorites
+              </Text>
+              <Text className="mt-0.5 text-[9px] text-brand-neutral-text-warm">
+                Your personally saved dishes
+              </Text>
+            </View>
+            <View className="rounded-full bg-brand-rose-surface px-2.5 py-1">
+              <Text className="text-[9px] font-bold text-brand-danger-strong">
+                {wishlist.length} {wishlist.length === 1 ? "Item" : "Items"}
               </Text>
             </View>
             <Pressable
               accessibilityLabel="Close favorites"
               accessibilityRole="button"
-              className="ml-auto h-10 w-10 items-center justify-center rounded-full active:bg-slate-100"
+              className="ml-2 h-8 w-8 items-center justify-center rounded-full bg-white/80 active:bg-white"
               hitSlop={6}
               onPress={onClose}
             >
-              <X color={colors["neutral-text-warm"]} size={18} />
+              <X color={colors["neutral-text-warm"]} size={15} />
             </Pressable>
           </View>
 
           <ScrollView
             className="flex-1"
-            contentContainerStyle={{ padding: 14, flexGrow: 1 }}
+            contentContainerStyle={{ paddingHorizontal: 12, paddingTop: 13, paddingBottom: 14, flexGrow: 1 }}
             showsVerticalScrollIndicator={false}
           >
             {isWishlistLoading ? (
@@ -218,8 +226,8 @@ export default function FavoritesDrawer({
               })
             ) : (
               <View className="flex-1 items-center justify-center px-5">
-                <View className="h-14 w-14 items-center justify-center rounded-full bg-rose-50">
-                  <Heart color={colors["danger-heart"]} size={25} />
+                <View className="h-14 w-14 items-center justify-center rounded-full bg-brand-gold-soft">
+                  <Heart color={colors.heart} size={24} />
                 </View>
                 <Text className="mt-4 text-base font-extrabold text-brand-neutral-text-primary">
                   No favorites yet
@@ -251,6 +259,13 @@ export default function FavoritesDrawer({
               </Text>
             ) : null}
           </ScrollView>
+          <View className="flex-row items-center justify-center border-t border-brand-neutral-border-cream bg-brand-gold-white px-3 py-2.5">
+            <UtensilsCrossed color={colors["gold-copper"]} size={12} />
+            <Text className="ml-1.5 text-[9px] font-medium text-brand-neutral-text-warm">
+              Made with love, saved for you
+            </Text>
+            <Heart className="ml-1" color={colors.heart} fill={colors.heart} size={9} />
+          </View>
         </View>
       </View>
     </Modal>
