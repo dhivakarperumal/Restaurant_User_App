@@ -1,6 +1,14 @@
 import { useEffect, useState } from "react";
 import { router, usePathname } from "expo-router";
-import { ActivityIndicator, Image, Modal, Pressable, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  Image,
+  Modal,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { LogOut, UserRound } from "lucide-react-native";
 import { useCustomAlert } from "../../contexts/CustomAlertContext";
@@ -81,9 +89,15 @@ export default function DeliveryTopBar() {
 
   return (
     <SafeAreaView
-      className="z-20 border-b border-[#E7E0D8] bg-[#FFFCF6] px-5 pb-3 pt-2"
+      className="z-20 overflow-hidden border-b border-white/15 bg-[#06452F] px-5 pb-3 pt-2"
       edges={["top"]}
     >
+      <Image
+        accessible={false}
+        resizeMode="cover"
+        source={require("../../../assets/images/deliveryheader.png")}
+        style={[StyleSheet.absoluteFill, { top: -insets.top }]}
+      />
       <View className="flex-row items-center justify-between">
         <View className="min-w-0 flex-1 flex-row items-center">
           <Image
@@ -95,12 +109,12 @@ export default function DeliveryTopBar() {
           />
           <View className="min-w-0 flex-1">
             <Text
-              className="text-[10px] font-bold uppercase tracking-[1.5px] text-[#39804F]"
+              className="text-[10px] font-bold uppercase tracking-[1.5px] text-emerald-100"
               numberOfLines={1}
             >
               Delivery Partner
             </Text>
-            <Text className="text-xl font-extrabold leading-6 text-[#183B2A]" numberOfLines={1}>
+            <Text className="text-xl font-extrabold leading-6 text-white" numberOfLines={1}>
               {title}
             </Text>
           </View>

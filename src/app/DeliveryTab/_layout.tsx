@@ -1,8 +1,8 @@
 import { Slot } from "expo-router";
 import { View } from "react-native";
 import { CustomAlertProvider } from "../../contexts/CustomAlertContext";
-import DeliveryBottomBar from "../../components/delivery/DeliveryBottomBar";
-import DeliveryTopBar from "../../components/delivery/DeliveryTopBar";
+import DeliveryBottomBar from "../Navigations/DeliveryBottomBar";
+import DeliveryTopBar from "../Navigations/DeliveryTopBar";
 import RequireAuth from "../../components/RequireAuth";
 
 export default function DeliveryLayout() {

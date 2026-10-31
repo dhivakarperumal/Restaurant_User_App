@@ -15,7 +15,7 @@ import {
   RefreshCw,
   WalletCards,
 } from "lucide-react-native";
-import api, { getApiErrorMessage } from "../../lib/api";
+import api, { getApiErrorMessage } from "../../../lib/api";
 
 const DATE_RANGES = [
   { value: "today", label: "Today" },

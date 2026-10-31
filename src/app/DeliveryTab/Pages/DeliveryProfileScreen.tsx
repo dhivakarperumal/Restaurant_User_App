@@ -24,10 +24,10 @@ import {
   WalletCards,
   X,
 } from "lucide-react-native";
-import { useCustomAlert } from "../../contexts/CustomAlertContext";
-import { useAuth } from "../../contexts/AuthContext";
-import api, { getApiErrorMessage, getStoredUser } from "../../lib/api";
-import { confirmLogout } from "../../lib/logout";
+import { useCustomAlert } from "../../../contexts/CustomAlertContext";
+import { useAuth } from "../../../contexts/AuthContext";
+import api, { getApiErrorMessage, getStoredUser } from "../../../lib/api";
+import { confirmLogout } from "../../../lib/logout";
 
 type ProfileData = Record<string, unknown>;
 type ProfileForm = {
