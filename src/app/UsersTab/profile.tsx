@@ -33,6 +33,7 @@ import {
     View,
 } from "react-native";
 import { useCustomAlert } from "../../contexts/CustomAlertContext";
+import { useAuth } from "../../contexts/AuthContext";
 import api, {
     getApiErrorMessage,
     getStoredToken,
@@ -357,6 +358,7 @@ function ActionButton({
 
 export default function ProfileScreen() {
   const { showAlert } = useCustomAlert();
+  const { logout } = useAuth();
   const [activeTab, setActiveTab] = useState<AccountTab>("profile");
   const [account, setAccount] = useState<AccountUser | null>(null);
   const [profile, setProfile] = useState({ username: "", mobile_number: "", email: "" });
@@ -814,7 +816,7 @@ export default function ProfileScreen() {
               accessibilityLabel="Log out"
               accessibilityRole="button"
               className="h-10 w-10 items-center justify-center rounded-full bg-white/10"
-              onPress={() => confirmLogout(showAlert)}
+              onPress={() => confirmLogout(showAlert, logout)}
             >
               <LogOut color="#FFE2D8" size={18} />
             </Pressable>
@@ -1358,7 +1360,7 @@ export default function ProfileScreen() {
           <Pressable
             accessibilityRole="button"
             className="mt-4 min-h-12 flex-row items-center justify-center rounded-xl border border-[#F3C9C5] bg-white"
-            onPress={() => confirmLogout(showAlert)}
+            onPress={() => confirmLogout(showAlert, logout)}
           >
             <LogOut color="#A33424" size={17} />
             <Text className="ml-2 text-sm font-bold text-[#A33424]">Sign out</Text>

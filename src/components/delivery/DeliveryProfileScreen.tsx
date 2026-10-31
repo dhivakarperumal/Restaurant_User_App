@@ -25,6 +25,7 @@ import {
   X,
 } from "lucide-react-native";
 import { useCustomAlert } from "../../contexts/CustomAlertContext";
+import { useAuth } from "../../contexts/AuthContext";
 import api, { getApiErrorMessage, getStoredUser } from "../../lib/api";
 import { confirmLogout } from "../../lib/logout";
 
@@ -216,6 +217,7 @@ function ScreenDialog({
 
 export default function DeliveryProfileScreen() {
   const { showAlert } = useCustomAlert();
+  const { logout } = useAuth();
   const [profile, setProfile] = useState<ProfileData>({});
   const [storedUser, setStoredUser] = useState<ProfileData>({});
   const [loading, setLoading] = useState(true);
@@ -701,7 +703,7 @@ export default function DeliveryProfileScreen() {
               accessibilityRole="button"
               className="min-h-12 flex-row items-center rounded-2xl border border-rose-200 bg-white px-4"
               disabled={isLoggingOut}
-              onPress={() => confirmLogout(showAlert, setIsLoggingOut)}
+              onPress={() => confirmLogout(showAlert, logout, setIsLoggingOut)}
             >
               {isLoggingOut ? (
                 <ActivityIndicator color="#B83E2E" />

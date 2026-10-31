@@ -14,59 +14,203 @@ const api = axios.create({
   },
 });
 
+const ACTIVE_ROLE_KEY = "activeAuthRole";
+const SESSION_KEYS = {
+  user: {
+    token: "userToken",
+    role: "userRole",
+    profile: "userProfile",
+  },
+  delivery_partner: {
+    token: "deliveryPartnerToken",
+    role: "deliveryPartnerRole",
+    profile: "deliveryPartnerProfile",
+  },
+};
+
 let cachedToken = null;
+let cachedRole = null;
+let authExpiredHandler = null;
+
+const normalizeRole = (role) => {
+  if (typeof role !== "string") return null;
+  const normalized = role.trim().toLowerCase().replace(/[\s-]+/g, "_");
+  if (normalized === "user") return "user";
+  if (
+    normalized === "delivery_partner" ||
+    normalized === "deliverypartner" ||
+    normalized === "delivery"
+  ) {
+    return "delivery_partner";
+  }
+  return null;
+};
+
+const readStoredValue = async (key) => {
+  let value = await AsyncStorage.getItem(key);
+  if (!value && typeof window !== "undefined" && window.localStorage) {
+    try {
+      value = window.localStorage.getItem(key);
+    } catch {}
+  }
+  return value || null;
+};
+
+const writeStoredValue = async (key, value) => {
+  await AsyncStorage.setItem(key, value);
+  if (typeof window !== "undefined" && window.localStorage) {
+    try {
+      window.localStorage.setItem(key, value);
+    } catch {}
+  }
+};
+
+const removeStoredValues = async (keys) => {
+  await AsyncStorage.multiRemove(keys);
+  if (typeof window !== "undefined" && window.localStorage) {
+    try {
+      for (const key of keys) window.localStorage.removeItem(key);
+    } catch {}
+  }
+};
+
+const parseStoredProfile = (value) => {
+  if (!value) return null;
+  try {
+    return JSON.parse(value);
+  } catch {
+    return null;
+  }
+};
 
 /* =========================
    TOKEN MANAGEMENT
 ========================= */
 
-export const setAuthToken = async (token) => {
-  cachedToken = token || null;
+export const saveAuthSession = async (role, token, profile) => {
+  const normalizedRole = normalizeRole(role);
+  const normalizedToken = typeof token === "string" ? token.trim() : "";
+  if (!normalizedRole || !normalizedToken) {
+    throw new Error("A valid account role and authentication token are required.");
+  }
 
-  if (token) {
-    await AsyncStorage.setItem("userToken", token);
-    if (typeof window !== "undefined" && window.localStorage) {
-      try {
-        window.localStorage.setItem("userToken", token);
-      } catch {}
-    }
-  } else {
-    await AsyncStorage.removeItem("userToken");
-    if (typeof window !== "undefined" && window.localStorage) {
-      try {
-        window.localStorage.removeItem("userToken");
-      } catch {}
+  const keys = SESSION_KEYS[normalizedRole];
+  await writeStoredValue(keys.token, normalizedToken);
+  await writeStoredValue(keys.role, normalizedRole);
+  if (profile && typeof profile === "object") {
+    await writeStoredValue(keys.profile, JSON.stringify({ ...profile, role: normalizedRole }));
+  }
+  await writeStoredValue(ACTIVE_ROLE_KEY, normalizedRole);
+
+  cachedRole = normalizedRole;
+  cachedToken = normalizedToken;
+  return { role: normalizedRole, token: normalizedToken };
+};
+
+export const getStoredAuthSession = async () => {
+  let activeRoleValue = await readStoredValue(ACTIVE_ROLE_KEY);
+  let role = normalizeRole(activeRoleValue);
+
+  if (activeRoleValue === "none") {
+    cachedRole = null;
+    cachedToken = null;
+    return null;
+  }
+
+  if (!role && !activeRoleValue) {
+    const legacyProfileValue = await readStoredValue("userProfile");
+    const legacyProfile = parseStoredProfile(legacyProfileValue);
+    const legacyRole = normalizeRole(
+      (await readStoredValue("userRole")) ?? legacyProfile?.role,
+    );
+    const legacyToken = await readStoredValue("userToken");
+
+    if (legacyRole && legacyToken) {
+      const keys = SESSION_KEYS[legacyRole];
+      await writeStoredValue(keys.token, legacyToken);
+      await writeStoredValue(keys.role, legacyRole);
+      if (legacyProfile) {
+        await writeStoredValue(
+          keys.profile,
+          JSON.stringify({ ...legacyProfile, role: legacyRole }),
+        );
+      }
+      await writeStoredValue(ACTIVE_ROLE_KEY, legacyRole);
+      if (legacyRole === "delivery_partner") {
+        await removeStoredValues(["userToken", "userRole", "userProfile"]);
+      }
+      role = legacyRole;
     }
   }
+
+  if (!role) {
+    cachedRole = null;
+    cachedToken = null;
+    return null;
+  }
+
+  const keys = SESSION_KEYS[role];
+  const [token, storedRole, profileValue] = await Promise.all([
+    readStoredValue(keys.token),
+    readStoredValue(keys.role),
+    readStoredValue(keys.profile),
+  ]);
+  if (!token || (storedRole && normalizeRole(storedRole) !== role)) {
+    cachedRole = null;
+    cachedToken = null;
+    return null;
+  }
+
+  cachedRole = role;
+  cachedToken = token;
+  return { role, token, profile: parseStoredProfile(profileValue) };
 };
 
 export const getStoredToken = async () => {
-  if (cachedToken) {
-    return cachedToken;
-  }
-
-  let token = null;
-  try {
-    token = await AsyncStorage.getItem("userToken");
-  } catch (error) {
-    console.warn("AsyncStorage.getItem(userToken) error:", error);
-  }
-
-  if (!token && typeof window !== "undefined" && window.localStorage) {
-    try {
-      token = window.localStorage.getItem("userToken");
-    } catch {}
-  }
-
-  if (token) {
-    cachedToken = token;
-  }
-
-  return token || null;
+  const session = await getStoredAuthSession();
+  return session?.token ?? null;
 };
 
 export const clearTokenCache = () => {
   cachedToken = null;
+  cachedRole = null;
+};
+
+export const setAuthToken = async (token, role) => {
+  const activeRole = normalizeRole(
+    role ?? cachedRole ?? (await readStoredValue(ACTIVE_ROLE_KEY)),
+  );
+  if (!token) {
+    if (activeRole) await clearAuthSession(activeRole);
+    return;
+  }
+  await saveAuthSession(activeRole ?? "user", token);
+};
+
+export const clearAuthSession = async (role, expectedToken) => {
+  const normalizedRole = normalizeRole(role);
+  if (!normalizedRole) return;
+
+  const keys = SESSION_KEYS[normalizedRole];
+  if (
+    expectedToken &&
+    (await readStoredValue(keys.token)) !== expectedToken
+  ) {
+    return;
+  }
+  await removeStoredValues([keys.token, keys.role, keys.profile]);
+  const activeRole = normalizeRole(await readStoredValue(ACTIVE_ROLE_KEY));
+  if (activeRole === normalizedRole) {
+    await writeStoredValue(ACTIVE_ROLE_KEY, "none");
+    clearTokenCache();
+  }
+};
+
+export const setAuthExpiredHandler = (handler) => {
+  authExpiredHandler = handler;
+  return () => {
+    if (authExpiredHandler === handler) authExpiredHandler = null;
+  };
 };
 
 /* =========================
@@ -75,57 +219,20 @@ export const clearTokenCache = () => {
 
 export const saveUser = async (user) => {
   if (user) {
-    const serialized = JSON.stringify(user);
-    await AsyncStorage.setItem("userProfile", serialized);
-    if (typeof window !== "undefined" && window.localStorage) {
-      try {
-        window.localStorage.setItem("userProfile", serialized);
-      } catch {}
-    }
+    const session = await getStoredAuthSession();
+    const keys = SESSION_KEYS[session?.role ?? "user"];
+    await writeStoredValue(keys.profile, JSON.stringify(user));
   }
 };
 
 export const getStoredRole = async () => {
-  let role = null;
-  try {
-    role = await AsyncStorage.getItem("userRole");
-  } catch {}
-
-  if (!role && typeof window !== "undefined" && window.localStorage) {
-    try {
-      role = window.localStorage.getItem("userRole");
-    } catch {}
-  }
-
-  if (role) {
-    return role;
-  }
-
-  const user = await getStoredUser();
-  return user?.role || null;
+  const session = await getStoredAuthSession();
+  return session?.role ?? null;
 };
 
 export const getStoredUser = async () => {
-  let user = null;
-  try {
-    user = await AsyncStorage.getItem("userProfile");
-  } catch {}
-
-  if (!user && typeof window !== "undefined" && window.localStorage) {
-    try {
-      user = window.localStorage.getItem("userProfile");
-    } catch {}
-  }
-
-  if (!user) {
-    return null;
-  }
-
-  try {
-    return JSON.parse(user);
-  } catch {
-    return null;
-  }
+  const session = await getStoredAuthSession();
+  return session?.profile ?? null;
 };
 
 /* =========================
@@ -150,10 +257,16 @@ export const getApiErrorMessage = (
 
 api.interceptors.request.use(
   async (config) => {
-    const token = await getStoredToken();
+    const session = config.skipAuth ? null : await getStoredAuthSession();
+    const token = session?.token;
 
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+    }
+
+    if (session?.role && token) {
+      config._authRole = session.role;
+      config._authToken = token;
     }
 
     return config;
@@ -171,6 +284,13 @@ api.interceptors.response.use(
   async (error) => {
     if (error.response) {
       const status = error.response.status;
+      if (
+        (status === 401 || status === 403) &&
+        error.config?._authRole &&
+        authExpiredHandler
+      ) {
+        void authExpiredHandler(error.config._authRole, error.config._authToken);
+      }
 
       return Promise.reject({
         status,
@@ -179,6 +299,7 @@ api.interceptors.response.use(
           error.response.data?.error ||
           "Server error",
         data: error.response.data,
+        config: error.config,
       });
     }
 
@@ -199,7 +320,7 @@ export const loginWithIdentifier = async (identifier, password) => {
     const response = await api.post("/users/login", {
       identifier: String(identifier || "").trim(),
       password: String(password || ""),
-    });
+    }, { skipAuth: true });
 
     const responseBody = response.data || {};
     const data =
@@ -220,19 +341,6 @@ export const loginWithIdentifier = async (identifier, password) => {
       responseBody.accessToken ??
       responseBody.access_token;
 
-    if (typeof token === "string" && token.trim()) {
-      await setAuthToken(token.trim());
-    }
-
-    if (role) {
-      await AsyncStorage.setItem("userRole", String(role));
-      if (typeof window !== "undefined" && window.localStorage) {
-        try {
-          window.localStorage.setItem("userRole", String(role));
-        } catch {}
-      }
-    }
-
     const userObj =
       (data.user && typeof data.user === "object" ? data.user : null) ??
       (responseBody.user && typeof responseBody.user === "object"
@@ -240,15 +348,9 @@ export const loginWithIdentifier = async (identifier, password) => {
         : null) ??
       (data && typeof data === "object" ? data : null);
 
-    if (userObj || role) {
-      await saveUser({
-        ...(userObj && typeof userObj === "object" ? userObj : {}),
-        ...(role ? { role } : {}),
-      });
-    }
-
     return {
       ...data,
+      user: userObj,
       token,
       role,
       message: data.message || responseBody.message || "Login successful",
@@ -271,7 +373,7 @@ export const registerUser = async ({ username, email, phone, password }) => {
     mobile_number: String(phone || "").trim(),
     role: "user",
     password: String(password || ""),
-  });
+  }, { skipAuth: true });
 
   const responseBody = response.data || {};
   const data =
@@ -292,20 +394,6 @@ export const registerUser = async ({ username, email, phone, password }) => {
     responseBody.access_token;
   const role = user?.role ?? data.role ?? responseBody.role ?? "user";
 
-  if (typeof token === "string" && token.trim()) {
-    await setAuthToken(token.trim());
-  }
-
-  await AsyncStorage.setItem("userRole", String(role));
-  if (typeof window !== "undefined" && window.localStorage) {
-    try {
-      window.localStorage.setItem("userRole", String(role));
-    } catch {}
-  }
-  if (user) {
-    await saveUser({ ...user, role });
-  }
-
   return { ...data, user, token, role };
 };
 
@@ -314,18 +402,8 @@ export const registerUser = async ({ username, email, phone, password }) => {
 ========================= */
 
 export const logoutUser = async () => {
-  try {
-    await AsyncStorage.multiRemove(["userToken", "userProfile", "userRole"]);
-    if (typeof window !== "undefined" && window.localStorage) {
-      try {
-        window.localStorage.removeItem("userToken");
-        window.localStorage.removeItem("userProfile");
-        window.localStorage.removeItem("userRole");
-      } catch {}
-    }
-  } finally {
-    clearTokenCache();
-  }
+  const session = await getStoredAuthSession();
+  if (session) await clearAuthSession(session.role);
 };
 
 /* =========================

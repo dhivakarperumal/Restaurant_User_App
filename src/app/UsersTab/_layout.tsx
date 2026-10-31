@@ -11,10 +11,10 @@ import {
     UserRound,
 } from "lucide-react-native";
 import { Platform, StyleSheet, Text, View } from "react-native";
-import { SafeAreaProvider, useSafeAreaInsets } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { CartProvider, useCart } from "../../contexts/CartContext";
 import { CustomAlertProvider } from "../../contexts/CustomAlertContext";
-import "../../../global.css";
+import RequireAuth from "../../components/RequireAuth";
 import TopHeader from "../Navigations/TopHeader";
 
 const headerTitles: Record<string, string> = {
@@ -32,14 +32,14 @@ const headerTitles: Record<string, string> = {
 
 export default function RootLayout() {
   return (
-    <SafeAreaProvider>
-      <CustomAlertProvider>
-        <NavigationBar style="dark" />
-        <CartProvider>
+    <CustomAlertProvider>
+      <NavigationBar style="dark" />
+      <CartProvider>
+        <RequireAuth role="user">
           <RootTabs />
-        </CartProvider>
-      </CustomAlertProvider>
-    </SafeAreaProvider>
+        </RequireAuth>
+      </CartProvider>
+    </CustomAlertProvider>
   );
 }
 

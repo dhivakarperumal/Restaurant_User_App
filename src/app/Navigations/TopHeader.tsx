@@ -14,6 +14,7 @@ import {
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
 import { useCustomAlert } from "../../contexts/CustomAlertContext";
+import { useAuth } from "../../contexts/AuthContext";
 import { getStoredUser } from "../../lib/api";
 import { confirmLogout } from "../../lib/logout";
 
@@ -40,6 +41,7 @@ function getTextValue(user: Record<string, unknown>, keys: string[]) {
 export default function TopHeader({ title }: TopHeaderProps) {
   const insets = useSafeAreaInsets();
   const { showAlert } = useCustomAlert();
+  const { logout } = useAuth();
   const [isMenuVisible, setIsMenuVisible] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [account, setAccount] = useState<AccountDetails>({
@@ -196,7 +198,7 @@ export default function TopHeader({ title }: TopHeaderProps) {
               accessibilityRole="button"
               className="min-h-12 flex-row items-center px-4 active:bg-[#FFF1E8]"
               disabled={isLoggingOut}
-              onPress={() => confirmLogout(showAlert, setIsLoggingOut)}
+              onPress={() => confirmLogout(showAlert, logout, setIsLoggingOut)}
             >
               <LogOut color="#C2412D" size={18} />
               <Text className="ml-3 text-sm font-semibold text-[#B83E2E]">

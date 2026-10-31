@@ -4,6 +4,7 @@ import { ActivityIndicator, Image, Modal, Pressable, Text, View } from "react-na
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { LogOut, UserRound } from "lucide-react-native";
 import { useCustomAlert } from "../../contexts/CustomAlertContext";
+import { useAuth } from "../../contexts/AuthContext";
 import { getStoredUser } from "../../lib/api";
 import { confirmLogout } from "../../lib/logout";
 
@@ -53,6 +54,7 @@ export default function DeliveryTopBar() {
   const pathname = usePathname();
   const insets = useSafeAreaInsets();
   const { showAlert } = useCustomAlert();
+  const { logout } = useAuth();
   const [account, setAccount] = useState<AccountDetails>({
     name: "",
     email: "",
@@ -179,7 +181,7 @@ export default function DeliveryTopBar() {
               disabled={isLoggingOut}
               onPress={() => {
                 setIsMenuVisible(false);
-                confirmLogout(showAlert, setIsLoggingOut);
+                confirmLogout(showAlert, logout, setIsLoggingOut);
               }}
             >
               <LogOut color="#C2412D" size={18} />

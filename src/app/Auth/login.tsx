@@ -15,11 +15,12 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
   getApiErrorMessage,
-  loginWithIdentifier,
 } from "../../lib/api";
 import { getDashboardRoute } from "../../lib/auth";
+import { useAuth } from "../../contexts/AuthContext";
 
 export default function LoginScreen() {
+  const { login } = useAuth();
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
@@ -37,17 +38,14 @@ export default function LoginScreen() {
     setIsSubmitting(true);
 
     try {
-      const result = await loginWithIdentifier(trimmedIdentifier, password);
-      const role = result.user?.role ?? result.role;
-      const dashboardRoute = getDashboardRoute(role);
+      const session = await login(trimmedIdentifier, password);
+      const dashboardRoute = getDashboardRoute(session.role);
 
       if (dashboardRoute) {
         router.replace(dashboardRoute);
       } else {
         setErrorMessage(
-          role
-            ? "This account type is not supported in the app."
-            : "We couldn't identify your account type. Please try again or contact support.",
+          "This account type is not supported in the app.",
         );
       }
     } catch (error) {
