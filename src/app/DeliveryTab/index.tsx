@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { router } from "expo-router";
+import * as Linking from "expo-linking";
 import {
   ActivityIndicator,
+  Image,
   Modal,
   Pressable,
   RefreshControl,
@@ -17,10 +19,13 @@ import {
   CheckCircle2,
   Clock3,
   IndianRupee,
+  Eye,
   MapPin,
+  Navigation,
   PackageCheck,
   Power,
   RefreshCw,
+  ShoppingBag,
   Timer,
   UserRound,
   X,
@@ -29,7 +34,7 @@ import {
   Zap,
 } from "lucide-react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import api, { getApiErrorMessage } from "../../lib/api";
+import api, { API_BASE_URL, getApiErrorMessage } from "../../lib/api";
 import { useCustomAlert } from "../../contexts/CustomAlertContext";
 
 type Attendance = {
@@ -214,6 +219,49 @@ function formatDate(value?: string | null): string {
   return Number.isNaN(date.getTime())
     ? "—"
     : date.toLocaleDateString([], { day: "numeric", month: "short", year: "numeric" });
+}
+
+function getFirstItemImage(order: DeliveryOrder): string {
+  const items = Array.isArray(order.items) ? order.items : [];
+  const item = asRecord(items[0]);
+  if (!item) return "";
+  const images = Array.isArray(item.food_images) ? item.food_images : [];
+  const firstImage = asRecord(images[0]);
+  const image = firstText(item, ["product_image", "image", "thumbnail_image"])
+    || firstText(firstImage ?? {}, ["image_url", "url", "image"]);
+  if (!image) return "";
+  if (/^(data:|blob:|https?:\/\/)/i.test(image)) return image;
+  const baseUrl = API_BASE_URL.replace(/\/api\/?$/i, "").replace(/\/+$/, "");
+  return `${baseUrl}${image.startsWith("/") ? image : `/${image}`}`;
+}
+
+function DashboardOrderThumbnail({ uri }: { uri: string }) {
+  const [hasError, setHasError] = useState(false);
+  return uri && !hasError ? (
+    <Image
+      accessibilityLabel="First food item image"
+      className="mr-3 h-12 w-12 rounded-2xl bg-[#EAF2E8]"
+      onError={() => setHasError(true)}
+      resizeMode="cover"
+      source={{ uri }}
+    />
+  ) : (
+    <View className="mr-3 h-12 w-12 items-center justify-center rounded-2xl bg-[#EAF2E8]">
+      <PackageCheck color="#21643A" size={20} />
+    </View>
+  );
+}
+
+function getMapUrl(address: string, latitude: unknown, longitude: unknown): string {
+  const lat = typeof latitude === "string" || typeof latitude === "number"
+    ? String(latitude).trim()
+    : "";
+  const lng = typeof longitude === "string" || typeof longitude === "number"
+    ? String(longitude).trim()
+    : "";
+  const destination =
+    lat && lng ? `${encodeURIComponent(lat)},${encodeURIComponent(lng)}` : encodeURIComponent(address);
+  return `https://www.google.com/maps/dir/?api=1&destination=${destination}`;
 }
 
 function formatDuration(totalSeconds: number): string {
@@ -765,6 +813,13 @@ export default function DeliveryPartnerScreen() {
               ]
                 .filter(Boolean)
                 .join(", ");
+              const pickupLocation = [
+                firstText(order, ["restaurant_name", "shop_name", "pickup_address", "restaurant_address"]),
+                firstText(order, ["restaurant_area", "shop_area"]),
+                firstText(order, ["restaurant_city", "shop_city"]),
+              ]
+                .filter(Boolean)
+                .join(", ");
               const status = firstText(order, ["order_status", "status"]) || "New";
               const normalizedStatus = status.toUpperCase().replace(/[\s-]+/g, "_");
               const statusStyle =
@@ -775,50 +830,66 @@ export default function DeliveryPartnerScreen() {
                     : { backgroundColor: "#FFF6D8", color: "#A85B00" };
               const placedAt = getOrderDate(order);
               const orderNumber = firstText(order, ["order_number", "order_id", "id"]);
+              const itemImage = getFirstItemImage(order);
 
               return (
                 <View
-                  className="mt-3 rounded-2xl border border-[#E6ECE7] bg-[#FAFCFA] p-4"
+                  className="mt-3 overflow-hidden rounded-2xl border border-[#E2E9E3] bg-white"
                   key={order.id}
                 >
-                  <View className="flex-row items-center">
-                    <View className="mr-3 h-10 w-10 items-center justify-center rounded-xl bg-[#EAF2E8]">
-                      <PackageCheck color="#21643A" size={19} />
-                    </View>
-                    <View className="flex-1">
-                      <Text className="text-xs font-bold text-slate-500">
-                        Order #{orderNumber}
-                      </Text>
-                      <Text className="mt-0.5 text-sm font-extrabold text-[#17251E]">
-                        {customerName}
-                      </Text>
-                    </View>
-                    <View
-                      className="rounded-full px-2.5 py-1.5"
-                      style={{ backgroundColor: statusStyle.backgroundColor }}
-                    >
-                      <Text
-                        className="text-[10px] font-bold"
-                        style={{ color: statusStyle.color }}
+                  <View className="p-4">
+                    <View className="flex-row items-center">
+                      <DashboardOrderThumbnail uri={itemImage} />
+                      <View className="flex-1">
+                        <Text className="text-xs font-bold text-slate-500">
+                          Order #{orderNumber}
+                        </Text>
+                        <Text className="mt-0.5 text-sm font-extrabold text-[#17251E]">
+                          {customerName}
+                        </Text>
+                      </View>
+                      <View
+                        className="rounded-full px-2.5 py-1.5"
+                        style={{ backgroundColor: statusStyle.backgroundColor }}
                       >
-                        {status.replace(/_/g, " ")}
-                      </Text>
+                        <Text
+                          className="text-[10px] font-bold"
+                          style={{ color: statusStyle.color }}
+                        >
+                          {status.replace(/_/g, " ")}
+                        </Text>
+                      </View>
                     </View>
-                  </View>
-                  <View className="mt-3 flex-row items-start border-t border-[#E8EEE8] pt-3">
-                    <MapPin color="#39804F" size={16} />
-                    <Text
-                      className="ml-2 flex-1 text-xs leading-5 text-slate-600"
-                      numberOfLines={2}
-                    >
-                      {location || "Delivery location pending"}
-                    </Text>
-                    <View className="ml-2 max-w-[120px] flex-row items-center">
+
+                    <View className="mt-4 rounded-xl bg-[#F7F9F7] p-3">
+                      <View className="flex-row items-start">
+                        <ShoppingBag color="#39804F" size={15} />
+                        <View className="ml-2 flex-1">
+                          <Text className="text-[10px] font-bold uppercase tracking-wide text-[#39804F]">
+                            Pickup
+                          </Text>
+                          <Text className="mt-0.5 text-xs leading-5 text-slate-600" numberOfLines={2}>
+                            {pickupLocation || "Shop location pending"}
+                          </Text>
+                        </View>
+                      </View>
+                      <View className="ml-[7px] my-1 h-3 border-l border-dashed border-[#B8C9BA]" />
+                      <View className="flex-row items-start">
+                        <MapPin color="#C85A46" size={15} />
+                        <View className="ml-2 flex-1">
+                          <Text className="text-[10px] font-bold uppercase tracking-wide text-[#C85A46]">
+                            Delivery
+                          </Text>
+                          <Text className="mt-0.5 text-xs leading-5 text-slate-600" numberOfLines={2}>
+                            {location || "Delivery location pending"}
+                          </Text>
+                        </View>
+                      </View>
+                    </View>
+
+                    <View className="mt-3 flex-row items-center">
                       <Clock3 color="#839087" size={13} />
-                      <Text
-                        className="ml-1 text-right text-[10px] font-semibold text-slate-500"
-                        numberOfLines={1}
-                      >
+                      <Text className="ml-1.5 flex-1 text-[10px] font-semibold text-slate-500">
                         {placedAt
                           ? placedAt.toLocaleString([], {
                               day: "numeric",
@@ -829,6 +900,42 @@ export default function DeliveryPartnerScreen() {
                           : "Date unavailable"}
                       </Text>
                     </View>
+                  </View>
+
+                  <View className="flex-row border-t border-[#E8EEE8]">
+                    <Pressable
+                      accessibilityRole="button"
+                      className="flex-1 flex-row items-center justify-center py-3"
+                      onPress={async () => {
+                        const url = getMapUrl(
+                          pickupLocation,
+                          order.restaurant_latitude ?? order.shop_latitude,
+                          order.restaurant_longitude ?? order.shop_longitude,
+                        );
+                        try {
+                          await Linking.openURL(url);
+                        } catch (error: unknown) {
+                          console.error("Unable to open the shop location:", error);
+                          showAlert({
+                            title: "Unable to open map",
+                            message: "Please try again.",
+                            variant: "error",
+                          });
+                        }
+                      }}
+                    >
+                      <Navigation color="#21643A" size={15} />
+                      <Text className="ml-1.5 text-xs font-bold text-[#21643A]">Track shop</Text>
+                    </Pressable>
+                    <View className="my-2 w-px bg-[#E8EEE8]" />
+                    <Pressable
+                      accessibilityRole="button"
+                      className="flex-1 flex-row items-center justify-center py-3"
+                      onPress={() => router.push("/DeliveryTab/orders")}
+                    >
+                      <Eye color="#21643A" size={15} />
+                      <Text className="ml-1.5 text-xs font-bold text-[#21643A]">View order</Text>
+                    </Pressable>
                   </View>
                 </View>
               );
