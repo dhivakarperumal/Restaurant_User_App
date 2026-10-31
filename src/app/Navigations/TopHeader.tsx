@@ -1,6 +1,7 @@
 import { router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import {
+  ChevronDown,
   ChevronRight,
   Heart,
   LogOut,
@@ -16,6 +17,7 @@ import {
   Pressable,
   Text,
   View,
+  useWindowDimensions,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useCustomAlert } from "../../contexts/CustomAlertContext";
@@ -44,6 +46,7 @@ function getTextValue(user: Record<string, unknown>, keys: string[]) {
 
 export default function TopHeader({ title }: TopHeaderProps) {
   const insets = useSafeAreaInsets();
+  const { width: windowWidth } = useWindowDimensions();
   const { showAlert } = useCustomAlert();
   const [isMenuVisible, setIsMenuVisible] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -93,14 +96,17 @@ export default function TopHeader({ title }: TopHeaderProps) {
   return (
     <>
       <StatusBar style="dark" />
-      <View
+      <ImageBackground
+        source={require("../../../assets/images/userheader.png")}
+        resizeMode="cover"
         style={{ paddingTop: insets.top + 5 }}
-        className="bg-[#F7F1E8] px-2 pb-2"
+        className="px-2 pb-2"
       >
         <View
           accessibilityLabel={`${title} page header`}
           accessibilityRole="header"
-          className="flex-row items-center justify-between rounded-2xl border border-[#E9DDC7] bg-[#FFFCF6] px-3 py-2 shadow-sm"
+          style={{ backgroundColor: "rgba(255, 252, 246, 0.88)" }}
+          className="flex-row items-center justify-between rounded-2xl border border-[#E9DDC7] px-3 py-2 shadow-sm"
         >
           <View className="mr-2 flex-1 flex-row items-center">
             <Image
@@ -131,6 +137,7 @@ export default function TopHeader({ title }: TopHeaderProps) {
               onPress={() => router.push("/UsersTab/favorites")}
             >
               <Heart color="#D83C55" size={18} />
+              <View className="absolute right-1 top-1 h-2 w-2 rounded-full border border-white bg-[#D83C55]" />
             </Pressable>
             <Pressable
               accessibilityLabel="Open your orders"
@@ -139,6 +146,7 @@ export default function TopHeader({ title }: TopHeaderProps) {
               onPress={() => router.push("/UsersTab/orders")}
             >
               <ShoppingBag color="#17663D" size={18} />
+              <View className="absolute right-1 top-1 h-2 w-2 rounded-full border border-white bg-[#E9BE45]" />
             </Pressable>
             <Pressable
               accessibilityLabel="Open profile menu"
@@ -151,14 +159,17 @@ export default function TopHeader({ title }: TopHeaderProps) {
               {isLoggingOut ? (
                 <ActivityIndicator color="#17663D" />
               ) : (
-                <Text className="text-sm font-extrabold text-[#17663D]">
-                  {account.initial || "U"}
-                </Text>
+                <View className="flex-row items-center">
+                  <Text className="text-sm font-extrabold text-[#17663D]">
+                    {account.initial || "U"}
+                  </Text>
+                  <ChevronDown color="#17663D" size={12} />
+                </View>
               )}
             </Pressable>
           </View>
         </View>
-      </View>
+      </ImageBackground>
 
       <Modal
         animationType="fade"
@@ -176,7 +187,12 @@ export default function TopHeader({ title }: TopHeaderProps) {
           <View
             accessibilityViewIsModal
             className="absolute right-3 overflow-hidden rounded-3xl border border-[#E9DDC7] bg-[#FFFCF6] shadow-2xl"
-            style={{ top: insets.top + 68, width: 288, maxWidth: "92%" }}
+            style={{
+              top: insets.top + 68,
+              right: windowWidth * 0.1,
+              width: Math.min(288, windowWidth * 0.64),
+              maxHeight: "82%",
+            }}
           >
             <ImageBackground
               source={require("../../../assets/images/userheader.png")}
@@ -184,7 +200,7 @@ export default function TopHeader({ title }: TopHeaderProps) {
               className="overflow-hidden"
             >
               <View
-                style={{ backgroundColor: "rgba(255, 250, 242, 0.94)" }}
+                style={{ backgroundColor: "rgba(255, 250, 242, 0.76)" }}
                 className="flex-row items-center px-4 py-3"
               >
                 <View className="mr-3 h-11 w-11 items-center justify-center rounded-full border border-[#D9E6D9] bg-[#EAF2E8]">
@@ -211,7 +227,7 @@ export default function TopHeader({ title }: TopHeaderProps) {
 
             <Pressable
               accessibilityRole="button"
-              className="mx-2 mt-2 min-h-[52px] flex-row items-center rounded-xl px-2 active:bg-[#EAF2E8]"
+              className="mx-2 mt-1 min-h-[46px] flex-row items-center rounded-xl px-2 active:bg-[#EAF2E8]"
               onPress={() => {
                 setIsMenuVisible(false);
                 router.push("/UsersTab/profile");
@@ -231,7 +247,7 @@ export default function TopHeader({ title }: TopHeaderProps) {
             <View className="mx-3 border-t border-[#EEE8DD]" />
             <Pressable
               accessibilityRole="button"
-              className="mx-2 min-h-[52px] flex-row items-center rounded-xl px-2 active:bg-[#FFF3F4]"
+              className="mx-2 min-h-[46px] flex-row items-center rounded-xl px-2 active:bg-[#FFF3F4]"
               onPress={() => {
                 setIsMenuVisible(false);
                 router.push("/UsersTab/favorites");
@@ -251,7 +267,7 @@ export default function TopHeader({ title }: TopHeaderProps) {
             <View className="mx-3 border-t border-[#EEE8DD]" />
             <Pressable
               accessibilityRole="button"
-              className="mx-2 min-h-[52px] flex-row items-center rounded-xl px-2 active:bg-[#EAF2E8]"
+              className="mx-2 min-h-[46px] flex-row items-center rounded-xl px-2 active:bg-[#EAF2E8]"
               onPress={() => {
                 setIsMenuVisible(false);
                 router.push("/UsersTab/orders");
