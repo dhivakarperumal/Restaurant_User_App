@@ -100,7 +100,7 @@ export default function TopHeader({ title }: TopHeaderProps) {
         source={require("../../../assets/images/userheader.png")}
         resizeMode="cover"
         style={{ paddingTop: insets.top }}
-        className="px-2 py-1"
+        className="px-8 py-1"
       >
         <View
           accessibilityLabel={`${title} page header`}
