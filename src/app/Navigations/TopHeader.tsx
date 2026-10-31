@@ -8,13 +8,16 @@ import {
   ShoppingBag,
   UserRoundPen,
 } from "lucide-react-native";
-import { useEffect, useState } from "react";
+import { BlurTargetView, BlurView } from "expo-blur";
+import type { ComponentRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Image,
   ImageBackground,
   Modal,
   Pressable,
+  StyleSheet,
   Text,
   View,
   useWindowDimensions,
@@ -48,6 +51,7 @@ export default function TopHeader({ title }: TopHeaderProps) {
   const insets = useSafeAreaInsets();
   const { width: windowWidth } = useWindowDimensions();
   const { showAlert } = useCustomAlert();
+  const blurTarget = useRef<ComponentRef<typeof View> | null>(null);
   const [isMenuVisible, setIsMenuVisible] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [account, setAccount] = useState<AccountDetails>({
@@ -96,12 +100,24 @@ export default function TopHeader({ title }: TopHeaderProps) {
   return (
     <>
       <StatusBar style="dark" />
-      <ImageBackground
-        source={require("../../../assets/images/userheader.png")}
-        resizeMode="cover"
+      <View
         style={{ paddingTop: insets.top }}
-        className="border-b border-[#B88A2E] px-5 py-1"
+        className="relative overflow-hidden border-b border-[#B88A2E] px-5 py-1"
       >
+        <BlurTargetView ref={blurTarget} style={StyleSheet.absoluteFill}>
+          <ImageBackground
+            source={require("../../../assets/images/userheader.png")}
+            resizeMode="cover"
+            style={StyleSheet.absoluteFill}
+          />
+        </BlurTargetView>
+        <BlurView
+          blurTarget={blurTarget}
+          blurMethod="dimezisBlurViewSdk31Plus"
+          intensity={10}
+          tint="light"
+          style={StyleSheet.absoluteFill}
+        />
         <View
           accessibilityLabel={`${title} page header`}
           accessibilityRole="header"
@@ -168,7 +184,7 @@ export default function TopHeader({ title }: TopHeaderProps) {
             </Pressable>
           </View>
         </View>
-      </ImageBackground>
+      </View>
 
       <Modal
         animationType="fade"
