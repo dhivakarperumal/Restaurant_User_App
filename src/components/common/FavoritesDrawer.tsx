@@ -14,6 +14,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useCart } from "../../contexts/CartContext";
+import { useCustomAlert } from "../../contexts/CustomAlertContext";
 import { getFoodId, getFoodImage, getFoodName, getFoodPrice } from "../../lib/foods";
 import type { FoodProduct } from "../../types/food";
 
@@ -66,30 +67,27 @@ function FavoriteRow({
       <View className="ml-2.5 min-w-0 flex-1">
         <Pressable accessibilityRole="button" onPress={onOpen}>
           <Text
-            className="text-[11px] font-extrabold text-brand-neutral-text-primary"
+            className="text-xs font-extrabold text-brand-neutral-text-primary"
             numberOfLines={1}
           >
             {name}
           </Text>
         </Pressable>
-        <Text className="mt-0.5 text-[9px] text-brand-neutral-text-warm" numberOfLines={1}>
+        <Text className="mt-0.5 text-[10px] text-brand-neutral-text-warm" numberOfLines={1}>
           {details.join("  ·  ") || "Menu favorite"}
         </Text>
         <View className="mt-1.5 flex-row items-center justify-between">
-          <Text className="text-[11px] font-black text-brand-green-primary">
+          <Text className="text-xs font-black text-brand-green-primary">
             ₹{getFoodPrice(food).toFixed(2)}
           </Text>
           <Pressable
             accessibilityLabel={`Remove ${name} from favorites`}
             accessibilityRole="button"
-            className="flex-row items-center rounded-lg bg-brand-rose-surface px-2 py-1"
-            hitSlop={6}
+            className="h-8 w-8 items-center justify-center rounded-full bg-brand-rose-surface active:bg-brand-rose-muted"
+            hitSlop={8}
             onPress={onRemove}
           >
-            <Trash2 color={colors["danger-strong"]} size={10} />
-            <Text className="ml-1 text-[9px] font-bold text-brand-danger-strong">
-              Remove
-            </Text>
+            <Trash2 color={colors["danger-strong"]} size={15} />
           </Pressable>
         </View>
       </View>
@@ -114,6 +112,7 @@ export default function FavoritesDrawer({
   } = useCart();
   const insets = useSafeAreaInsets();
   const { width: windowWidth } = useWindowDimensions();
+  const { showAlert } = useCustomAlert();
   const [actionError, setActionError] = useState("");
 
   const handleRemove = async (food: FoodProduct) => {
@@ -124,6 +123,22 @@ export default function FavoritesDrawer({
       console.error("Failed to remove a favorite:", error);
       setActionError("We could not update your favorites. Please try again.");
     }
+  };
+
+  const confirmRemove = (food: FoodProduct) => {
+    showAlert({
+      title: "Remove favorite?",
+      message: `Remove ${getFoodName(food)} from your saved favorites?`,
+      variant: "confirm",
+      actions: [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Remove",
+          style: "destructive",
+          onPress: () => void handleRemove(food),
+        },
+      ],
+    });
   };
 
   const openFood = (food: FoodProduct) => {
@@ -152,27 +167,28 @@ export default function FavoritesDrawer({
         />
         <View
           accessibilityViewIsModal
-          className="h-full border-l border-brand-neutral-border-warm bg-brand-surface-modal shadow-2xl"
+          className="h-full flex-1 border-l border-brand-neutral-border-warm bg-brand-surface-modal shadow-2xl"
           style={{
             width: Math.min(400, windowWidth * 0.94),
-            paddingTop: insets.top,
-            paddingBottom: insets.bottom,
           }}
         >
-          <View className="flex-row items-center border-b border-brand-neutral-border-cream bg-brand-gold-white px-4 py-3">
+          <View
+            className="flex-row items-center border-b border-brand-neutral-border-cream bg-brand-gold-white px-4 pb-3"
+            style={{ paddingTop: insets.top + 12 }}
+          >
             <View className="h-10 w-10 items-center justify-center rounded-full bg-brand-gold-soft">
               <Heart color={colors.heart} fill={colors.heart} size={17} />
             </View>
             <View className="ml-2.5 flex-1">
-              <Text className="font-serif text-[15px] font-extrabold text-brand-neutral-text-forest">
+              <Text className="font-serif text-base font-extrabold text-brand-neutral-text-forest">
                 My Favorites
               </Text>
-              <Text className="mt-0.5 text-[9px] text-brand-neutral-text-warm">
+              <Text className="mt-0.5 text-[10px] text-brand-neutral-text-warm">
                 Your personally saved dishes
               </Text>
             </View>
             <View className="rounded-full bg-brand-rose-surface px-2.5 py-1">
-              <Text className="text-[9px] font-bold text-brand-danger-strong">
+              <Text className="text-[10px] font-bold text-brand-danger-strong">
                 {wishlist.length} {wishlist.length === 1 ? "Item" : "Items"}
               </Text>
             </View>
@@ -195,13 +211,13 @@ export default function FavoritesDrawer({
             {isWishlistLoading ? (
               <View className="flex-1 items-center justify-center">
                 <ActivityIndicator color={colors["green-primary"]} />
-                <Text className="mt-2 text-xs text-slate-500">
+                <Text className="mt-2 text-sm text-slate-500">
                   Loading favorites...
                 </Text>
               </View>
             ) : wishlistError ? (
               <View className="flex-1 items-center justify-center px-5">
-                <Text className="text-center text-xs leading-5 text-rose-700">
+                <Text className="text-center text-sm leading-5 text-rose-700">
                   {wishlistError}
                 </Text>
                 <Pressable
@@ -209,7 +225,7 @@ export default function FavoritesDrawer({
                   className="mt-3 rounded-xl bg-brand-green-primary px-4 py-2.5 active:opacity-80"
                   onPress={() => void refreshWishlist().catch(() => undefined)}
                 >
-                  <Text className="text-xs font-bold text-white">Try again</Text>
+                  <Text className="text-sm font-bold text-white">Try again</Text>
                 </Pressable>
               </View>
             ) : wishlist.length ? (
@@ -220,7 +236,7 @@ export default function FavoritesDrawer({
                     key={foodId || `favorite-${index}`}
                     food={food}
                     onOpen={() => openFood(food)}
-                    onRemove={() => void handleRemove(food)}
+                    onRemove={() => confirmRemove(food)}
                   />
                 );
               })
@@ -232,7 +248,7 @@ export default function FavoritesDrawer({
                 <Text className="mt-4 text-base font-extrabold text-brand-neutral-text-primary">
                   No favorites yet
                 </Text>
-                <Text className="mt-1 text-center text-xs leading-5 text-slate-500">
+                <Text className="mt-1 text-center text-sm leading-5 text-slate-500">
                   Browse the menu and tap the heart on any dish to save it here.
                 </Text>
                 <Pressable
@@ -244,7 +260,7 @@ export default function FavoritesDrawer({
                   }}
                 >
                   <UtensilsCrossed color={colors.white} size={15} />
-                  <Text className="ml-2 text-xs font-bold text-white">
+                  <Text className="ml-2 text-sm font-bold text-white">
                     Browse the menu
                   </Text>
                 </Pressable>
@@ -253,15 +269,18 @@ export default function FavoritesDrawer({
             {actionError ? (
               <Text
                 accessibilityRole="alert"
-                className="mt-1 text-center text-[10px] font-semibold text-rose-700"
+                className="mt-1 text-center text-xs font-semibold text-rose-700"
               >
                 {actionError}
               </Text>
             ) : null}
           </ScrollView>
-          <View className="flex-row items-center justify-center border-t border-brand-neutral-border-cream bg-brand-gold-white px-3 py-2.5">
+          <View
+            className="flex-row items-center justify-center border-t border-brand-neutral-border-cream bg-brand-gold-white px-3 pt-2.5"
+            style={{ paddingBottom: insets.bottom + 10 }}
+          >
             <UtensilsCrossed color={colors["gold-copper"]} size={12} />
-            <Text className="ml-1.5 text-[9px] font-medium text-brand-neutral-text-warm">
+            <Text className="ml-1.5 text-[10px] font-medium text-brand-neutral-text-warm">
               Made with love, saved for you
             </Text>
             <Heart className="ml-1" color={colors.heart} fill={colors.heart} size={9} />
