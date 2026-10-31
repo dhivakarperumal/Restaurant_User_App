@@ -25,6 +25,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useCustomAlert } from "../../contexts/CustomAlertContext";
+import FavoritesDrawer from "../../components/common/FavoritesDrawer";
 import { getStoredUser } from "../../lib/api";
 import { confirmLogout } from "../../lib/logout";
 
@@ -54,6 +55,7 @@ export default function TopHeader({ title }: TopHeaderProps) {
   const { showAlert } = useCustomAlert();
   const blurTarget = useRef<ComponentRef<typeof View> | null>(null);
   const [isMenuVisible, setIsMenuVisible] = useState(false);
+  const [isFavoritesVisible, setIsFavoritesVisible] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [account, setAccount] = useState<AccountDetails>({
     name: "",
@@ -150,7 +152,7 @@ export default function TopHeader({ title }: TopHeaderProps) {
               accessibilityLabel="Open your favorites"
               accessibilityRole="button"
               className="mr-1.5 h-10 w-10 items-center justify-center rounded-full border border-brand-neutral-border-cream bg-white active:bg-brand-rose-soft"
-              onPress={() => router.push("/UsersTab/favorites")}
+              onPress={() => setIsFavoritesVisible(true)}
             >
               <Heart color={colors["heart"]} size={20} />
               <View className="absolute right-1 top-1 h-2 w-2 rounded-full border border-white bg-brand-heart" />
@@ -321,6 +323,10 @@ export default function TopHeader({ title }: TopHeaderProps) {
           </View>
         </View>
       </Modal>
+      <FavoritesDrawer
+        visible={isFavoritesVisible}
+        onClose={() => setIsFavoritesVisible(false)}
+      />
     </>
   );
 }
