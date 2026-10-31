@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { router, usePathname } from "expo-router";
 import {
   ActivityIndicator,
@@ -10,10 +10,10 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
-import { LogOut, UserRound } from "lucide-react-native";
+import { Bell, LogOut, UserRound, X } from "lucide-react-native";
 import { useCustomAlert } from "../../contexts/CustomAlertContext";
 import { useAuth } from "../../contexts/AuthContext";
-import { getStoredUser } from "../../lib/api";
+import api, { getStoredUser } from "../../lib/api";
 import { confirmLogout } from "../../lib/logout";
 
 type AccountDetails = {
@@ -21,6 +21,24 @@ type AccountDetails = {
   email: string;
   initial: string;
 };
+
+type OrderNotice = {
+  id: string;
+};
+
+function asRecord(value: unknown): Record<string, unknown> | null {
+  return typeof value === "object" && value !== null && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : null;
+}
+
+const NEW_ORDER_STATUSES = new Set([
+  "NEW",
+  "NEW_ORDER",
+  "PENDING",
+  "ORDER_PLACED",
+  "ASSIGNED",
+]);
 
 const deliveryTitles: Record<string, string> = {
   "/delivery": "Dashboard",
@@ -70,6 +88,10 @@ export default function DeliveryTopBar() {
   });
   const [isMenuVisible, setIsMenuVisible] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [unreadOrderCount, setUnreadOrderCount] = useState(0);
+  const [newOrderNotice, setNewOrderNotice] = useState<OrderNotice | null>(null);
+  const knownOrderIds = useRef<Set<string> | null>(null);
+  const isCheckingOrders = useRef(false);
   const title = deliveryTitles[pathname] ?? "Delivery Partner";
 
   useEffect(() => {
@@ -86,6 +108,71 @@ export default function DeliveryTopBar() {
       active = false;
     };
   }, []);
+
+  useEffect(() => {
+    let active = true;
+
+    const checkForNewOrders = async () => {
+      if (isCheckingOrders.current) return;
+      isCheckingOrders.current = true;
+
+      try {
+        const response = await api.get("/delivery-partner/orders");
+        const root = asRecord(response.data);
+        const nested = asRecord(root?.data);
+        const ordersValue = Array.isArray(response.data)
+          ? response.data
+          : root?.orders ?? nested?.orders ?? root?.data;
+        if (!Array.isArray(ordersValue)) {
+          throw new Error("The assigned orders response was invalid.");
+        }
+
+        const eligibleOrders = ordersValue.flatMap((value) => {
+          const order = asRecord(value);
+          if (!order) return [];
+          const id = String(order.order_id ?? order.id ?? order.order_number ?? "").trim();
+          const status = String(order.order_status ?? order.status ?? "")
+            .trim()
+            .toUpperCase()
+            .replace(/[\s-]+/g, "_");
+          return id && NEW_ORDER_STATUSES.has(status) ? [{ id }] : [];
+        });
+        const currentIds = new Set(eligibleOrders.map((order) => order.id));
+
+        if (!active) return;
+        if (knownOrderIds.current === null) {
+          knownOrderIds.current = currentIds;
+          return;
+        }
+
+        const newOrders = eligibleOrders.filter(
+          (order) => !knownOrderIds.current?.has(order.id),
+        );
+        for (const id of currentIds) knownOrderIds.current.add(id);
+        if (newOrders.length) {
+          setUnreadOrderCount((count) => count + newOrders.length);
+          setNewOrderNotice(newOrders[newOrders.length - 1]);
+        }
+      } catch (error: unknown) {
+        console.error("Failed to check for new delivery orders:", error);
+      } finally {
+        isCheckingOrders.current = false;
+      }
+    };
+
+    void checkForNewOrders();
+    const interval = setInterval(() => void checkForNewOrders(), 20000);
+    return () => {
+      active = false;
+      clearInterval(interval);
+    };
+  }, []);
+
+  const openOrders = () => {
+    setNewOrderNotice(null);
+    setUnreadOrderCount(0);
+    router.push("/DeliveryTab/orders");
+  };
 
   return (
     <SafeAreaView
@@ -121,23 +208,91 @@ export default function DeliveryTopBar() {
           </View>
         </View>
 
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Open delivery partner profile menu"
-          accessibilityState={{ expanded: isMenuVisible }}
-          className="ml-3 h-11 w-11 items-center justify-center rounded-full border border-[#D9E6D9] bg-[#EAF2E8] active:bg-[#DCEBDD]"
-          disabled={isLoggingOut}
-          onPress={() => setIsMenuVisible(true)}
-        >
-          {isLoggingOut ? (
-            <ActivityIndicator color="#1A6A3B" />
-          ) : (
-            <Text className="text-base font-extrabold text-[#1A6A3B]">
-              {account.initial || <UserRound color="#1A6A3B" size={20} />}
-            </Text>
-          )}
-        </Pressable>
+        <View className="ml-3 flex-row items-center">
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={
+              unreadOrderCount
+                ? `${unreadOrderCount} new delivery orders. Open orders`
+                : "Open delivery orders"
+            }
+            className="mr-2 h-11 w-11 items-center justify-center rounded-full border border-white/40 bg-white/90 active:bg-white"
+            onPress={openOrders}
+          >
+            <Bell color="#08734D" size={20} strokeWidth={2.2} />
+            {unreadOrderCount > 0 ? (
+              <View className="absolute -right-1 -top-1 min-h-5 min-w-5 items-center justify-center rounded-full border-2 border-[#06452F] bg-[#E5484D] px-1">
+                <Text className="text-[9px] font-black text-white">
+                  {unreadOrderCount > 9 ? "9+" : unreadOrderCount}
+                </Text>
+              </View>
+            ) : null}
+          </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Open delivery partner profile menu"
+            accessibilityState={{ expanded: isMenuVisible }}
+            className="h-11 w-11 items-center justify-center rounded-full border border-[#D9E6D9] bg-[#EAF2E8] active:bg-[#DCEBDD]"
+            disabled={isLoggingOut}
+            onPress={() => setIsMenuVisible(true)}
+          >
+            {isLoggingOut ? (
+              <ActivityIndicator color="#1A6A3B" />
+            ) : (
+              <Text className="text-base font-extrabold text-[#1A6A3B]">
+                {account.initial || <UserRound color="#1A6A3B" size={20} />}
+              </Text>
+            )}
+          </Pressable>
+        </View>
       </View>
+
+      <Modal
+        animationType="fade"
+        onRequestClose={() => setNewOrderNotice(null)}
+        transparent
+        visible={newOrderNotice !== null}
+      >
+        <View className="flex-1 items-center justify-center bg-black/50 px-6">
+          <Pressable
+            accessibilityLabel="Dismiss new order notification"
+            className="absolute inset-0"
+            onPress={() => setNewOrderNotice(null)}
+          />
+          <View
+            accessibilityViewIsModal
+            className="w-full max-w-[380px] rounded-3xl bg-white p-6"
+          >
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Dismiss notification"
+              className="absolute right-3 top-3 z-10 h-10 w-10 items-center justify-center rounded-full bg-slate-100"
+              onPress={() => setNewOrderNotice(null)}
+            >
+              <X color="#64748B" size={18} />
+            </Pressable>
+            <View className="h-14 w-14 items-center justify-center rounded-2xl bg-emerald-100">
+              <Bell color="#08734D" size={26} />
+            </View>
+            <Text className="mt-4 text-xs font-extrabold uppercase tracking-[2px] text-emerald-700">
+              New delivery order
+            </Text>
+            <Text className="mt-2 text-xl font-black text-slate-900">
+              Order #{newOrderNotice?.id}
+            </Text>
+            <Text className="mt-2 text-sm leading-5 text-slate-600">
+              A new order is waiting for you. Open Orders to review the details.
+            </Text>
+            <Pressable
+              accessibilityRole="button"
+              className="mt-5 min-h-12 flex-row items-center justify-center rounded-xl bg-[#08734D] px-4 active:opacity-80"
+              onPress={openOrders}
+            >
+              <Text className="font-extrabold text-white">View order</Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
 
       <Modal
         animationType="fade"
