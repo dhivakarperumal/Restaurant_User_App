@@ -122,13 +122,13 @@ export default function CustomerReviews() {
         </Text>
       </View>
 
-      <View className="overflow-hidden rounded-[24px] border border-[#D5A233] bg-white shadow-md">
+      <View className="overflow-hidden rounded-[24px] bg-[#06402D] shadow-md">
         <View className="px-5 pb-5 pt-5">
-          <Text className="text-[10px] font-bold uppercase tracking-[2px] text-[#084A2B]">
+          <Text className="text-[10px] font-bold uppercase tracking-[2px] text-white/90">
             Customer reviews
           </Text>
           <View className="mt-2 flex-row items-end">
-            <Text className="font-serif text-5xl leading-[52px] text-[#084A2B]">
+            <Text className="font-serif text-5xl leading-[52px] text-white">
               {loading ? "—" : averageRating.toFixed(1)}
             </Text>
             <Text className="mb-1 ml-2 font-serif text-xl text-[#D5A233]">/ 5</Text>
@@ -140,14 +140,14 @@ export default function CustomerReviews() {
             {Array.from({ length: 5 }, (_, index) => (
               <Star
                 key={index}
-                color={index < Math.round(averageRating) ? "#D5A233" : "#DCE5DD"}
-                fill={index < Math.round(averageRating) ? "#D5A233" : "transparent"}
+                color={index < Math.round(averageRating) ? "#E6A622" : "#FFFFFF"}
+                fill={index < Math.round(averageRating) ? "#E6A622" : "transparent"}
                 size={21}
                 style={{ opacity: index < Math.round(averageRating) ? 1 : 0.3 }}
               />
             ))}
           </View>
-          <Text className="mt-2 text-xs text-[#31513B]">
+          <Text className="mt-2 text-xs text-white/90">
             Based on {loading ? "…" : reviews.length} recent published{" "}
             {reviews.length === 1 ? "review" : "reviews"}
           </Text>
