@@ -154,7 +154,9 @@ export default function FavoritesDrawer({
   return (
     <Modal
       animationType="fade"
+      navigationBarTranslucent
       onRequestClose={onClose}
+      statusBarTranslucent
       transparent
       visible={visible}
     >
