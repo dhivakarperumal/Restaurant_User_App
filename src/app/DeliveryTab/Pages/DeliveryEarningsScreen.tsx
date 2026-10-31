@@ -66,6 +66,112 @@ function firstDefined(record: Record<string, unknown>, keys: string[]): unknown 
   return undefined;
 }
 
+function getReadableOrderNumber(record: Record<string, unknown>): string | null {
+  const value = firstDefined(record, [
+    "order_number",
+    "order_no",
+    "order_code",
+    "orderNumber",
+    "orderNo",
+    "orderCode",
+  ]);
+  if (typeof value !== "string" && typeof value !== "number") return null;
+  const orderNumber = String(value).trim();
+  return orderNumber &&
+    !/^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i.test(orderNumber)
+    ? orderNumber
+    : null;
+}
+
+function getOrderLookupKeys(record: Record<string, unknown>): string[] {
+  return [
+    "id",
+    "order_id",
+    "orderId",
+    "order_uuid",
+    "orderUuid",
+    "order_number",
+    "orderNumber",
+    "order_no",
+    "orderNo",
+    "order_code",
+    "orderCode",
+  ]
+    .map((key) => record[key])
+    .filter((value): value is string | number =>
+      typeof value === "string" || typeof value === "number",
+    )
+    .map((value) => String(value).trim().toLowerCase())
+    .filter(Boolean);
+}
+
+function parseOrderNumberLookup(value: unknown): Record<string, string> {
+  const findOrderRecords = (candidate: unknown): unknown[] | null => {
+    if (Array.isArray(candidate)) return candidate;
+    const record = asRecord(candidate);
+    if (!record) return null;
+    for (const key of ["orders", "data", "results"]) {
+      if (record[key] !== undefined) {
+        const found = findOrderRecords(record[key]);
+        if (found) return found;
+      }
+    }
+    return null;
+  };
+  const records = findOrderRecords(value);
+  if (!records) throw new Error("The assigned orders response was invalid.");
+
+  const lookup: Record<string, string> = {};
+  for (const value of records) {
+    const record = asRecord(value);
+    if (!record) continue;
+    const nestedOrder =
+      asRecord(firstDefined(record, ["order", "order_details", "delivery_order"])) ?? {};
+    const orderNumber =
+      getReadableOrderNumber(record) ?? getReadableOrderNumber(nestedOrder);
+    if (!orderNumber) continue;
+
+    for (const key of [...getOrderLookupKeys(record), ...getOrderLookupKeys(nestedOrder)]) {
+      lookup[key] = orderNumber;
+    }
+  }
+  return lookup;
+}
+
+function getEarningsOrderNumber(
+  entry: EarningsRecord,
+  orderNumberLookup: Record<string, string>,
+): string | null {
+  const nestedOrder =
+    asRecord(firstDefined(entry, ["order", "order_details", "delivery_order"])) ?? {};
+  const directNumber =
+    getReadableOrderNumber(nestedOrder) ?? getReadableOrderNumber(entry);
+  if (directNumber) return directNumber;
+
+  const nestedKeys = getOrderLookupKeys(nestedOrder);
+  const reference =
+    entry.order_id ??
+    entry.orderId ??
+    entry.order_uuid ??
+    entry.orderUuid ??
+    entry.delivery_order_id ??
+    entry.deliveryOrderId ??
+    (typeof entry.order === "string" || typeof entry.order === "number" ? entry.order : undefined);
+  const entryKeys = typeof reference === "string" || typeof reference === "number"
+    ? [String(reference).trim().toLowerCase()]
+    : [];
+  for (const key of [...nestedKeys, ...entryKeys]) {
+    if (orderNumberLookup[key]) return orderNumberLookup[key];
+  }
+  const directReference = typeof reference === "string" || typeof reference === "number"
+    ? String(reference).trim()
+    : "";
+  if (directReference && !/^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i.test(directReference)) {
+    return directReference;
+  }
+  return null;
+}
+
 function formatMoney(value: unknown): string {
   if (value == null || value === "") return "—";
   const amount = Number(value);
@@ -179,6 +285,7 @@ export default function DeliveryEarningsScreen() {
   const [appliedFrom, setAppliedFrom] = useState("");
   const [appliedTo, setAppliedTo] = useState("");
   const [data, setData] = useState<EarningsData>({ summary: {}, entries: [] });
+  const [orderNumberLookup, setOrderNumberLookup] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [refreshVersion, setRefreshVersion] = useState(0);
@@ -223,6 +330,24 @@ export default function DeliveryEarningsScreen() {
       active = false;
     };
   }, [appliedFrom, appliedTo, range, refreshVersion]);
+
+  useEffect(() => {
+    let active = true;
+    const loadOrderNumbers = async () => {
+      try {
+        const response = await api.get("/delivery-partner/orders");
+        const lookup = parseOrderNumberLookup(response.data);
+        if (active) setOrderNumberLookup(lookup);
+      } catch (error: unknown) {
+        console.error("Failed to load order numbers for earnings history:", error);
+      }
+    };
+
+    void loadOrderNumbers();
+    return () => {
+      active = false;
+    };
+  }, [refreshVersion]);
 
   const refresh = useCallback(() => {
     if (loading || refreshing) return;
@@ -545,6 +670,7 @@ export default function DeliveryEarningsScreen() {
               const displayDistance = distance == null || distance === ""
                 ? "—"
                 : `${String(distance)} km`;
+              const orderNumber = getEarningsOrderNumber(entry, orderNumberLookup);
 
               return (
                 <View
@@ -561,12 +687,22 @@ export default function DeliveryEarningsScreen() {
                       <Text className="text-[9px] font-bold uppercase tracking-wide text-slate-400">
                         Delivery payout
                       </Text>
-                      <Text className="mt-0.5 text-sm font-extrabold text-[#26352B]">
-                        Order #{String(firstDefined(entry, ["order_id", "id"]) ?? "—")}
-                      </Text>
                     </View>
-                    <Text className="text-base font-black text-[#17663D]">
+                    <Text className="ml-2 text-base font-black text-[#17663D]">
                       {formatMoney(firstDefined(entry, ["total_earnings", "total"]))}
+                    </Text>
+                  </View>
+
+                  <View className="mt-3 rounded-xl bg-white px-3 py-2.5">
+                    <Text className="text-[9px] font-bold uppercase tracking-wide text-slate-400">
+                      Order number
+                    </Text>
+                    <Text
+                      className="mt-1 text-[11px] font-semibold text-[#26352B]"
+                      selectable
+                      style={{ flexShrink: 1 }}
+                    >
+                      {orderNumber ?? "Order number unavailable"}
                     </Text>
                   </View>
 

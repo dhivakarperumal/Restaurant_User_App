@@ -158,6 +158,46 @@ function orderIdentifier(order: DeliveryOrder): string {
   return order.order_id;
 }
 
+function getOrderItemCount(order: DeliveryOrder): number | null {
+  const declaredCountValue = firstText(order, [
+    "item_count",
+    "items_count",
+    "itemCount",
+    "itemsCount",
+  ]);
+  const declaredCount = Number(declaredCountValue);
+  if (declaredCountValue && Number.isFinite(declaredCount) && declaredCount >= 0) {
+    return declaredCount;
+  }
+  if (order.items.length === 0) return null;
+
+  return order.items.reduce((count, item) => {
+    const quantity = Number(firstText(item, ["quantity", "qty"]));
+    return count + (Number.isFinite(quantity) && quantity > 0 ? quantity : 1);
+  }, 0);
+}
+
+function orderDisplayNumber(order: DeliveryOrder): string {
+  const keys = [
+    "order_number",
+    "order_no",
+    "order_code",
+    "orderNumber",
+    "orderNo",
+    "orderCode",
+  ];
+  const nestedOrder =
+    asRecord(order.order) ??
+    asRecord(order.order_details) ??
+    asRecord(order.delivery_order);
+  const displayNumber =
+    (nestedOrder ? firstText(nestedOrder, keys) : "") || firstText(order, keys);
+  return displayNumber &&
+    !/^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i.test(displayNumber)
+    ? displayNumber
+    : orderIdentifier(order);
+}
+
 function getCustomer(order: DeliveryOrder): Record<string, unknown> {
   return asRecord(order.customer) ?? {};
 }
@@ -438,6 +478,7 @@ export default function DeliveryOrdersScreen() {
         !query ||
         [
           orderIdentifier(order),
+          orderDisplayNumber(order),
           firstText(order, ["customer_name"]),
           firstText(customer, ["name", "full_name", "fullName"]),
           firstText(order, ["customer_phone", "phone"]),
@@ -555,7 +596,7 @@ export default function DeliveryOrdersScreen() {
       setSelectedOrder(result);
       showAlert({
         title: "Delivery status updated",
-        message: `Order ${orderIdentifier(order)} is now ${statusLabel(result.order_status)}.`,
+        message: `Order ${orderDisplayNumber(order)} is now ${statusLabel(result.order_status)}.`,
         variant: "success",
       });
     } catch (error: unknown) {
@@ -573,7 +614,7 @@ export default function DeliveryOrdersScreen() {
   const confirmOrderStatus = (order: DeliveryOrder, nextStatus: string) => {
     showAlert({
       title: "Confirm status update",
-      message: `Mark ${orderIdentifier(order)} as ${statusLabel(nextStatus)}?`,
+      message: `Mark order ${orderDisplayNumber(order)} as ${statusLabel(nextStatus)}?`,
       variant: "confirm",
       actions: [
         { text: "Cancel", style: "cancel" },
@@ -624,6 +665,7 @@ export default function DeliveryOrdersScreen() {
     const dropoff = firstText(order, ["delivery_address", "dropoff_address"]);
     const isUpdating = updatingOrderId === orderIdentifier(order);
     const orderTotal = getOrderTotal(order);
+    const itemCount = getOrderItemCount(order);
     const firstItemImage = getFirstItemImage(order.items[0]);
 
     return (
@@ -640,7 +682,7 @@ export default function DeliveryOrdersScreen() {
           />
           <View className="mr-2 flex-1">
             <Text className="text-[10px] font-extrabold uppercase tracking-[1.2px] text-[#718078]">
-              Order {orderIdentifier(order)}
+              Order {orderDisplayNumber(order)}
             </Text>
             <Text className="mt-0.5 text-base font-extrabold text-[#17251E]" numberOfLines={1}>
               {customerName}
@@ -678,11 +720,21 @@ export default function DeliveryOrdersScreen() {
           </View>
         </View>
         <View className="mt-3 flex-row items-center justify-between border-t border-[#EDF0EC] pt-3">
-          <View className="mr-2 flex-1 flex-row items-center">
-            <CalendarDays color="#829087" size={14} />
-            <Text className="ml-1.5 flex-1 text-[10px] font-medium text-slate-500" numberOfLines={1}>
-              {formatDate(getOrderDate(order))}
-            </Text>
+          <View className="mr-2 flex-1">
+            <View className="flex-row items-center">
+              <CalendarDays color="#829087" size={14} />
+              <Text className="ml-1.5 flex-1 text-[10px] font-medium text-slate-500" numberOfLines={1}>
+                {formatDate(getOrderDate(order))}
+              </Text>
+            </View>
+            <View className="mt-1.5 flex-row items-center">
+              <Package color="#829087" size={14} />
+              <Text className="ml-1.5 text-[10px] font-semibold text-[#526057]">
+                {itemCount == null
+                  ? "Items unavailable"
+                  : `${itemCount} ${itemCount === 1 ? "item" : "items"}`}
+              </Text>
+            </View>
           </View>
           <View className="items-end">
             <Text className="text-[9px] font-bold uppercase tracking-wide text-slate-500">
@@ -1064,7 +1116,7 @@ export default function DeliveryOrdersScreen() {
                     Delivery details
                   </Text>
                   <Text className="mt-1 text-xl font-black text-[#17251E]">
-                    Order {orderIdentifier(selectedOrder)}
+                    Order {orderDisplayNumber(selectedOrder)}
                   </Text>
                 </View>
                 <Pressable
