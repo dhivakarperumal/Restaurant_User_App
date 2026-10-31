@@ -274,46 +274,6 @@ export default function TopHeader({ title }: TopHeaderProps) {
             <View className="mx-3 border-t border-brand-neutral-border" />
             <Pressable
               accessibilityRole="button"
-              className="mx-2 min-h-[46px] flex-row items-center rounded-xl px-2 active:bg-brand-rose-muted"
-              onPress={() => {
-                setIsMenuVisible(false);
-                router.push("/UsersTab/favorites");
-              }}
-            >
-              <View className="mr-2 h-8 w-8 items-center justify-center rounded-full bg-brand-danger-surface-alt">
-                <Heart color={colors["heart"]} size={17} />
-              </View>
-              <View className="flex-1">
-                <Text className="text-xs font-bold text-brand-neutral-text-forest">My Favorites</Text>
-                <Text className="mt-0.5 text-[9px] text-brand-neutral-text-warm">
-                  View saved items
-                </Text>
-              </View>
-              <ChevronRight color={colors["neutral-text-warm"]} size={16} />
-            </Pressable>
-            <View className="mx-3 border-t border-brand-neutral-border" />
-            <Pressable
-              accessibilityRole="button"
-              className="mx-2 min-h-[46px] flex-row items-center rounded-xl px-2 active:bg-brand-green-muted-surface"
-              onPress={() => {
-                setIsMenuVisible(false);
-                router.push("/UsersTab/orders");
-              }}
-            >
-              <View className="mr-2 h-8 w-8 items-center justify-center rounded-full bg-brand-gold-soft">
-                <ShoppingBag color={colors["green-secondary"]} size={17} />
-              </View>
-              <View className="flex-1">
-                <Text className="text-xs font-bold text-brand-neutral-text-forest">My Orders</Text>
-                <Text className="mt-0.5 text-[9px] text-brand-neutral-text-warm">
-                  Check your order history
-                </Text>
-              </View>
-              <ChevronRight color={colors["neutral-text-warm"]} size={16} />
-            </Pressable>
-            <View className="mx-3 border-t border-brand-neutral-border" />
-            <Pressable
-              accessibilityRole="button"
               className="mx-2 mb-2 mt-1 min-h-[48px] flex-row items-center rounded-xl bg-brand-warning-surface px-2 active:bg-brand-danger-soft"
               disabled={isLoggingOut}
               onPress={() => confirmLogout(showAlert, setIsLoggingOut)}
