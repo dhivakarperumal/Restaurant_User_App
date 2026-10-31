@@ -4,6 +4,7 @@ import DateTimePicker, {
 } from "@react-native-community/datetimepicker";
 import {
   ActivityIndicator,
+  Image,
   Modal,
   Platform,
   Pressable,
@@ -21,6 +22,7 @@ import {
   Check,
   CheckCircle2,
   Clock3,
+  Eye,
   MapPin,
   Navigation,
   Package,
@@ -32,7 +34,7 @@ import {
   XCircle,
 } from "lucide-react-native";
 import { useCustomAlert } from "../../contexts/CustomAlertContext";
-import api, { getApiErrorMessage } from "../../lib/api";
+import api, { API_BASE_URL, getApiErrorMessage } from "../../lib/api";
 
 type FilterKey = "all" | "today" | "delivery" | "cancelled";
 type OrderView = {
@@ -233,6 +235,37 @@ function getOrderTotal(order: DeliveryOrder): number | null {
     }
   }
   return hasItemAmount ? total : null;
+}
+
+function getFirstItemImage(item: OrderItem | undefined): string {
+  if (!item) return "";
+  const images = item.food_images;
+  const firstImage = Array.isArray(images) ? images[0] : null;
+  const imageRecord = asRecord(firstImage);
+  const value =
+    firstText(item, ["product_image", "image", "thumbnail_image"]) ||
+    firstText(imageRecord ?? {}, ["image_url", "url", "image"]);
+  if (!value) return "";
+  if (/^(data:|blob:|https?:\/\/)/i.test(value)) return value;
+  const baseUrl = API_BASE_URL.replace(/\/api\/?$/i, "").replace(/\/+$/, "");
+  return `${baseUrl}${value.startsWith("/") ? value : `/${value}`}`;
+}
+
+function OrderItemThumbnail({ uri }: { uri: string }) {
+  const [hasError, setHasError] = useState(false);
+  return uri && !hasError ? (
+    <Image
+      accessibilityLabel="First item in this order"
+      className="mr-3 h-11 w-11 rounded-2xl bg-[#EAF4EA]"
+      onError={() => setHasError(true)}
+      resizeMode="cover"
+      source={{ uri }}
+    />
+  ) : (
+    <View className="mr-3 h-11 w-11 items-center justify-center rounded-2xl bg-[#EAF4EA]">
+      <Package color="#17663D" size={20} />
+    </View>
+  );
 }
 
 function getStatusColors(status: unknown): { background: string; foreground: string } {
@@ -585,6 +618,7 @@ export default function DeliveryOrdersScreen() {
     const dropoff = firstText(order, ["delivery_address", "dropoff_address"]);
     const isUpdating = updatingOrderId === orderIdentifier(order);
     const orderTotal = getOrderTotal(order);
+    const firstItemImage = getFirstItemImage(order.items[0]);
 
     return (
       <Pressable
@@ -594,9 +628,7 @@ export default function DeliveryOrdersScreen() {
         onPress={() => setSelectedOrder(order)}
       >
         <View className="flex-row items-center">
-          <View className="mr-3 h-11 w-11 items-center justify-center rounded-2xl bg-[#EAF4EA]">
-            <Package color="#17663D" size={20} />
-          </View>
+          <OrderItemThumbnail uri={firstItemImage} />
           <View className="mr-2 flex-1">
             <Text className="text-[10px] font-extrabold uppercase tracking-[1.2px] text-[#718078]">
               Order {orderIdentifier(order)}
@@ -651,6 +683,39 @@ export default function DeliveryOrdersScreen() {
               {orderTotal == null ? "Amount unavailable" : formatAmount(orderTotal)}
             </Text>
           </View>
+        </View>
+        <View className="mt-3 flex-row">
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`Track order ${orderIdentifier(order)} on map`}
+            className="mr-2 min-h-10 flex-1 flex-row items-center justify-center rounded-xl bg-[#EEF5EB] px-3 active:bg-[#E1EDE0]"
+            onPress={(event) => {
+              event.stopPropagation();
+              void openExternalUrl(
+                getLocationUrl(
+                  dropoff,
+                  order.delivery_latitude,
+                  order.delivery_longitude,
+                ),
+                "Navigation",
+              );
+            }}
+          >
+            <Navigation color="#17663D" size={15} />
+            <Text className="ml-2 text-xs font-bold text-[#17663D]">Track map</Text>
+          </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`View order ${orderIdentifier(order)}`}
+            className="min-h-10 flex-1 flex-row items-center justify-center rounded-xl border border-[#E1E8E1] bg-white px-3 active:bg-[#F6F8F5]"
+            onPress={(event) => {
+              event.stopPropagation();
+              setSelectedOrder(order);
+            }}
+          >
+            <Eye color="#53645A" size={16} />
+            <Text className="ml-2 text-xs font-bold text-[#39483F]">View order</Text>
+          </Pressable>
         </View>
         {normalizeStatus(order.order_status) === "REACHED_CUSTOMER" ? (
           <Pressable
