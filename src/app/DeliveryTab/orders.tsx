@@ -584,6 +584,7 @@ export default function DeliveryOrdersScreen() {
     ]);
     const dropoff = firstText(order, ["delivery_address", "dropoff_address"]);
     const isUpdating = updatingOrderId === orderIdentifier(order);
+    const orderTotal = getOrderTotal(order);
 
     return (
       <Pressable
@@ -642,11 +643,13 @@ export default function DeliveryOrdersScreen() {
               {formatDate(getOrderDate(order))}
             </Text>
           </View>
-          <View className="flex-row items-center rounded-full bg-[#EAF4EA] px-3 py-1.5">
-            <Text className="text-xs font-extrabold text-[#17663D]">
-              {formatAmount(order.delivery_charge)}
+          <View className="items-end">
+            <Text className="text-[9px] font-bold uppercase tracking-wide text-slate-500">
+              Order total
             </Text>
-            <Text className="ml-1 text-[9px] font-semibold text-[#52745A]">delivery</Text>
+            <Text className="mt-0.5 text-sm font-black text-[#17663D]">
+              {orderTotal == null ? "Amount unavailable" : formatAmount(orderTotal)}
+            </Text>
           </View>
         </View>
         {normalizeStatus(order.order_status) === "REACHED_CUSTOMER" ? (
@@ -687,6 +690,7 @@ export default function DeliveryOrdersScreen() {
   const selectedNextStatus = selectedOrder
     ? NEXT_STATUS[normalizeStatus(selectedOrder.order_status)]
     : undefined;
+  const selectedOrderTotal = selectedOrder ? getOrderTotal(selectedOrder) : null;
   const customerName =
     firstText(selectedOrder ?? {}, ["customer_name"]) ||
     firstText(selectedCustomer, ["name", "full_name", "fullName"]) ||
@@ -1131,10 +1135,12 @@ export default function DeliveryOrdersScreen() {
                       {firstText(selectedOrder, ["payment_type", "payment_method"]) || "—"}
                     </Text>
                   </View>
-                  <View className="mt-2 flex-row justify-between">
-                    <Text className="text-xs font-bold text-[#39483F]">Delivery charge</Text>
-                    <Text className="text-xs font-extrabold text-[#17663D]">
-                      {formatAmount(selectedOrder.delivery_charge)}
+                  <View className="mt-3 flex-row justify-between border-t border-[#F0F2EE] pt-3">
+                    <Text className="text-sm font-extrabold text-[#17251E]">Total amount</Text>
+                    <Text className="text-sm font-black text-[#17663D]">
+                      {selectedOrderTotal == null
+                        ? "Unavailable"
+                        : formatAmount(selectedOrderTotal)}
                     </Text>
                   </View>
                 </View>
