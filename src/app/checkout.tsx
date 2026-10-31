@@ -158,8 +158,14 @@ async function getAddressFromCoordinates(
 
   const street = [result.streetNumber, result.street].filter(Boolean).join(" ");
   const address = {
-    address_line: street || result.name || "",
-    area_locality: result.district || result.subregion || "",
+    address_line: street || result.name || result.formattedAddress || "",
+    area_locality:
+      result.district ||
+      result.subregion ||
+      result.name ||
+      result.street ||
+      result.city ||
+      "",
     city: result.city || result.subregion || result.district || "",
     state: result.region === "NCT of Delhi" ? "Delhi" : result.region || "",
     pincode: (result.postalCode || "").replace(/\s/g, "").slice(0, 6),
@@ -178,6 +184,7 @@ async function getAddressFromCoordinates(
 }
 
 type FingerprintedDeliveryQuote = DeliveryQuote & { fingerprint: string };
+type DeliveryLocationSource = "device" | "address" | null;
 
 function SectionHeading({
   icon,
@@ -312,6 +319,8 @@ export default function CheckoutScreen() {
   const [address, setAddress] = useState<CheckoutAddress>(EMPTY_ADDRESS);
   const [deliveryLocation, setDeliveryLocation] =
     useState<CheckoutLocation | null>(null);
+  const [deliveryLocationSource, setDeliveryLocationSource] =
+    useState<DeliveryLocationSource>(null);
   const [deliveryQuote, setDeliveryQuote] =
     useState<FingerprintedDeliveryQuote | null>(null);
   const [deliveryQuoteError, setDeliveryQuoteError] = useState<{
@@ -427,7 +436,10 @@ export default function CheckoutScreen() {
           address,
           controller.signal,
         );
-        if (active) setDeliveryLocation(location);
+        if (active) {
+          setDeliveryLocation(location);
+          setDeliveryLocationSource("address");
+        }
       } catch (error) {
         if (active) {
           console.error("Could not locate the delivery address:", error);
@@ -493,7 +505,10 @@ export default function CheckoutScreen() {
 
   const updateAddress = (field: keyof CheckoutAddress, value: string) => {
     setSelectedAddressId(null);
-    setDeliveryLocation(null);
+    if (deliveryLocationSource !== "device") {
+      setDeliveryLocation(null);
+      setDeliveryLocationSource(null);
+    }
     setAddressGeocodingError(null);
     setAddressNotice("");
     setAddress((current) => ({ ...current, [field]: value }));
@@ -532,13 +547,22 @@ export default function CheckoutScreen() {
         longitude: position.coords.longitude,
       };
       setDeliveryLocation(location);
+      setDeliveryLocationSource("device");
       setDeliveryQuote(null);
       setAddress(EMPTY_ADDRESS);
       setSelectedAddressId(null);
 
       try {
         const detectedAddress = await getAddressFromCoordinates(location);
-        setAddress({ ...EMPTY_ADDRESS, ...detectedAddress });
+        setAddress((current) => ({
+          ...current,
+          address_line: current.address_line || detectedAddress.address_line || "",
+          area_locality:
+            current.area_locality || detectedAddress.area_locality || "",
+          city: current.city || detectedAddress.city || "",
+          state: current.state || detectedAddress.state || "",
+          pincode: current.pincode || detectedAddress.pincode || "",
+        }));
         setAddressNotice(
           "Location found. Review the detected address and complete any missing details.",
         );
@@ -1006,6 +1030,7 @@ export default function CheckoutScreen() {
                         onPress={() => {
                           setAddress(saved);
                           setDeliveryLocation(null);
+                          setDeliveryLocationSource(null);
                           setAddressGeocodingError(null);
                           setSelectedAddressId(id);
                         }}
@@ -1029,6 +1054,7 @@ export default function CheckoutScreen() {
                     onPress={() => {
                       setAddress(EMPTY_ADDRESS);
                       setDeliveryLocation(null);
+                      setDeliveryLocationSource(null);
                       setAddressGeocodingError(null);
                       setSelectedAddressId(null);
                     }}
