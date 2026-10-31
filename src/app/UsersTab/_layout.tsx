@@ -79,16 +79,24 @@ function RootTabs() {
             style={[
               StyleSheet.absoluteFill,
               {
-                marginHorizontal: 3,
-                marginTop: 4,
-                marginBottom: 4,
+                backgroundColor: "#FFFCF6",
+              },
+            ]}
+          >
+            <View
+              style={{
+                position: "absolute",
+                top: 4,
+                right: 3,
+                bottom: insets.bottom + 4,
+                left: 3,
                 backgroundColor: "#084A2B",
                 borderColor: "#E9BE45",
                 borderWidth: 2,
                 borderRadius: 32,
-              },
-            ]}
-          />
+              }}
+            />
+          </View>
         ),
         tabBarStyle: {
           display:
@@ -204,7 +212,7 @@ function RootTabs() {
                 <View
                   style={[
                     tabIconContainerStyle,
-                    focused && { backgroundColor: "#EAF2E8" },
+                    focused && activeTabIconStyle,
                   ]}
                 >
                   <ShoppingBag {...commonProps} />
@@ -215,7 +223,7 @@ function RootTabs() {
                 <View
                   style={[
                     tabIconContainerStyle,
-                    focused && { backgroundColor: "#EAF2E8" },
+                    focused && activeTabIconStyle,
                   ]}
                 >
                   <UserRound {...commonProps} />
@@ -242,7 +250,7 @@ function RootTabs() {
                 color,
                 fontSize: 10,
                 fontWeight: focused ? "700" : "600",
-                marginTop: focused ? -16 : 1,
+                marginTop: 1,
               }}
             >
               {labels[route.name] ?? route.name}
