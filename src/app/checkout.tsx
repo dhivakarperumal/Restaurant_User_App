@@ -536,7 +536,6 @@ export default function CheckoutScreen() {
           "Location found. Review the detected address and complete any missing details.",
         );
       } catch (error) {
-        console.error("Could not resolve current checkout location:", error);
         setAddressNotice(
           error instanceof Error
             ? `${error.message} You can still enter the address manually.`
@@ -544,7 +543,6 @@ export default function CheckoutScreen() {
         );
       }
     } catch (error) {
-      console.error("Could not fetch the current checkout location:", error);
       setAddressNotice(
         error instanceof Error
           ? error.message
