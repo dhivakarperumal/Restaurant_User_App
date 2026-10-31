@@ -251,11 +251,17 @@ function getFirstItemImage(item: OrderItem | undefined): string {
   return `${baseUrl}${value.startsWith("/") ? value : `/${value}`}`;
 }
 
-function OrderItemThumbnail({ uri }: { uri: string }) {
+function OrderItemThumbnail({
+  uri,
+  accessibilityLabel,
+}: {
+  uri: string;
+  accessibilityLabel: string;
+}) {
   const [hasError, setHasError] = useState(false);
   return uri && !hasError ? (
     <Image
-      accessibilityLabel="First item in this order"
+      accessibilityLabel={accessibilityLabel}
       className="mr-3 h-11 w-11 rounded-2xl bg-[#EAF4EA]"
       onError={() => setHasError(true)}
       resizeMode="cover"
@@ -628,7 +634,10 @@ export default function DeliveryOrdersScreen() {
         onPress={() => setSelectedOrder(order)}
       >
         <View className="flex-row items-center">
-          <OrderItemThumbnail uri={firstItemImage} />
+          <OrderItemThumbnail
+            uri={firstItemImage}
+            accessibilityLabel="First food item image"
+          />
           <View className="mr-2 flex-1">
             <Text className="text-[10px] font-extrabold uppercase tracking-[1.2px] text-[#718078]">
               Order {orderIdentifier(order)}
@@ -1176,19 +1185,30 @@ export default function DeliveryOrdersScreen() {
                     <Text className="ml-2 text-sm font-extrabold text-[#17251E]">Food items</Text>
                   </View>
                   {selectedOrder.items.length ? (
-                    selectedOrder.items.map((item, index) => (
-                      <View
-                        className="mt-3 flex-row justify-between border-b border-[#F0F2EE] pb-2"
-                        key={firstText(item, ["id", "food_id"]) || `${index}`}
-                      >
-                        <Text className="mr-3 flex-1 text-xs text-[#39483F]">
-                          {firstText(item, ["food_name", "name", "product_name"]) || "Food item"}
-                        </Text>
-                        <Text className="text-xs font-semibold text-slate-500">
-                          × {firstText(item, ["quantity", "qty"]) || "1"}
-                        </Text>
-                      </View>
-                    ))
+                    selectedOrder.items.map((item, index) => {
+                      const itemName =
+                        firstText(item, ["food_name", "name", "product_name"]) ||
+                        "Food item";
+                      return (
+                        <View
+                          className="mt-3 flex-row items-center border-b border-[#F0F2EE] pb-3"
+                          key={firstText(item, ["id", "food_id"]) || `${index}`}
+                        >
+                          <OrderItemThumbnail
+                            accessibilityLabel={`${itemName} image`}
+                            uri={getFirstItemImage(item)}
+                          />
+                          <Text className="mr-3 flex-1 text-xs font-semibold leading-5 text-[#39483F]">
+                            {itemName}
+                          </Text>
+                          <View className="rounded-full bg-[#F3F6F1] px-2.5 py-1">
+                            <Text className="text-xs font-bold text-slate-600">
+                              × {firstText(item, ["quantity", "qty"]) || "1"}
+                            </Text>
+                          </View>
+                        </View>
+                      );
+                    })
                   ) : (
                     <Text className="mt-3 text-xs text-slate-500">
                       Item details unavailable
