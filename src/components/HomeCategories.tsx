@@ -146,7 +146,7 @@ export default function HomeCategories() {
         </Text>
         <View className="mt-1 flex-row items-baseline">
           <Text className="text-2xl font-black text-[#17251E]">Choose Your </Text>
-          <Text className="text-2xl font-black italic text-[#1A6A3B]">Favorite</Text>
+          <Text className="text-2xl font-black italic text-[#1A6A3B]">Category</Text>
         </View>
       </View>
 

@@ -108,7 +108,7 @@ export default function HomeCuisines() {
           Our Cuisines
         </Text>
         <Text className="mt-1 text-2xl font-black text-[#17251E]">
-          A World of <Text className="italic text-[#1A6A3B]">Flavors</Text>
+          A World of <Text className="italic text-[#1A6A3B]">Cuisines</Text>
         </Text>
       </View>
 
