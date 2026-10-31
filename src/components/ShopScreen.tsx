@@ -431,7 +431,7 @@ export default function ShopScreen() {
       contentContainerStyle={{ paddingHorizontal: 24, paddingTop: 18, paddingBottom: 120 }}
     >
       <View className="mb-5 items-center">
-        <Text className="text-[11px] font-extrabold uppercase tracking-[2px] text-[#E86D16]">
+        <Text className="text-[11px] font-extrabold uppercase tracking-[2px] text-[#D5A233]">
           Fresh from our kitchen
         </Text>
         <Text className="mt-1 text-2xl font-black text-[#17251E]">Shop the menu</Text>
@@ -476,7 +476,7 @@ export default function ShopScreen() {
           <SlidersHorizontal color="#1A6A3B" size={17} />
           <Text className="ml-2 text-sm font-bold text-[#17251E]">Filters</Text>
           {hasActiveFilters ? (
-            <View className="ml-2 h-2 w-2 rounded-full bg-[#E86D16]" />
+            <View className="ml-2 h-2 w-2 rounded-full bg-[#D5A233]" />
           ) : null}
         </View>
         <ChevronDown

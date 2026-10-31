@@ -383,7 +383,7 @@ function ProductDetailsContent({
               />
             ) : (
               <View className="h-full items-center justify-center">
-                <UtensilsCrossed color="#A05C2A" size={48} />
+                <UtensilsCrossed color="#D5A233" size={48} />
               </View>
             )}
             <Pressable
@@ -397,8 +397,8 @@ function ProductDetailsContent({
             </Pressable>
 
             {discount > 0 ? (
-              <View className="absolute right-4 rounded-full bg-[#E86D16] px-3 py-1.5" style={{ top: Math.max(insets.top + 4, 16) }}>
-                <Text className="text-xs font-extrabold text-white">{Math.round(discount)}% OFF</Text>
+              <View className="absolute right-4 rounded-full bg-[#E9BE45] px-3 py-1.5" style={{ top: Math.max(insets.top + 4, 16) }}>
+                <Text className="text-xs font-extrabold text-[#084A2B]">{Math.round(discount)}% OFF</Text>
               </View>
             ) : null}
 
@@ -437,13 +437,13 @@ function ProductDetailsContent({
                 </View>
               ) : null}
               {food.is_spicy === true ? (
-                <View className="rounded-full bg-amber-50 px-2.5 py-1.5">
-                  <Text className="text-xs font-bold text-amber-800">Spicy</Text>
+                <View className="rounded-full bg-[#FFF3C8] px-2.5 py-1.5">
+                  <Text className="text-xs font-bold text-[#084A2B]">Spicy</Text>
                 </View>
               ) : null}
               {food.featured === true ? (
-                <View className="rounded-full bg-orange-50 px-2.5 py-1.5">
-                  <Text className="text-xs font-bold text-orange-800">Chef&apos;s pick</Text>
+                <View className="rounded-full bg-[#FFF3C8] px-2.5 py-1.5">
+                  <Text className="text-xs font-bold text-[#084A2B]">Chef&apos;s pick</Text>
                 </View>
               ) : null}
             </View>
@@ -461,7 +461,7 @@ function ProductDetailsContent({
                   ₹{Number(food.mrp).toFixed(2)}
                 </Text>
                 {discount > 0 ? (
-                  <Text className="ml-2 text-xs font-bold text-[#E86D16]">
+                  <Text className="ml-2 text-xs font-bold text-[#8A6716]">
                     Save {Math.round(discount)}%
                   </Text>
                 ) : null}

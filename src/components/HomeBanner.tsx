@@ -207,7 +207,7 @@ export default function HomeBanner() {
           {/* Subtitle Badge */}
           <View className="px-5 pt-5">
             <View className="self-start flex-row items-center rounded-full bg-white/20 px-3 py-1.5 backdrop-blur-sm">
-              <Sparkles color="#FFD29A" size={13} strokeWidth={2.2} />
+              <Sparkles color="#E9BE45" size={13} strokeWidth={2.2} />
               <Text className="ml-1.5 text-[10px] font-extrabold uppercase tracking-[1.4px] text-white">
                 {banner.subtitle}
               </Text>
@@ -231,15 +231,15 @@ export default function HomeBanner() {
                 <Pressable
                   accessibilityRole="button"
                   accessibilityLabel="Order now"
-                  className="min-h-11 flex-row items-center justify-center rounded-2xl bg-[#F47716] px-4 shadow-sm"
+                  className="min-h-11 flex-row items-center justify-center rounded-2xl bg-[#E9BE45] px-4 shadow-sm"
                   onPress={() => router.push(getBannerDestination(banner.link))}
                   style={({ pressed }) => ({
                     opacity: pressed ? 0.88 : 1,
                     transform: [{ scale: pressed ? 0.97 : 1 }],
                   })}
                 >
-                  <Text className="text-xs font-extrabold text-white">Order now</Text>
-                  <ArrowRight color="#FFFFFF" size={14} className="ml-1.5" />
+                  <Text className="text-xs font-extrabold text-[#084A2B]">Order now</Text>
+                  <ArrowRight color="#084A2B" size={14} className="ml-1.5" />
                 </Pressable>
 
                 <Pressable
@@ -260,7 +260,7 @@ export default function HomeBanner() {
                     <View
                       key={dotIdx}
                       className={`h-2 rounded-full ${
-                        dotIdx === activeIndex ? "w-5 bg-[#F47716]" : "w-2 bg-white/50"
+                        dotIdx === activeIndex ? "w-5 bg-[#E9BE45]" : "w-2 bg-white/50"
                       }`}
                     />
                   ))}

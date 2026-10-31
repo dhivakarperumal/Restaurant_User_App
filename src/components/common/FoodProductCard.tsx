@@ -58,7 +58,7 @@ export default function FoodProductCard({
               source={{ uri: image }}
             />
           ) : (
-            <UtensilsCrossed color="#A05C2A" size={26} />
+            <UtensilsCrossed color="#D5A233" size={26} />
           )}
         </Pressable>
         <View className="ml-3 min-w-0 flex-1">
@@ -69,8 +69,8 @@ export default function FoodProductCard({
             </Text>
             {Number(food.rating) > 0 && (
               <View className="ml-1 flex-row items-center">
-                <Star color="#F59E0B" fill="#FBBF24" size={11} />
-                <Text className="ml-0.5 text-[10px] font-bold text-amber-700">
+                <Star color="#D5A233" fill="#D5A233" size={11} />
+                <Text className="ml-0.5 text-[10px] font-bold text-[#8A6716]">
                   {Number(food.rating).toFixed(1)}
                 </Text>
               </View>
@@ -156,7 +156,7 @@ export default function FoodProductCard({
               source={{ uri: image }}
             />
           ) : (
-            <UtensilsCrossed color="#A05C2A" size={32} />
+            <UtensilsCrossed color="#D5A233" size={32} />
           )}
           {!isAvailable ? (
             <View
@@ -173,9 +173,9 @@ export default function FoodProductCard({
           <View className={`h-2.5 w-2.5 rounded-full ${isVeg ? "bg-emerald-600" : "bg-rose-600"}`} />
         </View>
         {food.is_spicy === true && (
-          <View pointerEvents="none" className="absolute bottom-2 left-2 flex-row items-center rounded-md bg-amber-500 px-1.5 py-1">
-            <Flame color="#FFFFFF" size={11} />
-            <Text className="ml-0.5 text-[9px] font-bold text-white">Spicy</Text>
+          <View pointerEvents="none" className="absolute bottom-2 left-2 flex-row items-center rounded-md bg-[#E9BE45] px-1.5 py-1">
+            <Flame color="#084A2B" size={11} />
+            <Text className="ml-0.5 text-[9px] font-bold text-[#084A2B]">Spicy</Text>
           </View>
         )}
         <Pressable
@@ -200,8 +200,8 @@ export default function FoodProductCard({
           </Text>
           {Number(food.rating) > 0 && (
             <View className="ml-1 flex-row items-center">
-              <Star color="#F59E0B" fill="#FBBF24" size={11} />
-              <Text className="ml-0.5 text-[10px] font-bold text-amber-700">
+              <Star color="#D5A233" fill="#D5A233" size={11} />
+              <Text className="ml-0.5 text-[10px] font-bold text-[#8A6716]">
                 {Number(food.rating).toFixed(1)}
               </Text>
             </View>

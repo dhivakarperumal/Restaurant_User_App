@@ -141,7 +141,7 @@ export default function HomeCategories() {
     <View className="mt-7">
       {/* Header Section */}
       <View className="mb-4 items-center">
-        <Text className="text-[11px] font-extrabold uppercase tracking-[2px] text-[#E86D16]">
+        <Text className="text-[11px] font-extrabold uppercase tracking-[2px] text-[#D5A233]">
           Popular Categories
         </Text>
         <View className="mt-1 flex-row items-baseline">
@@ -248,7 +248,7 @@ function CategoryCard({
             params: { category: category.filter },
           })
         }
-        className="h-full w-full items-center justify-between rounded-2xl border-2 border-[#E5E5E5] bg-white p-1.5 shadow-sm active:border-[#D8C7A7] active:scale-95"
+        className="h-full w-full items-center justify-between rounded-2xl border-2 border-[#E8D59D] bg-white p-1.5 shadow-sm active:border-[#D5A233] active:scale-95"
       >
         {/* Aspect Ratio Image Container */}
         <View
@@ -266,7 +266,7 @@ function CategoryCard({
             />
           ) : (
             <View className="h-full w-full items-center justify-center">
-              <ImageIcon color="#A05C2A" size={24} strokeWidth={1.8} />
+              <ImageIcon color="#D5A233" size={24} strokeWidth={1.8} />
             </View>
           )}
         </View>
