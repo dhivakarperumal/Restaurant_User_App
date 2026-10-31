@@ -96,9 +96,11 @@ export default function TopHeader({ title }: TopHeaderProps) {
   return (
     <>
       <StatusBar style="dark" />
-      <View
+      <ImageBackground
+        source={require("../../../assets/images/userheader.png")}
+        resizeMode="cover"
         style={{ paddingTop: insets.top }}
-        className="border-b border-[#B88A2E] bg-[#F5E9D5] px-5 py-1"
+        className="border-b border-[#B88A2E] px-5 py-1"
       >
         <View
           accessibilityLabel={`${title} page header`}
@@ -166,7 +168,7 @@ export default function TopHeader({ title }: TopHeaderProps) {
             </Pressable>
           </View>
         </View>
-      </View>
+      </ImageBackground>
 
       <Modal
         animationType="fade"
