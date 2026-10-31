@@ -1,11 +1,15 @@
 import colors from "../../../theme/colors.json";
 import { router } from "expo-router";
+import * as Location from "expo-location";
 import {
     ArrowLeft,
     CheckCircle2,
+    LocateFixed,
     MapPin,
     PackageCheck,
     ShoppingBag,
+    Store,
+    Truck,
     UtensilsCrossed,
 } from "lucide-react-native";
 import type { ReactNode } from "react";
@@ -32,12 +36,15 @@ import { getFoodImage, getFoodName } from "../../../lib/foods";
 import {
     clearCheckoutIdempotencyKey,
     createOrder,
+    fetchDeliveryQuote,
     fetchSavedAddresses,
     getCheckoutIdempotencyKey,
     verifyOrderPayment,
     type CheckoutAddress,
     type CheckoutCustomer,
+    type CheckoutLocation,
     type CheckoutPayload,
+    type DeliveryQuote,
 } from "../../../lib/orderApi";
 import type { CartItem } from "../../../types/food";
 
@@ -73,6 +80,103 @@ function isAddressComplete(address: CheckoutAddress): boolean {
       /^\d{6}$/.test(address.pincode.trim()),
   );
 }
+
+function getAddressFingerprint(address: CheckoutAddress): string {
+  return [
+    address.address_line,
+    address.area_locality,
+    address.city,
+    address.state,
+    address.pincode,
+  ]
+    .map((part) => part.trim())
+    .join("|");
+}
+
+async function getCoordinatesFromAddress(
+  address: CheckoutAddress,
+  signal: AbortSignal,
+): Promise<CheckoutLocation> {
+  const searchParts = [
+    address.address_line,
+    address.area_locality,
+    address.city,
+    address.state,
+    address.pincode,
+    "India",
+  ].filter(Boolean);
+  const query = new URLSearchParams({
+    format: "jsonv2",
+    limit: "1",
+    countrycodes: "in",
+    q: searchParts.join(", "),
+  });
+  const response = await fetch(
+    `https://nominatim.openstreetmap.org/search?${query}`,
+    { signal },
+  );
+  if (!response.ok) {
+    throw new Error(
+      "Address search is temporarily unavailable. Please try current location.",
+    );
+  }
+
+  const results: unknown = await response.json();
+  if (!Array.isArray(results) || !results.length) {
+    throw new Error(
+      "We could not locate that address. Check the address details or use current location.",
+    );
+  }
+  const result = results[0] as Record<string, unknown>;
+  const latitude = Number(result.lat);
+  const longitude = Number(result.lon);
+  if (
+    !Number.isFinite(latitude) ||
+    latitude < -90 ||
+    latitude > 90 ||
+    !Number.isFinite(longitude) ||
+    longitude < -180 ||
+    longitude > 180
+  ) {
+    throw new Error("The address location was invalid. Please try again.");
+  }
+
+  return { latitude, longitude };
+}
+
+async function getAddressFromCoordinates(
+  location: CheckoutLocation,
+): Promise<Partial<CheckoutAddress>> {
+  const results = await Location.reverseGeocodeAsync(location);
+  const result = results[0];
+  if (!result) {
+    throw new Error(
+      "No address details were found for your location. Please enter the address manually.",
+    );
+  }
+
+  const street = [result.streetNumber, result.street].filter(Boolean).join(" ");
+  const address = {
+    address_line: street || result.name || "",
+    area_locality: result.district || result.subregion || "",
+    city: result.city || result.subregion || result.district || "",
+    state: result.region === "NCT of Delhi" ? "Delhi" : result.region || "",
+    pincode: (result.postalCode || "").replace(/\s/g, "").slice(0, 6),
+  };
+  if (
+    !address.address_line &&
+    !address.area_locality &&
+    !address.city &&
+    !address.state
+  ) {
+    throw new Error(
+      "No address details were found for your location. Please enter the address manually.",
+    );
+  }
+  return address;
+}
+
+type FingerprintedDeliveryQuote = DeliveryQuote & { fingerprint: string };
 
 function SectionHeading({
   icon,
@@ -203,8 +307,23 @@ export default function CheckoutScreen() {
   const [fulfillmentType, setFulfillmentType] =
     useState<CheckoutPayload["order_type"]>("home_delivery");
   const [paymentMethod, setPaymentMethod] =
-    useState<CheckoutPayload["payment_method"]>("cod");
+    useState<CheckoutPayload["payment_method"]>("online");
   const [address, setAddress] = useState<CheckoutAddress>(EMPTY_ADDRESS);
+  const [deliveryLocation, setDeliveryLocation] =
+    useState<CheckoutLocation | null>(null);
+  const [deliveryQuote, setDeliveryQuote] =
+    useState<FingerprintedDeliveryQuote | null>(null);
+  const [deliveryQuoteError, setDeliveryQuoteError] = useState<{
+    fingerprint: string;
+    message: string;
+  } | null>(null);
+  const [isQuotingDelivery, setIsQuotingDelivery] = useState(false);
+  const [isFetchingLocation, setIsFetchingLocation] = useState(false);
+  const [isGeocodingAddress, setIsGeocodingAddress] = useState(false);
+  const [addressGeocodingError, setAddressGeocodingError] = useState<{
+    fingerprint: string;
+    message: string;
+  } | null>(null);
   const [savedAddresses, setSavedAddresses] = useState<CheckoutAddress[]>([]);
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(
     null,
@@ -269,10 +388,170 @@ export default function CheckoutScreen() {
     () => items.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0),
     [items],
   );
+  const addressFingerprint = getAddressFingerprint(address);
+  const quoteFingerprint = [
+    fulfillmentType,
+    subtotal.toFixed(2),
+    deliveryLocation?.latitude ?? "",
+    deliveryLocation?.longitude ?? "",
+  ].join(":");
+  const currentDeliveryQuote =
+    deliveryQuote?.fingerprint === quoteFingerprint ? deliveryQuote : null;
+  const currentDeliveryQuoteError =
+    deliveryQuoteError?.fingerprint === quoteFingerprint
+      ? deliveryQuoteError.message
+      : "";
+  const currentAddressGeocodingError =
+    addressGeocodingError?.fingerprint === addressFingerprint
+      ? addressGeocodingError.message
+      : "";
+
+  useEffect(() => {
+    if (
+      fulfillmentType !== "home_delivery" ||
+      deliveryLocation ||
+      !isAddressComplete(address)
+    ) {
+      setIsGeocodingAddress(false);
+      return;
+    }
+
+    let active = true;
+    const controller = new AbortController();
+    const timeout = setTimeout(async () => {
+      setIsGeocodingAddress(true);
+      setAddressGeocodingError(null);
+      try {
+        const location = await getCoordinatesFromAddress(
+          address,
+          controller.signal,
+        );
+        if (active) setDeliveryLocation(location);
+      } catch (error) {
+        if (active) {
+          console.error("Could not locate the delivery address:", error);
+          setAddressGeocodingError({
+            fingerprint: addressFingerprint,
+            message:
+              error instanceof Error
+                ? error.message
+                : "The address could not be located.",
+          });
+        }
+      } finally {
+        if (active) setIsGeocodingAddress(false);
+      }
+    }, 900);
+
+    return () => {
+      active = false;
+      clearTimeout(timeout);
+      controller.abort();
+    };
+  }, [address, addressFingerprint, deliveryLocation, fulfillmentType]);
+
+  useEffect(() => {
+    if (fulfillmentType !== "home_delivery" || !deliveryLocation) {
+      setDeliveryQuote(null);
+      setDeliveryQuoteError(null);
+      setIsQuotingDelivery(false);
+      return;
+    }
+
+    let active = true;
+    setDeliveryQuote(null);
+    setDeliveryQuoteError(null);
+    setIsQuotingDelivery(true);
+    void fetchDeliveryQuote(deliveryLocation, subtotal)
+      .then((quote) => {
+        if (active) {
+          setDeliveryQuote({ ...quote, fingerprint: quoteFingerprint });
+        }
+      })
+      .catch((error: unknown) => {
+        if (active) {
+          console.error("Delivery charge could not be calculated:", error);
+          const message =
+            typeof error === "object" &&
+            error !== null &&
+            "message" in error &&
+            typeof error.message === "string"
+              ? error.message
+              : "The delivery charge could not be calculated.";
+          setDeliveryQuoteError({ fingerprint: quoteFingerprint, message });
+        }
+      })
+      .finally(() => {
+        if (active) setIsQuotingDelivery(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [deliveryLocation, fulfillmentType, quoteFingerprint, subtotal]);
 
   const updateAddress = (field: keyof CheckoutAddress, value: string) => {
     setSelectedAddressId(null);
+    setDeliveryLocation(null);
+    setAddressGeocodingError(null);
+    setAddressNotice("");
     setAddress((current) => ({ ...current, [field]: value }));
+  };
+
+  const useCurrentLocation = async () => {
+    setAddressNotice("");
+    setAddressGeocodingError(null);
+    setDeliveryQuoteError(null);
+    setIsFetchingLocation(true);
+    try {
+      const permission = await Location.requestForegroundPermissionsAsync();
+      if (permission.status !== "granted") {
+        throw new Error(
+          "Location permission was denied. Allow location access or enter your address manually.",
+        );
+      }
+      if (!(await Location.hasServicesEnabledAsync())) {
+        throw new Error(
+          "Location services are turned off. Enable them or enter your address manually.",
+        );
+      }
+
+      const position = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.High,
+      });
+      const location = {
+        latitude: position.coords.latitude,
+        longitude: position.coords.longitude,
+      };
+      setDeliveryLocation(location);
+      setDeliveryQuote(null);
+      setAddress(EMPTY_ADDRESS);
+      setSelectedAddressId(null);
+
+      try {
+        const detectedAddress = await getAddressFromCoordinates(location);
+        setAddress({ ...EMPTY_ADDRESS, ...detectedAddress });
+        setAddressNotice(
+          "Location found. Review the detected address and complete any missing details.",
+        );
+      } catch (error) {
+        console.error("Could not resolve current checkout location:", error);
+        setAddressNotice(
+          error instanceof Error
+            ? `${error.message} You can still enter the address manually.`
+            : "Your location was found. Enter the delivery address manually.",
+        );
+      }
+    } catch (error) {
+      console.error("Could not fetch the current checkout location:", error);
+      setAddressNotice(
+        error instanceof Error
+          ? error.message
+          : "Your current location could not be detected. Enter your address manually.",
+      );
+    } finally {
+      setIsFetchingLocation(false);
+    }
   };
 
   const completeOrder = async (
@@ -397,6 +676,20 @@ export default function CheckoutScreen() {
       setErrorMessage("Complete the delivery address and enter a 6-digit pincode.");
       return;
     }
+    if (fulfillmentType === "home_delivery" && !deliveryLocation) {
+      setErrorMessage(
+        currentAddressGeocodingError ||
+          "Enter a complete delivery address or use current location to calculate the delivery charge.",
+      );
+      return;
+    }
+    if (fulfillmentType === "home_delivery" && !currentDeliveryQuote) {
+      setErrorMessage(
+        currentDeliveryQuoteError ||
+          "Wait for the delivery charge to finish calculating before placing your order.",
+      );
+      return;
+    }
     if (submissionInProgress.current) return;
 
     submissionInProgress.current = true;
@@ -410,6 +703,8 @@ export default function CheckoutScreen() {
         },
         order_type: fulfillmentType,
         address: fulfillmentType === "home_delivery" ? address : null,
+        delivery_location:
+          fulfillmentType === "home_delivery" ? deliveryLocation : null,
         payment_method: paymentMethod,
       };
       const requestKey = await getCheckoutIdempotencyKey(
@@ -649,7 +944,7 @@ export default function CheckoutScreen() {
           {fulfillmentType === "home_delivery" ? (
             <View className="mt-5 border-t border-slate-100 pt-5">
               {addressNotice ? (
-                <Text className="mb-3 text-sm text-amber-700">{addressNotice}</Text>
+                <Text className="mb-3 text-sm text-brand-gold-dark">{addressNotice}</Text>
               ) : null}
               {savedAddresses.length > 0 ? (
                 <View className="mb-4">
@@ -671,6 +966,8 @@ export default function CheckoutScreen() {
                         key={id}
                         onPress={() => {
                           setAddress(saved);
+                          setDeliveryLocation(null);
+                          setAddressGeocodingError(null);
                           setSelectedAddressId(id);
                         }}
                       >
@@ -692,6 +989,8 @@ export default function CheckoutScreen() {
                     }`}
                     onPress={() => {
                       setAddress(EMPTY_ADDRESS);
+                      setDeliveryLocation(null);
+                      setAddressGeocodingError(null);
                       setSelectedAddressId(null);
                     }}
                   >
@@ -700,6 +999,47 @@ export default function CheckoutScreen() {
                     </Text>
                   </Pressable>
                 </View>
+              ) : null}
+
+              <Pressable
+                accessibilityRole="button"
+                accessibilityState={{ disabled: isFetchingLocation }}
+                className="mb-4 min-h-12 flex-row items-center justify-center rounded-xl border border-brand-gold-muted bg-brand-gold-pale px-4"
+                disabled={isFetchingLocation}
+                onPress={() => void useCurrentLocation()}
+              >
+                {isFetchingLocation ? (
+                  <ActivityIndicator color={colors["green-primary"]} />
+                ) : (
+                  <LocateFixed color={colors["green-primary"]} size={18} />
+                )}
+                <Text className="ml-2 text-sm font-bold text-brand-green-primary">
+                  {isFetchingLocation ? "Finding your location…" : "Use current location"}
+                </Text>
+              </Pressable>
+              <Text className="mb-4 text-xs leading-5 text-slate-500">
+                Use your device location or enter the full address to calculate the delivery fee.
+              </Text>
+              {deliveryLocation ? (
+                <View className="mb-4 flex-row items-center rounded-xl bg-brand-green-surface px-3 py-2.5">
+                  <MapPin color={colors["green-primary"]} size={16} />
+                  <Text className="ml-2 flex-1 text-xs font-semibold text-brand-green-primary">
+                    Delivery location captured. Review your address before placing the order.
+                  </Text>
+                </View>
+              ) : null}
+              {isGeocodingAddress ? (
+                <View className="mb-4 flex-row items-center">
+                  <ActivityIndicator color={colors["green-primary"]} size="small" />
+                  <Text className="ml-2 text-xs text-slate-500">
+                    Finding the address location…
+                  </Text>
+                </View>
+              ) : null}
+              {currentAddressGeocodingError ? (
+                <Text className="mb-4 text-xs leading-5 text-brand-danger">
+                  {currentAddressGeocodingError}
+                </Text>
               ) : null}
 
               <Field
@@ -761,6 +1101,57 @@ export default function CheckoutScreen() {
               <Text className="text-xs leading-5 text-slate-500">
                 We save each unique address once to your account for faster future checkouts.
               </Text>
+              <View className="mt-4 rounded-xl border border-brand-neutral-border-warm bg-brand-surface-cream p-3">
+                {isQuotingDelivery ? (
+                  <View className="flex-row items-center">
+                    <ActivityIndicator color={colors["green-primary"]} size="small" />
+                    <Text className="ml-2 text-sm font-semibold text-brand-neutral-text-deep">
+                      Calculating delivery charge…
+                    </Text>
+                  </View>
+                ) : currentDeliveryQuote ? (
+                  <>
+                    <View className="flex-row items-center justify-between">
+                      <Text className="text-sm font-bold text-brand-neutral-text-deep">
+                        Delivery charge
+                      </Text>
+                      <Text className="text-sm font-extrabold text-brand-green-primary">
+                        {currentDeliveryQuote.free_delivery
+                          ? "Free"
+                          : `₹${currentDeliveryQuote.delivery_charge.toFixed(2)}`}
+                      </Text>
+                    </View>
+                    <Text className="mt-1 text-xs text-slate-500">
+                      {currentDeliveryQuote.distance_km.toFixed(1)} km from the restaurant
+                    </Text>
+                  </>
+                ) : currentDeliveryQuoteError ? (
+                  <View>
+                    <Text className="text-sm font-semibold text-brand-danger">
+                      {currentDeliveryQuoteError}
+                    </Text>
+                    {deliveryLocation ? (
+                      <Pressable
+                        accessibilityRole="button"
+                        className="mt-2 self-start py-1"
+                        onPress={() =>
+                          setDeliveryLocation((location) =>
+                            location ? { ...location } : null,
+                          )
+                        }
+                      >
+                        <Text className="text-sm font-bold text-brand-green-primary">
+                          Try again
+                        </Text>
+                      </Pressable>
+                    ) : null}
+                  </View>
+                ) : (
+                  <Text className="text-sm text-slate-500">
+                    Delivery charge will appear after your address is located.
+                  </Text>
+                )}
+              </View>
             </View>
           ) : null}
         </View>
@@ -822,9 +1213,29 @@ export default function CheckoutScreen() {
               </Text>
             </View>
             <View className="mt-3 flex-row justify-between">
+              <Text className="text-sm font-semibold text-slate-600">
+                Delivery charge
+              </Text>
+              <Text className="text-sm font-bold text-slate-800">
+                {fulfillmentType === "pickup"
+                  ? "Free"
+                  : currentDeliveryQuote
+                    ? currentDeliveryQuote.free_delivery
+                      ? "Free"
+                      : `₹${currentDeliveryQuote.delivery_charge.toFixed(2)}`
+                    : isQuotingDelivery
+                      ? "Calculating…"
+                      : "—"}
+              </Text>
+            </View>
+            <View className="mt-3 flex-row justify-between">
               <Text className="text-base font-extrabold text-brand-neutral-text-primary">Total</Text>
               <Text className="text-base font-extrabold text-brand-green-primary">
-                ₹{subtotal.toFixed(2)}
+                {fulfillmentType === "pickup"
+                  ? `₹${subtotal.toFixed(2)}`
+                  : currentDeliveryQuote
+                    ? `₹${currentDeliveryQuote.total_amount.toFixed(2)}`
+                    : "—"}
               </Text>
             </View>
           </View>

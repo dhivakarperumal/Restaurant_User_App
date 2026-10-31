@@ -22,7 +22,20 @@ export type CheckoutPayload = {
   customer: CheckoutCustomer;
   order_type: "home_delivery" | "pickup";
   address: CheckoutAddress | null;
+  delivery_location?: CheckoutLocation | null;
   payment_method: "cod" | "online";
+};
+
+export type CheckoutLocation = {
+  latitude: number;
+  longitude: number;
+};
+
+export type DeliveryQuote = {
+  delivery_charge: number;
+  distance_km: number;
+  total_amount: number;
+  free_delivery: boolean;
 };
 
 export type CheckoutOrder = {
@@ -50,6 +63,13 @@ function getText(record: ApiRecord, key: string): string {
   return typeof value === "string" || typeof value === "number"
     ? String(value)
     : "";
+}
+
+function getFiniteNumber(value: unknown): number | null {
+  if (typeof value !== "number" && typeof value !== "string") return null;
+  if (typeof value === "string" && !value.trim()) return null;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
 }
 
 function normalizeAddress(value: unknown): CheckoutAddress | null {
@@ -82,6 +102,43 @@ export async function fetchSavedAddresses(): Promise<CheckoutAddress[]> {
     const normalized = normalizeAddress(address);
     return normalized ? [normalized] : [];
   });
+}
+
+export async function fetchDeliveryQuote(
+  location: CheckoutLocation,
+  subtotal: number,
+): Promise<DeliveryQuote> {
+  const response = await api.post("/orders/delivery-quote", {
+    location,
+    subtotal,
+  });
+  const body = asRecord(response.data);
+  const data = asRecord(body?.data);
+  const deliveryCharge = getFiniteNumber(data?.delivery_charge);
+  const distanceKm = getFiniteNumber(data?.distance_km);
+  const totalAmount = getFiniteNumber(data?.total_amount);
+
+  if (
+    body?.success !== true ||
+    deliveryCharge === null ||
+    deliveryCharge < 0 ||
+    distanceKm === null ||
+    distanceKm < 0 ||
+    totalAmount === null ||
+    totalAmount < 0
+  ) {
+    throw new Error(
+      getText(body ?? {}, "message") ||
+        "The delivery charge could not be calculated.",
+    );
+  }
+
+  return {
+    delivery_charge: deliveryCharge,
+    distance_km: distanceKm,
+    total_amount: totalAmount,
+    free_delivery: data?.free_delivery === true,
+  };
 }
 
 function getCartFingerprintItems(cart: CartItem[]) {
