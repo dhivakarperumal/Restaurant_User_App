@@ -99,14 +99,13 @@ export default function TopHeader({ title }: TopHeaderProps) {
       <ImageBackground
         source={require("../../../assets/images/userheader.png")}
         resizeMode="cover"
-        style={{ paddingTop: insets.top + 5 }}
-        className="px-2 pb-2"
+        style={{ paddingTop: insets.top }}
+        className="px-2 py-1"
       >
         <View
           accessibilityLabel={`${title} page header`}
           accessibilityRole="header"
-          style={{ backgroundColor: "rgba(255, 252, 246, 0.88)" }}
-          className="flex-row items-center justify-between rounded-2xl border border-[#E9DDC7] px-3 py-2 shadow-sm"
+          className="min-h-[52px] flex-row items-center justify-between px-1"
         >
           <View className="mr-2 flex-1 flex-row items-center">
             <Image
