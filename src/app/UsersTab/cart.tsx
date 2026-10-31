@@ -88,12 +88,6 @@ export default function CartScreen() {
       showsVerticalScrollIndicator={false}
       contentContainerStyle={{ padding: 24, paddingBottom: 120 }}
     >
-      <View className="flex-row items-center">
-        <ShoppingCart color={colors["green-primary"]} size={22} />
-        <Text className="ml-2 text-lg font-extrabold text-brand-neutral-text-primary">
-          Your cart
-        </Text>
-      </View>
 
       {items.length > 0 && isHydrated ? (
         <Pressable
