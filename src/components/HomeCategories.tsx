@@ -10,6 +10,7 @@ import {
   useWindowDimensions,
 } from "react-native";
 import api, { API_BASE_URL } from "../lib/api";
+import colors from "../theme/colors.json";
 
 type Category = {
   id: string;
@@ -141,7 +142,7 @@ export default function HomeCategories() {
     <View className="mt-7">
       {/* Header Section */}
       <View className="mb-4 items-center">
-        <Text className="text-[11px] font-extrabold uppercase tracking-[2px] text-[#D5A233]">
+        <Text className="text-[11px] font-extrabold uppercase tracking-[2px] text-brand-gold">
           Popular Categories
         </Text>
         <View className="mt-1 flex-row items-baseline">
@@ -248,7 +249,7 @@ function CategoryCard({
             params: { category: category.filter },
           })
         }
-        className="h-full w-full items-center justify-between rounded-2xl border-2 border-[#E8D59D] bg-white p-1.5 shadow-sm active:border-[#D5A233] active:scale-95"
+        className="h-full w-full items-center justify-between rounded-2xl border-2 border-brand-gold-muted bg-white p-1.5 shadow-sm active:border-brand-gold active:scale-95"
       >
         {/* Aspect Ratio Image Container */}
         <View
@@ -266,7 +267,7 @@ function CategoryCard({
             />
           ) : (
             <View className="h-full w-full items-center justify-center">
-              <ImageIcon color="#D5A233" size={24} strokeWidth={1.8} />
+              <ImageIcon color={colors.gold} size={24} strokeWidth={1.8} />
             </View>
           )}
         </View>

@@ -10,6 +10,7 @@ import {
   useWindowDimensions,
 } from "react-native";
 import api, { API_BASE_URL } from "../lib/api";
+import colors from "../theme/colors.json";
 
 type Cuisine = {
   id: string;
@@ -104,7 +105,7 @@ export default function HomeCuisines() {
   return (
     <View className="mt-8">
       <View className="mb-4 items-center">
-        <Text className="text-[11px] font-extrabold uppercase tracking-[2px] text-[#D5A233]">
+        <Text className="text-[11px] font-extrabold uppercase tracking-[2px] text-brand-gold">
           Our Cuisines
         </Text>
         <Text className="mt-1 text-2xl font-black text-[#17251E]">
@@ -211,9 +212,9 @@ function CuisineCard({
       ) : (
         <View className="h-full w-full items-center justify-center bg-[#315D2D]">
           {cuisine.image ? (
-            <ImageIcon color="#E9BE45" size={28} />
+            <ImageIcon color={colors["gold-bright"]} size={28} />
           ) : (
-            <Utensils color="#E9BE45" size={28} />
+            <Utensils color={colors["gold-bright"]} size={28} />
           )}
         </View>
       )}

@@ -33,6 +33,7 @@ import { useCart } from "../contexts/CartContext";
 import type { FoodProduct } from "../types/food";
 import FoodCustomizationModal from "./common/FoodCustomizationModal";
 import FoodProductCard from "./common/FoodProductCard";
+import colors from "../theme/colors.json";
 
 type ShopCategory = {
   id: string;
@@ -431,7 +432,7 @@ export default function ShopScreen() {
       contentContainerStyle={{ paddingHorizontal: 24, paddingTop: 18, paddingBottom: 120 }}
     >
       <View className="mb-5 items-center">
-        <Text className="text-[11px] font-extrabold uppercase tracking-[2px] text-[#D5A233]">
+        <Text className="text-[11px] font-extrabold uppercase tracking-[2px] text-brand-gold">
           Fresh from our kitchen
         </Text>
         <Text className="mt-1 text-2xl font-black text-[#17251E]">Shop the menu</Text>
@@ -473,10 +474,10 @@ export default function ShopScreen() {
         onPress={() => setFiltersOpen((open) => !open)}
       >
         <View className="flex-row items-center">
-          <SlidersHorizontal color="#1A6A3B" size={17} />
+          <SlidersHorizontal color={colors.green} size={17} />
           <Text className="ml-2 text-sm font-bold text-[#17251E]">Filters</Text>
           {hasActiveFilters ? (
-            <View className="ml-2 h-2 w-2 rounded-full bg-[#D5A233]" />
+            <View className="ml-2 h-2 w-2 rounded-full bg-brand-gold" />
           ) : null}
         </View>
         <ChevronDown
@@ -878,7 +879,7 @@ function FilterChip({
     <Pressable
       accessibilityRole="button"
       accessibilityState={{ selected }}
-      className={`min-h-9 flex-row items-center rounded-lg px-3 ${selected ? "bg-[#1A6A3B]" : "bg-slate-100"}`}
+      className={`min-h-9 flex-row items-center rounded-lg px-3 ${selected ? "bg-brand-green" : "bg-slate-100"}`}
       onPress={onPress}
     >
       {selected ? <Check color="#FFFFFF" size={13} /> : null}

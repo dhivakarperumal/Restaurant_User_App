@@ -153,7 +153,7 @@ export default function HomeProducts() {
   ) => (
     <View className="mt-8">
       <View className="mb-4">
-        <Text className="text-center text-[11px] font-extrabold uppercase tracking-[2px] text-[#D5A233]">
+        <Text className="text-center text-[11px] font-extrabold uppercase tracking-[2px] text-brand-gold">
           {eyebrow}
         </Text>
         <Text className="mt-1 text-center text-2xl font-black text-[#17251E]">
@@ -177,7 +177,7 @@ export default function HomeProducts() {
   return (
     <View className="mt-8">
       <View className="mb-4">
-        <Text className="text-center text-[11px] font-extrabold uppercase tracking-[2px] text-[#D5A233]">
+        <Text className="text-center text-[11px] font-extrabold uppercase tracking-[2px] text-brand-gold">
           A taste of what we make
         </Text>
         <Text className="mt-1 text-center text-2xl font-black text-[#17251E]">

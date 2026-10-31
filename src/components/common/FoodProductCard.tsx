@@ -3,6 +3,7 @@ import { Clock3, Flame, Heart, Plus, Star, UtensilsCrossed } from "lucide-react-
 import { Image, Pressable, Text, View } from "react-native";
 import { getFoodImage, getFoodName, getFoodPrice } from "../../lib/foods";
 import type { FoodProduct } from "../../types/food";
+import colors from "../../theme/colors.json";
 
 type FoodProductCardProps = {
   food: FoodProduct;
@@ -58,7 +59,7 @@ export default function FoodProductCard({
               source={{ uri: image }}
             />
           ) : (
-            <UtensilsCrossed color="#D5A233" size={26} />
+            <UtensilsCrossed color={colors.gold} size={26} />
           )}
         </Pressable>
         <View className="ml-3 min-w-0 flex-1">
@@ -69,8 +70,8 @@ export default function FoodProductCard({
             </Text>
             {Number(food.rating) > 0 && (
               <View className="ml-1 flex-row items-center">
-                <Star color="#D5A233" fill="#D5A233" size={11} />
-                <Text className="ml-0.5 text-[10px] font-bold text-[#8A6716]">
+                <Star color={colors.gold} fill={colors.gold} size={11} />
+                <Text className="ml-0.5 text-[10px] font-bold text-brand-gold-dark">
                   {Number(food.rating).toFixed(1)}
                 </Text>
               </View>
@@ -156,7 +157,7 @@ export default function FoodProductCard({
               source={{ uri: image }}
             />
           ) : (
-            <UtensilsCrossed color="#D5A233" size={32} />
+            <UtensilsCrossed color={colors.gold} size={32} />
           )}
           {!isAvailable ? (
             <View
@@ -173,9 +174,9 @@ export default function FoodProductCard({
           <View className={`h-2.5 w-2.5 rounded-full ${isVeg ? "bg-emerald-600" : "bg-rose-600"}`} />
         </View>
         {food.is_spicy === true && (
-          <View pointerEvents="none" className="absolute bottom-2 left-2 flex-row items-center rounded-md bg-[#E9BE45] px-1.5 py-1">
-            <Flame color="#084A2B" size={11} />
-            <Text className="ml-0.5 text-[9px] font-bold text-[#084A2B]">Spicy</Text>
+          <View pointerEvents="none" className="absolute bottom-2 left-2 flex-row items-center rounded-md bg-brand-gold-bright px-1.5 py-1">
+            <Flame color={colors.green} size={11} />
+            <Text className="ml-0.5 text-[9px] font-bold text-brand-green">Spicy</Text>
           </View>
         )}
         <Pressable
@@ -200,8 +201,8 @@ export default function FoodProductCard({
           </Text>
           {Number(food.rating) > 0 && (
             <View className="ml-1 flex-row items-center">
-              <Star color="#D5A233" fill="#D5A233" size={11} />
-              <Text className="ml-0.5 text-[10px] font-bold text-[#8A6716]">
+              <Star color={colors.gold} fill={colors.gold} size={11} />
+              <Text className="ml-0.5 text-[10px] font-bold text-brand-gold-dark">
                 {Number(food.rating).toFixed(1)}
               </Text>
             </View>

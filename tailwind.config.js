@@ -1,4 +1,6 @@
 /** @type {import('tailwindcss').Config} */
+const brandColors = require("./src/theme/colors.json");
+
 module.exports = {
   // NOTE: Update this to include the paths to all files that contain Nativewind classes.
   content: [
@@ -10,7 +12,7 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        brand: "#dc2626",
+        brand: brandColors,
       },
     },
   },
