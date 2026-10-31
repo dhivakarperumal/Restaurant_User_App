@@ -186,25 +186,16 @@ export default function CustomerReviews() {
           horizontal
           showsHorizontalScrollIndicator={false}
           className="mt-5"
-          contentContainerStyle={{ gap: 12 }}
+          contentContainerStyle={{ paddingRight: 16 }}
         >
           <View
             style={{ width: cardWidth }}
-            className="h-[270px] rounded-[22px] border border-[#EFEEE7] bg-white p-5"
+            className="h-[270px] rounded-[22px] border border-[#D8C69D] bg-[#F5EFE5] p-5"
           >
-            <View className="h-4 w-28 rounded bg-[#EDF1E9]" />
-            <View className="mt-8 h-4 w-2/3 rounded bg-[#EDF1E9]" />
-            <View className="mt-3 h-3 w-full rounded bg-[#EDF1E9]" />
-            <View className="mt-2 h-3 w-4/5 rounded bg-[#EDF1E9]" />
-          </View>
-          <View
-            style={{ width: cardWidth }}
-            className="h-[270px] rounded-[22px] border border-[#EFEEE7] bg-white p-5"
-          >
-            <View className="h-4 w-28 rounded bg-[#EDF1E9]" />
-            <View className="mt-8 h-4 w-2/3 rounded bg-[#EDF1E9]" />
-            <View className="mt-3 h-3 w-full rounded bg-[#EDF1E9]" />
-            <View className="mt-2 h-3 w-4/5 rounded bg-[#EDF1E9]" />
+            <View className="h-4 w-28 rounded bg-[#E4D9C3]" />
+            <View className="mt-8 h-4 w-2/3 rounded bg-[#E4D9C3]" />
+            <View className="mt-3 h-3 w-full rounded bg-[#E4D9C3]" />
+            <View className="mt-2 h-3 w-4/5 rounded bg-[#E4D9C3]" />
           </View>
         </ScrollView>
       ) : error ? (
@@ -241,7 +232,7 @@ export default function CustomerReviews() {
               <View
                 key={review.id}
                 style={{ width: cardWidth }}
-                className="min-h-[270px] flex-col rounded-[22px] border border-[#F0EEE6] bg-white p-5 shadow-sm"
+                className="min-h-[270px] flex-col rounded-[22px] border border-[#D8C69D] bg-[#F5EFE5] p-5 shadow-sm"
               >
                 <View className="flex-row items-center justify-between">
                   <View
@@ -257,7 +248,7 @@ export default function CustomerReviews() {
                       />
                     ))}
                   </View>
-                  <Text className="text-sm font-bold text-[#153C2B]">
+                  <Text className="rounded-full bg-[#E9DAB9] px-2.5 py-1 text-xs font-extrabold text-[#153C2B]">
                     {review.rating.toFixed(1)}
                   </Text>
                 </View>
@@ -275,7 +266,7 @@ export default function CustomerReviews() {
                     {review.comment}
                   </Text>
                 </View>
-                <View className="mt-4 flex-row items-center border-t border-[#EEECE3] pt-3">
+                <View className="mt-4 flex-row items-center border-t border-[#D8C69D] pt-3">
                   <View className="h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-[#EAF3E5]">
                     {review.photo ? (
                       <Image
