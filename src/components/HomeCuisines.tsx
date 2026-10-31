@@ -106,7 +106,7 @@ export default function HomeCuisines() {
     <View className="mt-8">
       <View className="mb-4 items-center">
         <Text className="text-[11px] font-extrabold uppercase tracking-[2px] text-brand-gold">
-          Our Cuisines
+          TASTE THE WORLD
         </Text>
         <Text className="mt-1 text-2xl font-black text-brand-neutral-text-primary">
           A World of <Text className="italic text-brand-green-primary">Cuisines</Text>

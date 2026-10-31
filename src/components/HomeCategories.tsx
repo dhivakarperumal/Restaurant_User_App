@@ -143,7 +143,7 @@ export default function HomeCategories() {
       {/* Header Section */}
       <View className="mb-4 items-center">
         <Text className="text-[11px] font-extrabold uppercase tracking-[2px] text-brand-gold">
-          Popular Categories
+          MADE FOR YOU
         </Text>
         <View className="mt-1 flex-row items-baseline">
           <Text className="text-2xl font-black text-brand-neutral-text-primary">Choose Your </Text>
