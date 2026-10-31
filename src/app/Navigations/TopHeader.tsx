@@ -228,7 +228,7 @@ export default function TopHeader({ title }: TopHeaderProps) {
             >
               <View
                 style={{ backgroundColor: "rgba(255, 250, 242, 0.76)" }}
-                className="flex-row items-center px-4 py-3"
+                className="flex-row items-center px-4 py-2.5"
               >
                 <View className="mr-3 h-11 w-11 items-center justify-center rounded-full border border-brand-green-border bg-brand-green-muted-surface">
                   <Text className="text-base font-extrabold text-brand-green-secondary">
@@ -254,7 +254,7 @@ export default function TopHeader({ title }: TopHeaderProps) {
 
             <Pressable
               accessibilityRole="button"
-              className="mx-2 mt-1 min-h-[46px] flex-row items-center rounded-xl px-2 active:bg-brand-green-muted-surface"
+              className="mx-2 min-h-[44px] flex-row items-center rounded-xl px-2 active:bg-brand-green-muted-surface"
               onPress={() => {
                 setIsMenuVisible(false);
                 router.push("/UsersTab/profile");
@@ -274,7 +274,7 @@ export default function TopHeader({ title }: TopHeaderProps) {
             <View className="mx-3 border-t border-brand-neutral-border" />
             <Pressable
               accessibilityRole="button"
-              className="mx-2 mb-2 mt-1 min-h-[48px] flex-row items-center rounded-xl bg-brand-warning-surface px-2 active:bg-brand-danger-soft"
+              className="mx-2 mb-1 min-h-[44px] flex-row items-center rounded-xl bg-brand-warning-surface px-2 active:bg-brand-danger-soft"
               disabled={isLoggingOut}
               onPress={() => confirmLogout(showAlert, setIsLoggingOut)}
             >
