@@ -188,18 +188,24 @@ export default function CustomerReviews() {
           className="mt-5"
           contentContainerStyle={{ gap: 12 }}
         >
-          {[0, 1].map((item) => (
-            <View
-              key={item}
-              style={{ width: cardWidth }}
-              className="h-[270px] animate-pulse rounded-[22px] border border-[#EFEEE7] bg-white p-5"
-            >
-              <View className="h-4 w-28 rounded bg-[#EDF1E9]" />
-              <View className="mt-8 h-4 w-2/3 rounded bg-[#EDF1E9]" />
-              <View className="mt-3 h-3 w-full rounded bg-[#EDF1E9]" />
-              <View className="mt-2 h-3 w-4/5 rounded bg-[#EDF1E9]" />
-            </View>
-          ))}
+          <View
+            style={{ width: cardWidth }}
+            className="h-[270px] rounded-[22px] border border-[#EFEEE7] bg-white p-5"
+          >
+            <View className="h-4 w-28 rounded bg-[#EDF1E9]" />
+            <View className="mt-8 h-4 w-2/3 rounded bg-[#EDF1E9]" />
+            <View className="mt-3 h-3 w-full rounded bg-[#EDF1E9]" />
+            <View className="mt-2 h-3 w-4/5 rounded bg-[#EDF1E9]" />
+          </View>
+          <View
+            style={{ width: cardWidth }}
+            className="h-[270px] rounded-[22px] border border-[#EFEEE7] bg-white p-5"
+          >
+            <View className="h-4 w-28 rounded bg-[#EDF1E9]" />
+            <View className="mt-8 h-4 w-2/3 rounded bg-[#EDF1E9]" />
+            <View className="mt-3 h-3 w-full rounded bg-[#EDF1E9]" />
+            <View className="mt-2 h-3 w-4/5 rounded bg-[#EDF1E9]" />
+          </View>
         </ScrollView>
       ) : error ? (
         <View className="mt-5 items-center rounded-2xl border border-[#F2D4CA] bg-white p-5">
