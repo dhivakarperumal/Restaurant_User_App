@@ -26,7 +26,6 @@ const headerTitles: Record<string, string> = {
   cart: "Cart",
   "event-orders": "Event Orders",
   reservations: "Table Reservation",
-  checkout: "Checkout",
   orders: "Orders",
   profile: "Profile",
 };
@@ -103,7 +102,6 @@ function RootTabs() {
           display:
             route.name === "login" ||
             route.name === "register" ||
-            route.name === "checkout" ||
             route.name === "product/[id]" ||
             route.name === "delivery" ||
             route.name.startsWith("delivery/")
@@ -291,7 +289,6 @@ function RootTabs() {
       <Tabs.Screen name="cart" options={{ title: "Cart" }} />
       <Tabs.Screen name="event-orders" options={{ title: "Events" }} />
       <Tabs.Screen name="reservations" options={{ title: "Tables" }} />
-      <Tabs.Screen name="checkout" options={{ href: null }} />
       <Tabs.Screen name="orders" options={{ href: null }} />
       <Tabs.Screen name="profile" options={{ title: "Profile" }} />
       <Tabs.Screen name="product/[id]" options={{ title: "Product", href: null }} />

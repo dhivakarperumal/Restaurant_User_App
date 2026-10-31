@@ -1,4 +1,4 @@
-import colors from "../../../theme/colors.json";
+import colors from "../theme/colors.json";
 import { router } from "expo-router";
 import * as Location from "expo-location";
 import {
@@ -30,9 +30,9 @@ import type {
     RazorpayPaymentSuccess,
 } from "react-native-razorpay";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useCart } from "../../../contexts/CartContext";
-import { getCartAccount, type CartAccount } from "../../../lib/cartApi";
-import { getFoodImage, getFoodName } from "../../../lib/foods";
+import { useCart } from "../contexts/CartContext";
+import { getCartAccount, type CartAccount } from "../lib/cartApi";
+import { getFoodImage, getFoodName } from "../lib/foods";
 import {
     clearCheckoutIdempotencyKey,
     createOrder,
@@ -45,8 +45,8 @@ import {
     type CheckoutLocation,
     type CheckoutPayload,
     type DeliveryQuote,
-} from "../../../lib/orderApi";
-import type { CartItem } from "../../../types/food";
+} from "../lib/orderApi";
+import type { CartItem } from "../types/food";
 
 const EMPTY_ADDRESS: CheckoutAddress = {
   address_line: "",

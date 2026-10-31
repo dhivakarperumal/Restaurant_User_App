@@ -1,5 +1,5 @@
 import colors from "../../theme/colors.json";
-import { Link } from "expo-router";
+import { router } from "expo-router";
 import {
     Minus,
     Plus,
@@ -145,16 +145,15 @@ export default function CartScreen() {
                   ₹{total.toFixed(2)}
                 </Text>
               </View>
-              <Link href="/UsersTab/checkout" asChild>
-                <Pressable
-                  accessibilityRole="button"
-                  className="mt-4 min-h-12 items-center justify-center rounded-xl bg-brand-green-primary active:bg-brand-green-action-hover"
-                >
-                  <Text className="text-sm font-extrabold text-white">
-                    Continue to checkout
-                  </Text>
-                </Pressable>
-              </Link>
+              <Pressable
+                accessibilityRole="button"
+                className="mt-4 min-h-12 items-center justify-center rounded-xl bg-brand-green-primary active:bg-brand-green-action-hover"
+                onPress={() => router.push("/checkout")}
+              >
+                <Text className="text-sm font-extrabold text-white">
+                  Continue to checkout
+                </Text>
+              </Pressable>
             </View>
           </View>
         </>
