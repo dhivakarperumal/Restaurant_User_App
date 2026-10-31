@@ -56,7 +56,12 @@ function RootTabs() {
     <Tabs
       screenOptions={({ route }) => ({
         headerShown: Boolean(headerTitles[route.name]),
-        header: () => <TopHeader title={headerTitles[route.name] ?? route.name} />,
+        header: ({ navigation }) => (
+          <TopHeader
+            title={headerTitles[route.name] ?? route.name}
+            onOrdersPress={() => navigation.navigate("orders")}
+          />
+        ),
         headerStyle: { backgroundColor: colors["surface-app"] },
         tabBarActiveTintColor: colors["green-action"],
         tabBarInactiveTintColor: colors["surface-cream-alt"],
