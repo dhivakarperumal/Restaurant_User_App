@@ -109,7 +109,7 @@ export default function CustomerReviews() {
   if (!loading && !error && reviews.length === 0) return null;
 
   return (
-    <View className="-mx-6 mt-10 bg-[#FBFAF5] px-4 py-8">
+    <View className="-mx-6 mt-10 bg-white px-4 py-8">
       <View className="mb-5 items-center">
         <Text className="text-[11px] font-extrabold uppercase tracking-[3px] text-[#163D2C]">
           Testimonials
@@ -122,13 +122,13 @@ export default function CustomerReviews() {
         </Text>
       </View>
 
-      <View className="overflow-hidden rounded-[24px] bg-[#06402D] shadow-md">
+      <View className="overflow-hidden rounded-[24px] border border-[#D5A233] bg-white shadow-md">
         <View className="px-5 pb-5 pt-5">
-          <Text className="text-[10px] font-bold uppercase tracking-[2px] text-white/90">
+          <Text className="text-[10px] font-bold uppercase tracking-[2px] text-[#084A2B]">
             Customer reviews
           </Text>
           <View className="mt-2 flex-row items-end">
-            <Text className="font-serif text-5xl leading-[52px] text-white">
+            <Text className="font-serif text-5xl leading-[52px] text-[#084A2B]">
               {loading ? "—" : averageRating.toFixed(1)}
             </Text>
             <Text className="mb-1 ml-2 font-serif text-xl text-[#D5A233]">/ 5</Text>
@@ -140,20 +140,20 @@ export default function CustomerReviews() {
             {Array.from({ length: 5 }, (_, index) => (
               <Star
                 key={index}
-                color={index < Math.round(averageRating) ? "#E6A622" : "#FFFFFF"}
-                fill={index < Math.round(averageRating) ? "#E6A622" : "transparent"}
+                color={index < Math.round(averageRating) ? "#D5A233" : "#DCE5DD"}
+                fill={index < Math.round(averageRating) ? "#D5A233" : "transparent"}
                 size={21}
                 style={{ opacity: index < Math.round(averageRating) ? 1 : 0.3 }}
               />
             ))}
           </View>
-          <Text className="mt-2 text-xs text-white/90">
+          <Text className="mt-2 text-xs text-[#31513B]">
             Based on {loading ? "…" : reviews.length} recent published{" "}
             {reviews.length === 1 ? "review" : "reviews"}
           </Text>
         </View>
 
-        <View className="rounded-t-[22px] bg-[#FFFEF9] px-4 py-4">
+        <View className="border-t border-[#E8D59D] bg-white px-4 py-4">
           {ratingBreakdown.map(({ stars, percentage }) => (
             <View key={stars} className="mb-2 flex-row items-center">
               <Text className="w-12 text-xs text-[#18372B]">{stars} Star</Text>
@@ -171,7 +171,7 @@ export default function CustomerReviews() {
               </Text>
             </View>
           ))}
-          <View className="mt-2 flex-row items-center rounded-2xl bg-[#F7F5E9] px-4 py-3">
+          <View className="mt-2 flex-row items-center rounded-2xl border border-[#E8D59D] bg-[#FFFDF6] px-4 py-3">
             <UsersRound color="#D29A1E" size={30} />
             <View className="ml-3">
               <Text className="font-serif text-xl font-bold leading-6 text-[#18372B]">
@@ -192,19 +192,19 @@ export default function CustomerReviews() {
             <View style={{ width: pageWidth }} className="items-center">
               <View
                 style={{ width: cardWidth }}
-                className="h-[270px] rounded-[22px] border border-[#D5A233] bg-[#084A2B] p-5"
+                className="h-[270px] rounded-[22px] border border-[#D5A233] bg-white p-5"
               >
-                <View className="h-4 w-28 rounded bg-[#216443]" />
-                <View className="mt-8 h-4 w-2/3 rounded bg-[#216443]" />
-                <View className="mt-3 h-3 w-full rounded bg-[#216443]" />
-                <View className="mt-2 h-3 w-4/5 rounded bg-[#216443]" />
+                <View className="h-4 w-28 rounded bg-[#E8D59D]" />
+                <View className="mt-8 h-4 w-2/3 rounded bg-[#DCE5DD]" />
+                <View className="mt-3 h-3 w-full rounded bg-[#DCE5DD]" />
+                <View className="mt-2 h-3 w-4/5 rounded bg-[#DCE5DD]" />
               </View>
             </View>
           </ScrollView>
         </View>
       ) : error ? (
-        <View className="mt-5 items-center rounded-2xl border border-[#D5A233] bg-[#084A2B] p-5">
-          <Text className="text-center text-sm text-[#FFF8E7]">{error}</Text>
+        <View className="mt-5 items-center rounded-2xl border border-[#D5A233] bg-white p-5">
+          <Text className="text-center text-sm text-[#084A2B]">{error}</Text>
           <Pressable
             accessibilityRole="button"
             className="mt-3 rounded-xl bg-[#D5A233] px-4 py-2"
@@ -232,7 +232,7 @@ export default function CustomerReviews() {
               >
                 <View
                   style={{ width: cardWidth }}
-                  className="min-h-[270px] flex-col rounded-[22px] border border-[#D5A233] bg-[#084A2B] p-5 shadow-sm"
+                  className="min-h-[270px] flex-col rounded-[22px] border border-[#D5A233] bg-white p-5 shadow-sm"
                 >
                   <View className="flex-row items-center justify-between">
                     <View
@@ -242,29 +242,29 @@ export default function CustomerReviews() {
                       {Array.from({ length: 5 }, (_, index) => (
                         <Star
                           key={index}
-                          color={index < review.rating ? "#E9BE45" : "#B8C8B8"}
-                          fill={index < review.rating ? "#E9BE45" : "transparent"}
+                          color={index < review.rating ? "#D5A233" : "#DCE5DD"}
+                          fill={index < review.rating ? "#D5A233" : "transparent"}
                           size={17}
                         />
                       ))}
                     </View>
-                    <Text className="rounded-full bg-[#E9BE45] px-2.5 py-1 text-xs font-extrabold text-[#084A2B]">
+                    <Text className="rounded-full bg-[#FFF3C8] px-2.5 py-1 text-xs font-extrabold text-[#084A2B]">
                       {review.rating.toFixed(1)}
                     </Text>
                   </View>
                   <View className="mt-6 flex-1">
-                    <Quote color="#E9BE45" fill="#E9BE45" size={21} />
+                    <Quote color="#D5A233" fill="#D5A233" size={21} />
                     {review.title ? (
                       <Text
                         numberOfLines={1}
-                        className="mt-1 text-sm font-bold text-[#FFF8E7]"
+                        className="mt-1 text-sm font-bold text-[#084A2B]"
                       >
                         {review.title}
                       </Text>
                     ) : null}
                     <Text
                       numberOfLines={5}
-                      className="mt-1 text-[13px] leading-5 text-[#F3EEDC]"
+                      className="mt-1 text-[13px] leading-5 text-[#31513B]"
                     >
                       {review.comment}
                     </Text>
@@ -285,13 +285,13 @@ export default function CustomerReviews() {
                     <View className="ml-3 flex-1">
                       <Text
                         numberOfLines={1}
-                        className="text-sm font-extrabold text-[#FFF8E7]"
+                        className="text-sm font-extrabold text-[#084A2B]"
                       >
                         {review.reviewerName}
                       </Text>
                       <Text
                         numberOfLines={1}
-                        className="mt-1 text-xs text-[#D5E0D3]"
+                        className="mt-1 text-xs text-[#617367]"
                       >
                         {review.productName}
                       </Text>
