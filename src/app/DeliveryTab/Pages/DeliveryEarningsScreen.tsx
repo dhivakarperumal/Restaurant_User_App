@@ -16,7 +16,9 @@ import DateTimePicker, {
 import {
   CalendarDays,
   CheckCheck,
+  Clock3,
   IndianRupee,
+  MapPin,
   RefreshCw,
   WalletCards,
 } from "lucide-react-native";
@@ -479,11 +481,23 @@ export default function DeliveryEarningsScreen() {
       </View>
 
       <View className="overflow-hidden rounded-2xl border border-[#E1E8E1] bg-white">
-        <View className="border-b border-[#EEF0EC] px-4 py-4">
-          <Text className="text-base font-extrabold text-[#17251E]">Earnings history</Text>
-          <Text className="mt-1 text-xs text-slate-500">
-            Per-delivery amounts and payment status
-          </Text>
+        <View className="flex-row items-center border-b border-[#EEF0EC] px-4 py-4">
+          <View className="h-10 w-10 items-center justify-center rounded-xl bg-[#EAF4E8]">
+            <WalletCards color="#17663D" size={19} />
+          </View>
+          <View className="ml-3 flex-1">
+            <Text className="text-base font-extrabold text-[#17251E]">Earnings history</Text>
+            <Text className="mt-0.5 text-xs text-slate-500">
+              Your delivery payouts and payment status
+            </Text>
+          </View>
+          {!loading && !errorMessage ? (
+            <View className="rounded-full bg-[#F0F4EF] px-2.5 py-1">
+              <Text className="text-[10px] font-bold text-[#526057]">
+                {data.entries.length} {data.entries.length === 1 ? "delivery" : "deliveries"}
+              </Text>
+            </View>
+          ) : null}
         </View>
         {loading ? (
           <View className="items-center px-4 py-10">
@@ -505,47 +519,107 @@ export default function DeliveryEarningsScreen() {
             </Text>
           </View>
         ) : (
-          data.entries.map((entry, index) => (
-            <View
-              className="border-b border-[#EEF0EC] px-4 py-4"
-              key={String(firstDefined(entry, ["id", "order_id"]) ?? index)}
-            >
-              <View className="flex-row items-start justify-between">
-                <View className="mr-3 flex-1">
-                  <Text className="text-xs font-extrabold text-[#26352B]">
-                    Order {String(firstDefined(entry, ["order_id", "id"]) ?? "—")}
-                  </Text>
-                  <Text className="mt-1 text-[10px] text-slate-500">
-                    {formatDate(firstDefined(entry, ["date", "created_at"]))}
-                  </Text>
+          <View className="p-3">
+            {data.entries.map((entry, index) => {
+              const paymentStatus = String(
+                firstDefined(entry, ["payment_status", "status"]) ?? "Status unavailable",
+              );
+              const normalizedPaymentStatus = paymentStatus.toUpperCase().replace(/[^A-Z]/g, "");
+              const isPaid = [
+                "PAID",
+                "COMPLETED",
+                "SETTLED",
+                "SUCCESS",
+                "PAYMENTPAID",
+                "PAYMENTCOMPLETED",
+              ].includes(normalizedPaymentStatus);
+              const isFailed = ["FAILED", "CANCELLED", "REJECTED", "PAYMENTFAILED"].includes(
+                normalizedPaymentStatus,
+              );
+              const statusColors = isPaid
+                ? { background: "#EAF4E8", text: "#17663D" }
+                : isFailed
+                  ? { background: "#FFF0F0", text: "#B42332" }
+                  : { background: "#FFF5DF", text: "#9A6200" };
+              const distance = firstDefined(entry, ["distance_km", "distance"]);
+              const displayDistance = distance == null || distance === ""
+                ? "—"
+                : `${String(distance)} km`;
+
+              return (
+                <View
+                  className={`rounded-2xl border border-[#E5EBE5] bg-[#FAFCFA] p-4 ${
+                    index < data.entries.length - 1 ? "mb-3" : ""
+                  }`}
+                  key={String(firstDefined(entry, ["id", "order_id"]) ?? index)}
+                >
+                  <View className="flex-row items-center">
+                    <View className="mr-3 h-10 w-10 items-center justify-center rounded-xl bg-white">
+                      <IndianRupee color="#39804F" size={19} />
+                    </View>
+                    <View className="flex-1">
+                      <Text className="text-[9px] font-bold uppercase tracking-wide text-slate-400">
+                        Delivery payout
+                      </Text>
+                      <Text className="mt-0.5 text-sm font-extrabold text-[#26352B]">
+                        Order #{String(firstDefined(entry, ["order_id", "id"]) ?? "—")}
+                      </Text>
+                    </View>
+                    <Text className="text-base font-black text-[#17663D]">
+                      {formatMoney(firstDefined(entry, ["total_earnings", "total"]))}
+                    </Text>
+                  </View>
+
+                  <View className="mt-3 flex-row items-center">
+                    <Clock3 color="#839087" size={13} />
+                    <Text className="ml-1.5 flex-1 text-[10px] font-medium text-slate-500">
+                      {formatDate(firstDefined(entry, ["date", "created_at"]))}
+                    </Text>
+                    <View
+                      className="rounded-full px-2.5 py-1"
+                      style={{ backgroundColor: statusColors.background }}
+                    >
+                      <Text
+                        className="text-[10px] font-bold"
+                        style={{ color: statusColors.text }}
+                      >
+                        {paymentStatus}
+                      </Text>
+                    </View>
+                  </View>
+
+                  <View className="mt-3 flex-row rounded-xl bg-white px-3 py-3">
+                    <View className="flex-1">
+                      <Text className="text-[9px] font-semibold text-slate-400">Base pay</Text>
+                      <Text className="mt-1 text-xs font-bold text-[#39483F]">
+                        {formatMoney(entry.base_charge)}
+                      </Text>
+                    </View>
+                    <View className="mx-3 w-px bg-[#E8EEE8]" />
+                    <View className="flex-1">
+                      <Text className="text-[9px] font-semibold text-slate-400">Extra</Text>
+                      <Text className="mt-1 text-xs font-bold text-[#39483F]">
+                        {formatMoney(entry.extra_charge)}
+                      </Text>
+                    </View>
+                    <View className="mx-3 w-px bg-[#E8EEE8]" />
+                    <View className="flex-1">
+                      <Text className="text-[9px] font-semibold text-slate-400">Incentive</Text>
+                      <Text className="mt-1 text-xs font-bold text-[#39483F]">
+                        {formatMoney(entry.incentive)}
+                      </Text>
+                    </View>
+                  </View>
+                  <View className="mt-2 flex-row items-center">
+                    <MapPin color="#839087" size={12} />
+                    <Text className="ml-1 text-[10px] text-slate-500">
+                      Distance: {displayDistance}
+                    </Text>
+                  </View>
                 </View>
-                <Text className="text-sm font-black text-[#17663D]">
-                  {formatMoney(firstDefined(entry, ["total_earnings", "total"]))}
-                </Text>
-              </View>
-              <View className="mt-3 flex-row flex-wrap">
-                <Text className="mr-4 text-[10px] text-slate-500">
-                  Distance: {String(firstDefined(entry, ["distance_km", "distance"]) ?? "—")} km
-                </Text>
-                <Text className="mr-4 text-[10px] text-slate-500">
-                  Base: {formatMoney(entry.base_charge)}
-                </Text>
-                <Text className="text-[10px] text-slate-500">
-                  Extra: {formatMoney(entry.extra_charge)}
-                </Text>
-              </View>
-              <View className="mt-2 flex-row items-center justify-between">
-                <Text className="text-[10px] text-slate-500">
-                  Incentive: {formatMoney(entry.incentive)}
-                </Text>
-                <View className="rounded-full bg-emerald-50 px-2.5 py-1">
-                  <Text className="text-[10px] font-bold text-emerald-700">
-                    {String(entry.payment_status ?? "Payment status unavailable")}
-                  </Text>
-                </View>
-              </View>
-            </View>
-          ))
+              );
+            })}
+          </View>
         )}
       </View>
       </ScrollView>
