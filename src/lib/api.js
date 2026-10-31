@@ -313,7 +313,7 @@ api.interceptors.response.use(
     if (error.response) {
       const status = error.response.status;
       if (
-        (status === 401 || status === 403) &&
+        status === 401 &&
         error.config?._authRole &&
         authExpiredHandler
       ) {

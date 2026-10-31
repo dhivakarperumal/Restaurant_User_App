@@ -42,6 +42,7 @@ type EarningsRecord = Record<string, unknown>;
 type EarningsData = {
   summary: Record<string, unknown>;
   entries: EarningsRecord[];
+  deliveryRates: DeliveryRates;
 };
 type EarningsMetric = {
   label: string;
@@ -50,10 +51,16 @@ type EarningsMetric = {
   color: string;
   Icon: typeof IndianRupee;
 };
+type DeliveryRates = {
+  baseCharge: number | null;
+  perKmCharge: number | null;
+};
 type DeliveryOrderLookup = {
   orderNumber: string | null;
   distanceKm: number | null;
   deliveryCharge: number | null;
+  baseCharge: number | null;
+  perKmCharge: number | null;
 };
 
 function asRecord(value: unknown): Record<string, unknown> | null {
@@ -80,6 +87,42 @@ function numberValue(value: unknown): number | null {
 
 function recordNumber(record: Record<string, unknown>, keys: string[]): number | null {
   return numberValue(firstDefined(record, keys));
+}
+
+function parseDeliveryRates(value: unknown): DeliveryRates {
+  const root = asRecord(value);
+  const payload = asRecord(root?.data) ?? root;
+  const nestedPayload = asRecord(payload?.data) ?? payload;
+  const containers = [nestedPayload, payload, root].filter(
+    (record, index, records): record is EarningsRecord =>
+      record !== null && records.indexOf(record) === index,
+  );
+  const candidates = containers
+    .flatMap((record) => [
+      record.delivery_rates,
+      record.deliveryRates,
+      record.delivery_settings,
+      record.deliverySettings,
+      record.settings,
+      record.rates,
+      record,
+    ])
+    .map(asRecord)
+    .filter((record): record is EarningsRecord => record !== null);
+  return {
+    baseCharge:
+      candidates
+        .map((record) =>
+          recordNumber(record, ["base_charge", "baseCharge", "base_pay", "basePay"]),
+        )
+        .find((rate) => rate != null) ?? null,
+    perKmCharge:
+      candidates
+        .map((record) =>
+          recordNumber(record, ["per_km_charge", "perKmCharge", "distance_rate"]),
+        )
+        .find((rate) => rate != null) ?? null,
+  };
 }
 
 function getDistanceKm(entry: EarningsRecord): number | null {
@@ -109,6 +152,25 @@ function getDeliveryCharge(record: EarningsRecord): number | null {
   ]);
 }
 
+function getBaseCharge(record: EarningsRecord): number | null {
+  return recordNumber(record, ["base_charge", "baseCharge", "base_pay", "basePay"]);
+}
+
+function getPerKmCharge(record: EarningsRecord): number | null {
+  return recordNumber(record, [
+    "per_km_charge",
+    "perKmCharge",
+    "distance_rate",
+    "distanceRate",
+  ]);
+}
+
+function preferNonZero(...values: (number | null)[]): number | null {
+  return values.find((value) => value != null && value !== 0) ??
+    values.find((value) => value != null) ??
+    null;
+}
+
 function getReadableOrderNumber(record: Record<string, unknown>): string | null {
   const value = firstDefined(record, [
     "order_number",
@@ -133,6 +195,12 @@ function getOrderLookupKeys(record: Record<string, unknown>): string[] {
     "orderId",
     "order_uuid",
     "orderUuid",
+    "delivery_order_id",
+    "deliveryOrderId",
+    "delivery_id",
+    "deliveryId",
+    "order_ref",
+    "orderRef",
     "order_number",
     "orderNumber",
     "order_no",
@@ -148,12 +216,50 @@ function getOrderLookupKeys(record: Record<string, unknown>): string[] {
     .filter(Boolean);
 }
 
+function getRelatedOrderRecords(record: EarningsRecord): EarningsRecord[] {
+  const relationKeys = [
+    "order",
+    "order_details",
+    "orderDetails",
+    "delivery_order",
+    "deliveryOrder",
+    "delivery",
+    "delivery_details",
+    "deliveryDetails",
+    "delivery_assignment",
+    "deliveryAssignment",
+    "assigned_order",
+    "assignedOrder",
+    "assignment",
+  ];
+  const records: EarningsRecord[] = [];
+  const visit = (current: EarningsRecord, depth: number) => {
+    records.push(current);
+    if (depth >= 3) return;
+    for (const key of relationKeys) {
+      const nested = asRecord(current[key]);
+      if (nested) visit(nested, depth + 1);
+    }
+  };
+  visit(record, 0);
+  return records;
+}
+
 function parseDeliveryOrderLookup(value: unknown): Record<string, DeliveryOrderLookup> {
   const findOrderRecords = (candidate: unknown): unknown[] | null => {
     if (Array.isArray(candidate)) return candidate;
     const record = asRecord(candidate);
     if (!record) return null;
-    for (const key of ["orders", "data", "results"]) {
+    for (const key of [
+      "orders",
+      "assigned_orders",
+      "assignedOrders",
+      "deliveries",
+      "results",
+      "data",
+      "items",
+      "rows",
+    ]) {
       if (record[key] !== undefined) {
         const found = findOrderRecords(record[key]);
         if (found) return found;
@@ -168,23 +274,32 @@ function parseDeliveryOrderLookup(value: unknown): Record<string, DeliveryOrderL
   for (const value of records) {
     const record = asRecord(value);
     if (!record) continue;
-    const nestedOrder =
-      asRecord(firstDefined(record, ["order", "order_details", "delivery_order"])) ?? {};
+    const relatedRecords = getRelatedOrderRecords(record);
     const orderNumber =
-      getReadableOrderNumber(record) ?? getReadableOrderNumber(nestedOrder);
-    const distanceKm = getDistanceKm(record) ?? getDistanceKm(nestedOrder);
-    const deliveryCharge =
-      getDeliveryCharge(record) ?? getDeliveryCharge(nestedOrder);
-    for (const key of [...getOrderLookupKeys(record), ...getOrderLookupKeys(nestedOrder)]) {
-      lookup[key] = { orderNumber, distanceKm, deliveryCharge };
+      relatedRecords.map(getReadableOrderNumber).find(Boolean) ?? null;
+    const distanceKm = preferNonZero(...relatedRecords.map(getDistanceKm));
+    const deliveryCharge = preferNonZero(...relatedRecords.map(getDeliveryCharge));
+    const baseCharge = preferNonZero(...relatedRecords.map(getBaseCharge));
+    const perKmCharge = preferNonZero(...relatedRecords.map(getPerKmCharge));
+    const lookupKeys = relatedRecords.flatMap(getOrderLookupKeys);
+    for (const key of lookupKeys) {
+      const existing = lookup[key];
+      lookup[key] = {
+        orderNumber: orderNumber ?? existing?.orderNumber ?? null,
+        distanceKm: preferNonZero(distanceKm, existing?.distanceKm ?? null),
+        deliveryCharge: preferNonZero(
+          deliveryCharge,
+          existing?.deliveryCharge ?? null,
+        ),
+        baseCharge: preferNonZero(baseCharge, existing?.baseCharge ?? null),
+        perKmCharge: preferNonZero(perKmCharge, existing?.perKmCharge ?? null),
+      };
     }
   }
   return lookup;
 }
 
 function getEntryOrderLookupKeys(entry: EarningsRecord): string[] {
-  const nestedOrder =
-    asRecord(firstDefined(entry, ["order", "order_details", "delivery_order"])) ?? {};
   const reference =
     entry.order_id ??
     entry.orderId ??
@@ -192,6 +307,10 @@ function getEntryOrderLookupKeys(entry: EarningsRecord): string[] {
     entry.orderUuid ??
     entry.delivery_order_id ??
     entry.deliveryOrderId ??
+    entry.delivery_id ??
+    entry.deliveryId ??
+    entry.order_ref ??
+    entry.orderRef ??
     (typeof entry.order === "string" || typeof entry.order === "number"
       ? entry.order
       : undefined);
@@ -199,20 +318,21 @@ function getEntryOrderLookupKeys(entry: EarningsRecord): string[] {
     typeof reference === "string" || typeof reference === "number"
       ? [String(reference).trim().toLowerCase()]
       : [];
-  return [...getOrderLookupKeys(nestedOrder), ...getOrderLookupKeys(entry), ...referenceKeys];
+  return [
+    ...getRelatedOrderRecords(entry).flatMap(getOrderLookupKeys),
+    ...referenceKeys,
+  ];
 }
 
 function getEarningsOrderNumber(
   entry: EarningsRecord,
   orderLookup: Record<string, DeliveryOrderLookup>,
 ): string | null {
-  const nestedOrder =
-    asRecord(firstDefined(entry, ["order", "order_details", "delivery_order"])) ?? {};
-  const directNumber =
-    getReadableOrderNumber(nestedOrder) ?? getReadableOrderNumber(entry);
+  const relatedRecords = getRelatedOrderRecords(entry);
+  const directNumber = relatedRecords.map(getReadableOrderNumber).find(Boolean);
   if (directNumber) return directNumber;
 
-  const nestedKeys = getOrderLookupKeys(nestedOrder);
+  const nestedKeys = relatedRecords.flatMap(getOrderLookupKeys);
   const reference =
     entry.order_id ??
     entry.orderId ??
@@ -240,14 +360,15 @@ function getEarningsDistanceKm(
   entry: EarningsRecord,
   orderLookup: Record<string, DeliveryOrderLookup>,
 ): number | null {
-  const nestedOrder =
-    asRecord(firstDefined(entry, ["order", "order_details", "delivery_order"])) ?? {};
-  const directDistance = getDistanceKm(entry) ?? getDistanceKm(nestedOrder);
-  if (directDistance != null) return directDistance;
-  for (const key of getEntryOrderLookupKeys(entry)) {
-    const distanceKm = orderLookup[key]?.distanceKm;
-    if (distanceKm != null) return distanceKm;
-  }
+  const directDistance = preferNonZero(
+    ...getRelatedOrderRecords(entry).map(getDistanceKm),
+  );
+  const matchedDistances = getEntryOrderLookupKeys(entry).map(
+    (key) => orderLookup[key]?.distanceKm ?? null,
+  );
+  const matchedDistance = preferNonZero(...matchedDistances);
+  const resolvedDistance = preferNonZero(directDistance, matchedDistance);
+  if (resolvedDistance != null) return resolvedDistance;
   return null;
 }
 
@@ -255,15 +376,39 @@ function getEarningsDeliveryCharge(
   entry: EarningsRecord,
   orderLookup: Record<string, DeliveryOrderLookup>,
 ): number | null {
-  const nestedOrder =
-    asRecord(firstDefined(entry, ["order", "order_details", "delivery_order"])) ?? {};
-  const directCharge = getDeliveryCharge(entry) ?? getDeliveryCharge(nestedOrder);
-  if (directCharge != null) return directCharge;
-  for (const key of getEntryOrderLookupKeys(entry)) {
-    const deliveryCharge = orderLookup[key]?.deliveryCharge;
-    if (deliveryCharge != null) return deliveryCharge;
-  }
-  return null;
+  const directCharge = preferNonZero(
+    ...getRelatedOrderRecords(entry).map(getDeliveryCharge),
+  );
+  const matchedCharges = getEntryOrderLookupKeys(entry).map(
+    (key) => orderLookup[key]?.deliveryCharge ?? null,
+  );
+  return preferNonZero(directCharge, ...matchedCharges);
+}
+
+function getEarningsBaseCharge(
+  entry: EarningsRecord,
+  orderLookup: Record<string, DeliveryOrderLookup>,
+): number | null {
+  const directCharge = preferNonZero(
+    ...getRelatedOrderRecords(entry).map(getBaseCharge),
+  );
+  const matchedCharges = getEntryOrderLookupKeys(entry).map(
+    (key) => orderLookup[key]?.baseCharge ?? null,
+  );
+  return preferNonZero(directCharge, ...matchedCharges);
+}
+
+function getEarningsPerKmCharge(
+  entry: EarningsRecord,
+  orderLookup: Record<string, DeliveryOrderLookup>,
+): number | null {
+  const directRate = preferNonZero(
+    ...getRelatedOrderRecords(entry).map(getPerKmCharge),
+  );
+  const matchedRates = getEntryOrderLookupKeys(entry).map(
+    (key) => orderLookup[key]?.perKmCharge ?? null,
+  );
+  return preferNonZero(directRate, ...matchedRates);
 }
 
 function formatMoney(value: unknown): string {
@@ -336,7 +481,11 @@ function parseEarningsResponse(value: unknown): EarningsData {
       nestedPayload.rows ??
       nestedPayload.items,
   );
-  return { summary, entries };
+  return {
+    summary,
+    entries,
+    deliveryRates: parseDeliveryRates(value),
+  };
 }
 
 function EarningsMetricCard({
@@ -378,7 +527,15 @@ export default function DeliveryEarningsScreen() {
   const [to, setTo] = useState("");
   const [appliedFrom, setAppliedFrom] = useState("");
   const [appliedTo, setAppliedTo] = useState("");
-  const [data, setData] = useState<EarningsData>({ summary: {}, entries: [] });
+  const [data, setData] = useState<EarningsData>({
+    summary: {},
+    entries: [],
+    deliveryRates: { baseCharge: null, perKmCharge: null },
+  });
+  const [settingsRates, setSettingsRates] = useState<DeliveryRates>({
+    baseCharge: null,
+    perKmCharge: null,
+  });
   const [orderLookup, setOrderLookup] = useState<Record<string, DeliveryOrderLookup>>({});
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -386,6 +543,40 @@ export default function DeliveryEarningsScreen() {
   const [errorMessage, setErrorMessage] = useState("");
   const [pickerMode, setPickerMode] = useState<"from" | "to" | null>(null);
   const [pickerDraft, setPickerDraft] = useState(new Date());
+
+  useEffect(() => {
+    let active = true;
+    const loadDeliveryRates = async () => {
+      try {
+        const response = await api.get("/settings/delivery", {
+          params: { _: `${Date.now()}-${Math.random().toString(36).slice(2)}` },
+          headers: {
+            "Cache-Control": "no-cache, no-store",
+            Pragma: "no-cache",
+            "If-None-Match": null,
+            "If-Modified-Since": null,
+          },
+        });
+        if (!active) return;
+        const rates = parseDeliveryRates(response.data);
+        setSettingsRates((current) => ({
+          baseCharge: rates.baseCharge ?? current.baseCharge,
+          perKmCharge: rates.perKmCharge ?? current.perKmCharge,
+        }));
+      } catch (error: unknown) {
+        if (!active) return;
+        console.warn(
+          "Delivery settings are unavailable for this account:",
+          getApiErrorMessage(error, "Delivery settings could not be loaded."),
+        );
+      }
+    };
+
+    void loadDeliveryRates();
+    return () => {
+      active = false;
+    };
+  }, [refreshVersion]);
 
   useEffect(() => {
     let active = true;
@@ -406,7 +597,11 @@ export default function DeliveryEarningsScreen() {
       } catch (error: unknown) {
         console.error("Failed to load delivery partner earnings:", error);
         if (active) {
-          setData({ summary: {}, entries: [] });
+          setData({
+            summary: {},
+            entries: [],
+            deliveryRates: { baseCharge: null, perKmCharge: null },
+          });
           setErrorMessage(
             getApiErrorMessage(error, "Your earnings are temporarily unavailable."),
           );
@@ -763,17 +958,40 @@ export default function DeliveryEarningsScreen() {
               const distanceKm = getEarningsDistanceKm(entry, orderLookup);
               const displayDistance = distanceKm == null ? "—" : `${distanceKm} km`;
               const deliveryCharge = getEarningsDeliveryCharge(entry, orderLookup);
-              const basePay =
-                recordNumber(entry, ["base_charge", "base_pay", "baseCharge", "basePay"]);
-              const otherDistancePay =
-                recordNumber(entry, [
-                  "extra_charge",
-                  "distance_charge",
-                  "distance_pay",
-                  "extraCharge",
-                  "distanceCharge",
-                  "distancePay",
-                ]);
+              const basePay = getEarningsBaseCharge(entry, orderLookup);
+              const perKmCharge = preferNonZero(
+                getEarningsPerKmCharge(entry, orderLookup),
+                data.deliveryRates.perKmCharge,
+                settingsRates.perKmCharge,
+              );
+              const resolvedBasePay = preferNonZero(
+                basePay,
+                data.deliveryRates.baseCharge,
+                settingsRates.baseCharge,
+                perKmCharge,
+              );
+              const calculatedDistancePay =
+                perKmCharge != null && distanceKm != null
+                  ? perKmCharge * distanceKm
+                  : null;
+              const otherDistancePay = preferNonZero(
+                calculatedDistancePay,
+                ...getRelatedOrderRecords(entry).map((record) =>
+                  recordNumber(record, [
+                    "extra_charge",
+                    "distance_charge",
+                    "distance_pay",
+                    "extraCharge",
+                    "distanceCharge",
+                    "distancePay",
+                  ]),
+                ),
+              );
+              const resolvedDeliveryCharge = preferNonZero(
+                calculatedDistancePay,
+                deliveryCharge,
+                otherDistancePay,
+              );
               const incentive = recordNumber(entry, [
                 "incentive",
                 "incentive_amount",
@@ -781,12 +999,15 @@ export default function DeliveryEarningsScreen() {
                 "incentiveAmount",
               ]);
               const totalEarnings =
-                recordNumber(entry, ["total_earnings", "total", "amount"]) ??
-                (deliveryCharge != null
-                  ? deliveryCharge + (incentive ?? 0)
-                  : basePay != null && otherDistancePay != null && incentive != null
-                    ? basePay + otherDistancePay + incentive
-                    : null);
+                preferNonZero(
+                  calculatedDistancePay,
+                  recordNumber(entry, ["total_earnings", "total", "amount"]),
+                  resolvedDeliveryCharge != null
+                    ? resolvedDeliveryCharge + (incentive ?? 0)
+                    : resolvedBasePay != null && otherDistancePay != null
+                      ? resolvedBasePay + otherDistancePay + (incentive ?? 0)
+                      : null,
+                );
               const orderNumber = getEarningsOrderNumber(entry, orderLookup);
 
               return (
@@ -843,18 +1064,20 @@ export default function DeliveryEarningsScreen() {
 
                   <View className="mt-3 flex-row rounded-xl bg-white px-3 py-3">
                     <View className="flex-1">
-                      <Text className="text-[9px] font-semibold text-slate-400">Base pay</Text>
+                      <Text className="text-[9px] font-semibold text-slate-400">Per Km charge</Text>
                       <Text className="mt-1 text-xs font-bold text-[#39483F]">
-                        {formatMoney(basePay)}
+                        {formatMoney(perKmCharge)}
                       </Text>
                     </View>
                     <View className="mx-3 w-px bg-[#E8EEE8]" />
                     <View className="flex-1">
                       <Text className="text-[9px] font-semibold text-slate-400">
-                        Delivery charge
+                        {resolvedDeliveryCharge != null
+                          ? "Delivery charge"
+                          : "Distance pay"}
                       </Text>
                       <Text className="mt-1 text-xs font-bold text-[#39483F]">
-                        {formatMoney(deliveryCharge ?? otherDistancePay)}
+                        {formatMoney(resolvedDeliveryCharge)}
                       </Text>
                     </View>
                     <View className="mx-3 w-px bg-[#E8EEE8]" />
