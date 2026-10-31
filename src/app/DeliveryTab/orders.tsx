@@ -50,6 +50,10 @@ const ORDER_VIEWS: OrderView[] = [
     key: "delivery",
     label: "Delivery",
     statuses: [
+      "NEW",
+      "NEW_ORDER",
+      "PENDING",
+      "ORDER_PLACED",
       "ASSIGNED",
       "ACCEPTED",
       "REACHED_PICKUP",
@@ -89,6 +93,10 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 const NEXT_STATUS: Record<string, string> = {
+  NEW: "ACCEPTED",
+  NEW_ORDER: "ACCEPTED",
+  PENDING: "ACCEPTED",
+  ORDER_PLACED: "ACCEPTED",
   ASSIGNED: "ACCEPTED",
   ACCEPTED: "REACHED_PICKUP",
   REACHED_PICKUP: "PICKED_UP",
@@ -816,6 +824,11 @@ export default function DeliveryOrdersScreen() {
   const selectedNextStatus = selectedOrder
     ? NEXT_STATUS[normalizeStatus(selectedOrder.order_status)]
     : undefined;
+  const canAcceptOrder = selectedOrder
+    ? ["NEW", "NEW_ORDER", "PENDING", "ORDER_PLACED"].includes(
+        normalizeStatus(selectedOrder.order_status),
+      )
+    : false;
   const selectedOrderTotal = selectedOrder ? getOrderTotal(selectedOrder) : null;
   const customerName =
     firstText(selectedOrder ?? {}, ["customer_name"]) ||
@@ -1345,6 +1358,8 @@ export default function DeliveryOrdersScreen() {
                       <Text className="text-sm font-extrabold text-white">
                         {normalizeStatus(selectedOrder.order_status) === "REACHED_CUSTOMER"
                           ? "Mark delivered"
+                          : canAcceptOrder
+                            ? "Accept delivery"
                           : statusLabel(selectedNextStatus)}
                       </Text>
                     ) : (

@@ -50,6 +50,19 @@ type DeliveryOrder = {
   [key: string]: unknown;
 };
 
+const NEXT_ORDER_STATUS: Record<string, string> = {
+  NEW: "ACCEPTED",
+  NEW_ORDER: "ACCEPTED",
+  PENDING: "ACCEPTED",
+  ORDER_PLACED: "ACCEPTED",
+  ASSIGNED: "ACCEPTED",
+  ACCEPTED: "REACHED_PICKUP",
+  REACHED_PICKUP: "PICKED_UP",
+  PICKED_UP: "OUT_FOR_DELIVERY",
+  OUT_FOR_DELIVERY: "REACHED_CUSTOMER",
+  REACHED_CUSTOMER: "DELIVERED",
+};
+
 type DashboardData = {
   is_online?: boolean;
   isOnline?: boolean;
@@ -160,6 +173,18 @@ function firstText(record: Record<string, unknown>, keys: string[]): string {
     }
   }
   return "";
+}
+
+function normalizeOrderStatus(value: unknown): string {
+  if (typeof value !== "string" && typeof value !== "number") return "";
+  return String(value).trim().toUpperCase().replace(/[\s-]+/g, "_");
+}
+
+function orderStatusLabel(status: string): string {
+  return status
+    .toLowerCase()
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
 function normalizeOrders(responseData: unknown): DeliveryOrder[] {
@@ -278,6 +303,7 @@ export default function DeliveryPartnerScreen() {
   const { showAlert } = useCustomAlert();
   const [dashboard, setDashboard] = useState<DashboardData | null>(null);
   const [orders, setOrders] = useState<DeliveryOrder[]>([]);
+  const [updatingOrderId, setUpdatingOrderId] = useState<string | null>(null);
   const [ordersLoading, setOrdersLoading] = useState(true);
   const [ordersError, setOrdersError] = useState("");
   const [loading, setLoading] = useState(true);
@@ -422,6 +448,53 @@ export default function DeliveryPartnerScreen() {
     setRefreshing(true);
     setRefreshVersion((value) => value + 1);
   }, []);
+
+  const updateOrderStatus = async (order: DeliveryOrder, nextStatus: string) => {
+    if (updatingOrderId) return;
+    setUpdatingOrderId(order.id);
+    try {
+      const response = await api.patch(
+        `/delivery-partner/orders/${encodeURIComponent(order.id)}/status`,
+        { status: nextStatus },
+      );
+      const root = asRecord(response.data);
+      const nested = asRecord(root?.data);
+      const updatedRecord = asRecord(root?.order) ?? asRecord(nested?.order) ?? nested;
+      const resolvedStatus =
+        firstText(updatedRecord ?? {}, ["order_status", "status"]) || nextStatus;
+      setOrders((current) =>
+        current.map((item) =>
+          item.id === order.id ? { ...item, order_status: resolvedStatus } : item,
+        ),
+      );
+      showAlert({
+        title: "Delivery status updated",
+        message: `Order ${order.id} is now ${orderStatusLabel(resolvedStatus)}.`,
+        variant: "success",
+      });
+    } catch (error: unknown) {
+      console.error("Failed to update delivery order status from dashboard:", error);
+      showAlert({
+        title: "Could not update delivery",
+        message: getApiErrorMessage(error, "Please try again."),
+        variant: "error",
+      });
+    } finally {
+      setUpdatingOrderId(null);
+    }
+  };
+
+  const confirmOrderStatus = (order: DeliveryOrder, nextStatus: string) => {
+    showAlert({
+      title: "Confirm status update",
+      message: `Mark order ${order.id} as ${orderStatusLabel(nextStatus)}?`,
+      variant: "confirm",
+      actions: [
+        { text: "Cancel", style: "cancel" },
+        { text: "Confirm", onPress: () => void updateOrderStatus(order, nextStatus) },
+      ],
+    });
+  };
 
   const updateAvailability = async (
     requestedState: boolean,
@@ -821,7 +894,11 @@ export default function DeliveryPartnerScreen() {
                 .filter(Boolean)
                 .join(", ");
               const status = firstText(order, ["order_status", "status"]) || "New";
-              const normalizedStatus = status.toUpperCase().replace(/[\s-]+/g, "_");
+              const normalizedStatus = normalizeOrderStatus(status);
+              const nextStatus =
+                NEXT_ORDER_STATUS[normalizedStatus] ??
+                (normalizedStatus === "SHIPPED" ? "DELIVERED" : undefined);
+              const isUpdatingOrder = updatingOrderId === order.id;
               const statusStyle =
                 normalizedStatus === "DELIVERED" || normalizedStatus === "COMPLETED"
                   ? { backgroundColor: "#EAF4E4", color: "#17663D" }
@@ -937,6 +1014,24 @@ export default function DeliveryPartnerScreen() {
                       <Text className="ml-1.5 text-xs font-bold text-[#21643A]">View order</Text>
                     </Pressable>
                   </View>
+                  {nextStatus ? (
+                    <Pressable
+                      accessibilityRole="button"
+                      className="mx-3 mb-3 min-h-11 flex-row items-center justify-center rounded-xl bg-[#17663D]"
+                      disabled={Boolean(updatingOrderId)}
+                      onPress={() => confirmOrderStatus(order, nextStatus)}
+                    >
+                      {isUpdatingOrder ? (
+                        <ActivityIndicator color="#FFFFFF" />
+                      ) : (
+                        <Text className="text-sm font-bold text-white">
+                          {nextStatus === "ACCEPTED"
+                            ? "Accept delivery"
+                            : `Mark ${orderStatusLabel(nextStatus).toLowerCase()}`}
+                        </Text>
+                      )}
+                    </Pressable>
+                  ) : null}
                 </View>
               );
             })

@@ -2,7 +2,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 
 export const API_BASE_URL =
-  process.env.EXPO_PUBLIC_API_URL || "https://restaurant.qtechx.com/api";
+  // process.env.EXPO_PUBLIC_API_URL || "https://restaurant.qtechx.com/api";
+  process.env.EXPO_PUBLIC_API_URL || "http://192.168.1.5:5000/api";
   
 
 const api = axios.create({
@@ -326,7 +327,6 @@ api.interceptors.response.use(
           error.response.data?.error ||
           "Server error",
         data: error.response.data,
-        config: error.config,
       });
     }
 

@@ -50,6 +50,11 @@ type EarningsMetric = {
   color: string;
   Icon: typeof IndianRupee;
 };
+type DeliveryOrderLookup = {
+  orderNumber: string | null;
+  distanceKm: number | null;
+  deliveryCharge: number | null;
+};
 
 function asRecord(value: unknown): Record<string, unknown> | null {
   return typeof value === "object" && value !== null && !Array.isArray(value)
@@ -64,6 +69,44 @@ function firstDefined(record: Record<string, unknown>, keys: string[]): unknown 
     }
   }
   return undefined;
+}
+
+function numberValue(value: unknown): number | null {
+  if (typeof value !== "string" && typeof value !== "number") return null;
+  if (typeof value === "string" && !value.trim()) return null;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function recordNumber(record: Record<string, unknown>, keys: string[]): number | null {
+  return numberValue(firstDefined(record, keys));
+}
+
+function getDistanceKm(entry: EarningsRecord): number | null {
+  const value = firstDefined(entry, [
+    "delivery_distance_km",
+    "deliveryDistanceKm",
+    "distance_km",
+    "distance",
+    "delivery_distance",
+    "distanceKm",
+  ]);
+  const directValue = numberValue(value);
+  if (directValue != null) return directValue >= 0 ? directValue : null;
+  if (typeof value === "string") {
+    const match = /^\s*(\d+(?:\.\d+)?)/.exec(value);
+    if (match) return Number(match[1]);
+  }
+  return null;
+}
+
+function getDeliveryCharge(record: EarningsRecord): number | null {
+  return recordNumber(record, [
+    "delivery_charge",
+    "deliveryCharge",
+    "delivery_charge_amount",
+    "deliveryChargeAmount",
+  ]);
 }
 
 function getReadableOrderNumber(record: Record<string, unknown>): string | null {
@@ -105,7 +148,7 @@ function getOrderLookupKeys(record: Record<string, unknown>): string[] {
     .filter(Boolean);
 }
 
-function parseOrderNumberLookup(value: unknown): Record<string, string> {
+function parseDeliveryOrderLookup(value: unknown): Record<string, DeliveryOrderLookup> {
   const findOrderRecords = (candidate: unknown): unknown[] | null => {
     if (Array.isArray(candidate)) return candidate;
     const record = asRecord(candidate);
@@ -121,7 +164,7 @@ function parseOrderNumberLookup(value: unknown): Record<string, string> {
   const records = findOrderRecords(value);
   if (!records) throw new Error("The assigned orders response was invalid.");
 
-  const lookup: Record<string, string> = {};
+  const lookup: Record<string, DeliveryOrderLookup> = {};
   for (const value of records) {
     const record = asRecord(value);
     if (!record) continue;
@@ -129,18 +172,39 @@ function parseOrderNumberLookup(value: unknown): Record<string, string> {
       asRecord(firstDefined(record, ["order", "order_details", "delivery_order"])) ?? {};
     const orderNumber =
       getReadableOrderNumber(record) ?? getReadableOrderNumber(nestedOrder);
-    if (!orderNumber) continue;
-
+    const distanceKm = getDistanceKm(record) ?? getDistanceKm(nestedOrder);
+    const deliveryCharge =
+      getDeliveryCharge(record) ?? getDeliveryCharge(nestedOrder);
     for (const key of [...getOrderLookupKeys(record), ...getOrderLookupKeys(nestedOrder)]) {
-      lookup[key] = orderNumber;
+      lookup[key] = { orderNumber, distanceKm, deliveryCharge };
     }
   }
   return lookup;
 }
 
+function getEntryOrderLookupKeys(entry: EarningsRecord): string[] {
+  const nestedOrder =
+    asRecord(firstDefined(entry, ["order", "order_details", "delivery_order"])) ?? {};
+  const reference =
+    entry.order_id ??
+    entry.orderId ??
+    entry.order_uuid ??
+    entry.orderUuid ??
+    entry.delivery_order_id ??
+    entry.deliveryOrderId ??
+    (typeof entry.order === "string" || typeof entry.order === "number"
+      ? entry.order
+      : undefined);
+  const referenceKeys =
+    typeof reference === "string" || typeof reference === "number"
+      ? [String(reference).trim().toLowerCase()]
+      : [];
+  return [...getOrderLookupKeys(nestedOrder), ...getOrderLookupKeys(entry), ...referenceKeys];
+}
+
 function getEarningsOrderNumber(
   entry: EarningsRecord,
-  orderNumberLookup: Record<string, string>,
+  orderLookup: Record<string, DeliveryOrderLookup>,
 ): string | null {
   const nestedOrder =
     asRecord(firstDefined(entry, ["order", "order_details", "delivery_order"])) ?? {};
@@ -161,13 +225,43 @@ function getEarningsOrderNumber(
     ? [String(reference).trim().toLowerCase()]
     : [];
   for (const key of [...nestedKeys, ...entryKeys]) {
-    if (orderNumberLookup[key]) return orderNumberLookup[key];
+    if (orderLookup[key]?.orderNumber) return orderLookup[key].orderNumber;
   }
   const directReference = typeof reference === "string" || typeof reference === "number"
     ? String(reference).trim()
     : "";
   if (directReference && !/^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i.test(directReference)) {
     return directReference;
+  }
+  return null;
+}
+
+function getEarningsDistanceKm(
+  entry: EarningsRecord,
+  orderLookup: Record<string, DeliveryOrderLookup>,
+): number | null {
+  const nestedOrder =
+    asRecord(firstDefined(entry, ["order", "order_details", "delivery_order"])) ?? {};
+  const directDistance = getDistanceKm(entry) ?? getDistanceKm(nestedOrder);
+  if (directDistance != null) return directDistance;
+  for (const key of getEntryOrderLookupKeys(entry)) {
+    const distanceKm = orderLookup[key]?.distanceKm;
+    if (distanceKm != null) return distanceKm;
+  }
+  return null;
+}
+
+function getEarningsDeliveryCharge(
+  entry: EarningsRecord,
+  orderLookup: Record<string, DeliveryOrderLookup>,
+): number | null {
+  const nestedOrder =
+    asRecord(firstDefined(entry, ["order", "order_details", "delivery_order"])) ?? {};
+  const directCharge = getDeliveryCharge(entry) ?? getDeliveryCharge(nestedOrder);
+  if (directCharge != null) return directCharge;
+  for (const key of getEntryOrderLookupKeys(entry)) {
+    const deliveryCharge = orderLookup[key]?.deliveryCharge;
+    if (deliveryCharge != null) return deliveryCharge;
   }
   return null;
 }
@@ -285,7 +379,7 @@ export default function DeliveryEarningsScreen() {
   const [appliedFrom, setAppliedFrom] = useState("");
   const [appliedTo, setAppliedTo] = useState("");
   const [data, setData] = useState<EarningsData>({ summary: {}, entries: [] });
-  const [orderNumberLookup, setOrderNumberLookup] = useState<Record<string, string>>({});
+  const [orderLookup, setOrderLookup] = useState<Record<string, DeliveryOrderLookup>>({});
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [refreshVersion, setRefreshVersion] = useState(0);
@@ -336,8 +430,8 @@ export default function DeliveryEarningsScreen() {
     const loadOrderNumbers = async () => {
       try {
         const response = await api.get("/delivery-partner/orders");
-        const lookup = parseOrderNumberLookup(response.data);
-        if (active) setOrderNumberLookup(lookup);
+        const lookup = parseDeliveryOrderLookup(response.data);
+        if (active) setOrderLookup(lookup);
       } catch (error: unknown) {
         console.error("Failed to load order numbers for earnings history:", error);
       }
@@ -613,7 +707,7 @@ export default function DeliveryEarningsScreen() {
           <View className="ml-3 flex-1">
             <Text className="text-base font-extrabold text-[#17251E]">Earnings history</Text>
             <Text className="mt-0.5 text-xs text-slate-500">
-              Your delivery payouts and payment status
+              Recorded payouts, incentives, and payment status
             </Text>
           </View>
           {!loading && !errorMessage ? (
@@ -666,11 +760,34 @@ export default function DeliveryEarningsScreen() {
                 : isFailed
                   ? { background: "#FFF0F0", text: "#B42332" }
                   : { background: "#FFF5DF", text: "#9A6200" };
-              const distance = firstDefined(entry, ["distance_km", "distance"]);
-              const displayDistance = distance == null || distance === ""
-                ? "—"
-                : `${String(distance)} km`;
-              const orderNumber = getEarningsOrderNumber(entry, orderNumberLookup);
+              const distanceKm = getEarningsDistanceKm(entry, orderLookup);
+              const displayDistance = distanceKm == null ? "—" : `${distanceKm} km`;
+              const deliveryCharge = getEarningsDeliveryCharge(entry, orderLookup);
+              const basePay =
+                recordNumber(entry, ["base_charge", "base_pay", "baseCharge", "basePay"]);
+              const otherDistancePay =
+                recordNumber(entry, [
+                  "extra_charge",
+                  "distance_charge",
+                  "distance_pay",
+                  "extraCharge",
+                  "distanceCharge",
+                  "distancePay",
+                ]);
+              const incentive = recordNumber(entry, [
+                "incentive",
+                "incentive_amount",
+                "bonus",
+                "incentiveAmount",
+              ]);
+              const totalEarnings =
+                recordNumber(entry, ["total_earnings", "total", "amount"]) ??
+                (deliveryCharge != null
+                  ? deliveryCharge + (incentive ?? 0)
+                  : basePay != null && otherDistancePay != null && incentive != null
+                    ? basePay + otherDistancePay + incentive
+                    : null);
+              const orderNumber = getEarningsOrderNumber(entry, orderLookup);
 
               return (
                 <View
@@ -689,7 +806,7 @@ export default function DeliveryEarningsScreen() {
                       </Text>
                     </View>
                     <Text className="ml-2 text-base font-black text-[#17663D]">
-                      {formatMoney(firstDefined(entry, ["total_earnings", "total"]))}
+                      {formatMoney(totalEarnings)}
                     </Text>
                   </View>
 
@@ -728,21 +845,23 @@ export default function DeliveryEarningsScreen() {
                     <View className="flex-1">
                       <Text className="text-[9px] font-semibold text-slate-400">Base pay</Text>
                       <Text className="mt-1 text-xs font-bold text-[#39483F]">
-                        {formatMoney(entry.base_charge)}
+                        {formatMoney(basePay)}
                       </Text>
                     </View>
                     <View className="mx-3 w-px bg-[#E8EEE8]" />
                     <View className="flex-1">
-                      <Text className="text-[9px] font-semibold text-slate-400">Extra</Text>
+                      <Text className="text-[9px] font-semibold text-slate-400">
+                        Delivery charge
+                      </Text>
                       <Text className="mt-1 text-xs font-bold text-[#39483F]">
-                        {formatMoney(entry.extra_charge)}
+                        {formatMoney(deliveryCharge ?? otherDistancePay)}
                       </Text>
                     </View>
                     <View className="mx-3 w-px bg-[#E8EEE8]" />
                     <View className="flex-1">
                       <Text className="text-[9px] font-semibold text-slate-400">Incentive</Text>
                       <Text className="mt-1 text-xs font-bold text-[#39483F]">
-                        {formatMoney(entry.incentive)}
+                        {formatMoney(incentive)}
                       </Text>
                     </View>
                   </View>
