@@ -1,3 +1,4 @@
+import colors from "../theme/colors.json";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Quote, Star, UserRound, UsersRound } from "lucide-react-native";
 import { Image, Pressable, ScrollView, Text, View, useWindowDimensions } from "react-native";
@@ -111,18 +112,18 @@ export default function CustomerReviews() {
   return (
     <View className="-mx-6 mt-10 bg-white px-4 py-8">
       <View className="mb-5 items-center">
-        <Text className="text-[11px] font-extrabold uppercase tracking-[3px] text-[#163D2C]">
+        <Text className="text-[11px] font-extrabold uppercase tracking-[3px] text-brand-green-forest-text">
           Testimonials
         </Text>
-        <Text className="mt-2 text-center text-2xl font-black text-[#0C3828]">
-          What Our <Text className="font-serif italic text-[#BB8A2D]">Customers Say</Text>
+        <Text className="mt-2 text-center text-2xl font-black text-brand-green-deep">
+          What Our <Text className="font-serif italic text-brand-gold-brand">Customers Say</Text>
         </Text>
-        <Text className="mt-1 text-center text-xs text-[#69736E]">
+        <Text className="mt-1 text-center text-xs text-brand-neutral-text-muted-alt">
           Real stories. Real flavours. Real happiness.
         </Text>
       </View>
 
-      <View className="overflow-hidden rounded-[24px] bg-[#06402D] shadow-md">
+      <View className="overflow-hidden rounded-[24px] bg-brand-green-deep shadow-md">
         <View className="px-5 pb-5 pt-5">
           <Text className="text-[10px] font-bold uppercase tracking-[2px] text-white/90">
             Customer reviews
@@ -131,7 +132,7 @@ export default function CustomerReviews() {
             <Text className="font-serif text-5xl leading-[52px] text-white">
               {loading ? "—" : averageRating.toFixed(1)}
             </Text>
-            <Text className="mb-1 ml-2 font-serif text-xl text-[#D5A233]">/ 5</Text>
+            <Text className="mb-1 ml-2 font-serif text-xl text-brand-gold">/ 5</Text>
           </View>
           <View
             accessibilityLabel={`${averageRating.toFixed(1)} out of 5 stars`}
@@ -140,8 +141,8 @@ export default function CustomerReviews() {
             {Array.from({ length: 5 }, (_, index) => (
               <Star
                 key={index}
-                color={index < Math.round(averageRating) ? "#E6A622" : "#FFFFFF"}
-                fill={index < Math.round(averageRating) ? "#E6A622" : "transparent"}
+                color={index < Math.round(averageRating) ? colors["gold-star"] : colors["white"]}
+                fill={index < Math.round(averageRating) ? colors["gold-star"] : "transparent"}
                 size={21}
                 style={{ opacity: index < Math.round(averageRating) ? 1 : 0.3 }}
               />
@@ -153,31 +154,31 @@ export default function CustomerReviews() {
           </Text>
         </View>
 
-        <View className="border-t border-[#E8D59D] bg-white px-4 py-4">
+        <View className="border-t border-brand-gold-muted bg-white px-4 py-4">
           {ratingBreakdown.map(({ stars, percentage }) => (
             <View key={stars} className="mb-2 flex-row items-center">
-              <Text className="w-12 text-xs text-[#18372B]">{stars} Star</Text>
+              <Text className="w-12 text-xs text-brand-green-forest-text">{stars} Star</Text>
               <View
                 accessibilityLabel={`${stars} star reviews, ${percentage}%`}
-                className="h-2.5 flex-1 overflow-hidden rounded-full bg-[#F2F0E6]"
+                className="h-2.5 flex-1 overflow-hidden rounded-full bg-brand-surface-warm-gray"
               >
                 <View
-                  className="h-full rounded-full bg-[#DDAA32]"
+                  className="h-full rounded-full bg-brand-gold-ochre"
                   style={{ width: `${percentage}%` }}
                 />
               </View>
-              <Text className="w-10 text-right text-xs font-semibold text-[#18372B]">
+              <Text className="w-10 text-right text-xs font-semibold text-brand-green-forest-text">
                 {loading ? "—" : `${percentage}%`}
               </Text>
             </View>
           ))}
-          <View className="mt-2 flex-row items-center rounded-2xl border border-[#E8D59D] bg-[#FFFDF6] px-4 py-3">
-            <UsersRound color="#D29A1E" size={30} />
+          <View className="mt-2 flex-row items-center rounded-2xl border border-brand-gold-muted bg-brand-surface-cream-white px-4 py-3">
+            <UsersRound color={colors["gold-ochre-light"]} size={30} />
             <View className="ml-3">
-              <Text className="font-serif text-xl font-bold leading-6 text-[#18372B]">
+              <Text className="font-serif text-xl font-bold leading-6 text-brand-green-forest-text">
                 {loading ? "—" : reviews.length.toLocaleString()}
               </Text>
-              <Text className="text-xs text-[#58645D]">Recent reviews</Text>
+              <Text className="text-xs text-brand-green-gray-dark">Recent reviews</Text>
             </View>
           </View>
         </View>
@@ -192,25 +193,25 @@ export default function CustomerReviews() {
             <View style={{ width: pageWidth }} className="items-center">
               <View
                 style={{ width: cardWidth }}
-                className="h-[270px] rounded-[22px] border border-[#D5A233] bg-white p-5"
+                className="h-[270px] rounded-[22px] border border-brand-gold bg-white p-5"
               >
-                <View className="h-4 w-28 rounded bg-[#E8D59D]" />
-                <View className="mt-8 h-4 w-2/3 rounded bg-[#DCE5DD]" />
-                <View className="mt-3 h-3 w-full rounded bg-[#DCE5DD]" />
-                <View className="mt-2 h-3 w-4/5 rounded bg-[#DCE5DD]" />
+                <View className="h-4 w-28 rounded bg-brand-gold-muted" />
+                <View className="mt-8 h-4 w-2/3 rounded bg-brand-green-soft" />
+                <View className="mt-3 h-3 w-full rounded bg-brand-green-soft" />
+                <View className="mt-2 h-3 w-4/5 rounded bg-brand-green-soft" />
               </View>
             </View>
           </ScrollView>
         </View>
       ) : error ? (
-        <View className="mt-5 items-center rounded-2xl border border-[#D5A233] bg-white p-5">
-          <Text className="text-center text-sm text-[#084A2B]">{error}</Text>
+        <View className="mt-5 items-center rounded-2xl border border-brand-gold bg-white p-5">
+          <Text className="text-center text-sm text-brand-green">{error}</Text>
           <Pressable
             accessibilityRole="button"
-            className="mt-3 rounded-xl bg-[#D5A233] px-4 py-2"
+            className="mt-3 rounded-xl bg-brand-gold px-4 py-2"
             onPress={() => void fetchReviews()}
           >
-            <Text className="text-xs font-bold text-[#084A2B]">Try again</Text>
+            <Text className="text-xs font-bold text-brand-green">Try again</Text>
           </Pressable>
         </View>
       ) : (
@@ -232,7 +233,7 @@ export default function CustomerReviews() {
               >
                 <View
                   style={{ width: cardWidth }}
-                  className="min-h-[270px] flex-col rounded-[22px] border border-[#D5A233] bg-white p-5 shadow-sm"
+                  className="min-h-[270px] flex-col rounded-[22px] border border-brand-gold bg-white p-5 shadow-sm"
                 >
                   <View className="flex-row items-center justify-between">
                     <View
@@ -242,35 +243,35 @@ export default function CustomerReviews() {
                       {Array.from({ length: 5 }, (_, index) => (
                         <Star
                           key={index}
-                          color={index < review.rating ? "#D5A233" : "#DCE5DD"}
-                          fill={index < review.rating ? "#D5A233" : "transparent"}
+                          color={index < review.rating ? colors["gold"] : colors["green-soft"]}
+                          fill={index < review.rating ? colors["gold"] : "transparent"}
                           size={17}
                         />
                       ))}
                     </View>
-                    <Text className="rounded-full bg-[#FFF3C8] px-2.5 py-1 text-xs font-extrabold text-[#084A2B]">
+                    <Text className="rounded-full bg-brand-gold-pale px-2.5 py-1 text-xs font-extrabold text-brand-green">
                       {review.rating.toFixed(1)}
                     </Text>
                   </View>
                   <View className="mt-6 flex-1">
-                    <Quote color="#D5A233" fill="#D5A233" size={21} />
+                    <Quote color={colors["gold"]} fill={colors["gold"]} size={21} />
                     {review.title ? (
                       <Text
                         numberOfLines={1}
-                        className="mt-1 text-sm font-bold text-[#084A2B]"
+                        className="mt-1 text-sm font-bold text-brand-green"
                       >
                         {review.title}
                       </Text>
                     ) : null}
                     <Text
                       numberOfLines={5}
-                      className="mt-1 text-[13px] leading-5 text-[#31513B]"
+                      className="mt-1 text-[13px] leading-5 text-brand-green-muted"
                     >
                       {review.comment}
                     </Text>
                   </View>
-                  <View className="mt-4 flex-row items-center border-t border-[#D5A233] pt-3">
-                    <View className="h-12 w-12 items-center justify-center overflow-hidden rounded-full border border-[#D5A233] bg-[#FFF8E7]">
+                  <View className="mt-4 flex-row items-center border-t border-brand-gold pt-3">
+                    <View className="h-12 w-12 items-center justify-center overflow-hidden rounded-full border border-brand-gold bg-brand-gold-white">
                       {review.photo ? (
                         <Image
                           accessibilityLabel={`${review.reviewerName} profile`}
@@ -279,19 +280,19 @@ export default function CustomerReviews() {
                           resizeMode="cover"
                         />
                       ) : (
-                        <UserRound color="#084A2B" size={24} strokeWidth={2.25} />
+                        <UserRound color={colors["green"]} size={24} strokeWidth={2.25} />
                       )}
                     </View>
                     <View className="ml-3 flex-1">
                       <Text
                         numberOfLines={1}
-                        className="text-sm font-extrabold text-[#084A2B]"
+                        className="text-sm font-extrabold text-brand-green"
                       >
                         {review.reviewerName}
                       </Text>
                       <Text
                         numberOfLines={1}
-                        className="mt-1 text-xs text-[#617367]"
+                        className="mt-1 text-xs text-brand-green-gray"
                       >
                         {review.productName}
                       </Text>

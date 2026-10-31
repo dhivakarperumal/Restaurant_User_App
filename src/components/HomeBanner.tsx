@@ -196,7 +196,7 @@ export default function HomeBanner() {
         <ImageBackground
           accessible
           accessibilityLabel={banner.title}
-          className="h-full w-full justify-between overflow-hidden rounded-[28px] bg-[#183B2A]"
+          className="h-full w-full justify-between overflow-hidden rounded-[28px] bg-brand-green-forest"
           imageStyle={{ borderRadius: 28 }}
           resizeMode="cover"
           source={banner.image ? { uri: banner.image } : undefined}

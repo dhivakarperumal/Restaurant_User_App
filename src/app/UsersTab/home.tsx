@@ -8,7 +8,7 @@ import CustomerReviews from "../../components/CustomerReviews";
 export default function HomeScreen() {
   return (
     <ScrollView
-      className="flex-1 bg-[#F3F4F3]"
+      className="flex-1 bg-brand-surface-app"
       showsVerticalScrollIndicator={false}
       contentContainerStyle={{
         paddingHorizontal: 24,

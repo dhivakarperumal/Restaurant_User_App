@@ -1,3 +1,4 @@
+import colors from "../../../theme/colors.json";
 import { router } from "expo-router";
 import {
     ArrowLeft,
@@ -50,7 +51,7 @@ const EMPTY_ADDRESS: CheckoutAddress = {
 };
 
 const fieldClassName =
-  "mt-2 min-h-12 rounded-xl border border-[#E7E0D8] bg-white px-4 py-3 text-base text-[#17251E]";
+  "mt-2 min-h-12 rounded-xl border border-brand-neutral-border-warm bg-white px-4 py-3 text-base text-brand-neutral-text-primary";
 
 function formatAddress(address: CheckoutAddress): string {
   return [
@@ -84,11 +85,11 @@ function SectionHeading({
 }) {
   return (
     <View className="mb-5 flex-row items-center">
-      <View className="mr-3 h-10 w-10 items-center justify-center rounded-xl bg-[#F5EFE5]">
+      <View className="mr-3 h-10 w-10 items-center justify-center rounded-xl bg-brand-surface-cream">
         {icon}
       </View>
       <View className="flex-1">
-        <Text className="text-lg font-extrabold text-[#17251E]">{title}</Text>
+        <Text className="text-lg font-extrabold text-brand-neutral-text-primary">{title}</Text>
         <Text className="mt-0.5 text-sm text-slate-500">{detail}</Text>
       </View>
     </View>
@@ -116,9 +117,9 @@ function Field({
 }) {
   return (
     <View className="mb-4">
-      <Text className="text-sm font-bold text-[#263830]">
+      <Text className="text-sm font-bold text-brand-neutral-text-deep">
         {label}
-        {required ? <Text className="text-[#A34F32]"> *</Text> : null}
+        {required ? <Text className="text-brand-warning-rust"> *</Text> : null}
       </Text>
       <TextInput
         accessibilityLabel={label}
@@ -129,7 +130,7 @@ function Field({
         maxLength={maxLength}
         onChangeText={onChangeText}
         placeholder={placeholder}
-        placeholderTextColor="#94A3B8"
+        placeholderTextColor={colors["neutral-placeholder"]}
         value={value}
       />
     </View>
@@ -151,7 +152,7 @@ function OrderItems({ items }: { items: CartItem[] }) {
             className="mb-4 flex-row items-center"
             key={item.key}
           >
-            <View className="h-14 w-14 items-center justify-center overflow-hidden rounded-xl bg-[#F5EFE5]">
+            <View className="h-14 w-14 items-center justify-center overflow-hidden rounded-xl bg-brand-surface-cream">
               {image ? (
                 <Image
                   accessible
@@ -161,12 +162,12 @@ function OrderItems({ items }: { items: CartItem[] }) {
                   source={{ uri: image }}
                 />
               ) : (
-                <UtensilsCrossed color="#A05C2A" size={21} />
+                <UtensilsCrossed color={colors["gold-copper"]} size={21} />
               )}
             </View>
             <View className="ml-3 flex-1">
               <Text
-                className="text-sm font-extrabold text-[#17251E]"
+                className="text-sm font-extrabold text-brand-neutral-text-primary"
                 numberOfLines={1}
               >
                 {getFoodName(item.food)}
@@ -181,7 +182,7 @@ function OrderItems({ items }: { items: CartItem[] }) {
                 </Text>
               ) : null}
             </View>
-            <Text className="ml-2 text-sm font-extrabold text-[#17251E]">
+            <Text className="ml-2 text-sm font-extrabold text-brand-neutral-text-primary">
               ₹{(item.unitPrice * item.quantity).toFixed(2)}
             </Text>
           </View>
@@ -328,7 +329,7 @@ export default function CheckoutScreen() {
           contact: customer.phone,
         },
         notes: { order_number: orderNumber },
-        theme: { color: "#1A6A3B" },
+        theme: { color: colors["green-primary"] },
       });
     } catch (error) {
       const paymentError = error as RazorpayPaymentFailure;
@@ -455,20 +456,20 @@ export default function CheckoutScreen() {
 
   if (completedOrder) {
     return (
-      <SafeAreaView className="flex-1 bg-[#F3F4F3]" edges={["bottom"]}>
+      <SafeAreaView className="flex-1 bg-brand-surface-app" edges={["bottom"]}>
         <View className="flex-1 items-center justify-center px-6">
-          <View className="w-full max-w-lg items-center rounded-3xl border border-[#E7E0D8] bg-white p-7">
-            <CheckCircle2 color="#16804A" size={58} />
-            <Text className="mt-5 text-center text-xs font-extrabold uppercase tracking-[3px] text-[#A34F32]">
+          <View className="w-full max-w-lg items-center rounded-3xl border border-brand-neutral-border-warm bg-white p-7">
+            <CheckCircle2 color={colors["green-success"]} size={58} />
+            <Text className="mt-5 text-center text-xs font-extrabold uppercase tracking-[3px] text-brand-warning-rust">
               Order confirmed
             </Text>
-            <Text className="mt-2 text-center text-2xl font-extrabold text-[#17251E]">
+            <Text className="mt-2 text-center text-2xl font-extrabold text-brand-neutral-text-primary">
               Thank you, {customer.name}!
             </Text>
             <Text className="mt-3 text-center text-sm text-slate-500">
               Your order reference is
             </Text>
-            <Text className="mt-1 text-center text-base font-extrabold text-[#17251E]">
+            <Text className="mt-1 text-center text-base font-extrabold text-brand-neutral-text-primary">
               {completedOrder}
             </Text>
             {completionNotice ? (
@@ -478,7 +479,7 @@ export default function CheckoutScreen() {
             ) : null}
             <Pressable
               accessibilityRole="button"
-              className="mt-7 min-h-12 w-full flex-row items-center justify-center rounded-xl bg-[#1A6A3B] px-5 active:bg-[#14542E]"
+              className="mt-7 min-h-12 w-full flex-row items-center justify-center rounded-xl bg-brand-green-primary px-5 active:bg-brand-green-action-hover"
               onPress={() => router.replace("/UsersTab/shop")}
             >
               <ShoppingBag color="white" size={18} />
@@ -494,8 +495,8 @@ export default function CheckoutScreen() {
 
   if (isLoading || !isHydrated || isCartLoading) {
     return (
-      <View className="flex-1 items-center justify-center bg-[#F3F4F3]">
-        <ActivityIndicator color="#1A6A3B" size="large" />
+      <View className="flex-1 items-center justify-center bg-brand-surface-app">
+        <ActivityIndicator color={colors["green-primary"]} size="large" />
         <Text className="mt-3 text-sm font-semibold text-slate-600">
           Preparing checkout…
         </Text>
@@ -505,9 +506,9 @@ export default function CheckoutScreen() {
 
   if (!account) {
     return (
-      <View className="flex-1 items-center justify-center bg-[#F3F4F3] px-6">
-        <ShoppingBag color="#1A6A3B" size={42} />
-        <Text className="mt-4 text-center text-2xl font-extrabold text-[#17251E]">
+      <View className="flex-1 items-center justify-center bg-brand-surface-app px-6">
+        <ShoppingBag color={colors["green-primary"]} size={42} />
+        <Text className="mt-4 text-center text-2xl font-extrabold text-brand-neutral-text-primary">
           Log in to checkout
         </Text>
         <Text className="mt-2 text-center text-sm text-slate-500">
@@ -515,7 +516,7 @@ export default function CheckoutScreen() {
         </Text>
         <Pressable
           accessibilityRole="button"
-          className="mt-6 min-h-12 justify-center rounded-xl bg-[#1A6A3B] px-6"
+          className="mt-6 min-h-12 justify-center rounded-xl bg-brand-green-primary px-6"
           onPress={() => router.replace("/Auth/login")}
         >
           <Text className="font-extrabold text-white">Log in</Text>
@@ -526,9 +527,9 @@ export default function CheckoutScreen() {
 
   if (items.length === 0) {
     return (
-      <View className="flex-1 items-center justify-center bg-[#F3F4F3] px-6">
-        <ShoppingBag color="#1A6A3B" size={42} />
-        <Text className="mt-4 text-center text-2xl font-extrabold text-[#17251E]">
+      <View className="flex-1 items-center justify-center bg-brand-surface-app px-6">
+        <ShoppingBag color={colors["green-primary"]} size={42} />
+        <Text className="mt-4 text-center text-2xl font-extrabold text-brand-neutral-text-primary">
           Your cart is empty
         </Text>
         <Text className="mt-2 text-center text-sm text-slate-500">
@@ -536,7 +537,7 @@ export default function CheckoutScreen() {
         </Text>
         <Pressable
           accessibilityRole="button"
-          className="mt-6 min-h-12 justify-center rounded-xl bg-[#1A6A3B] px-6"
+          className="mt-6 min-h-12 justify-center rounded-xl bg-brand-green-primary px-6"
           onPress={() => router.replace("/UsersTab/shop")}
         >
           <Text className="font-extrabold text-white">Browse food</Text>
@@ -547,7 +548,7 @@ export default function CheckoutScreen() {
 
   return (
     <KeyboardAvoidingView
-      className="flex-1 bg-[#F3F4F3]"
+      className="flex-1 bg-brand-surface-app"
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
       <ScrollView
@@ -561,26 +562,26 @@ export default function CheckoutScreen() {
           className="mb-5 self-start flex-row items-center py-2"
           onPress={() => router.back()}
         >
-          <ArrowLeft color="#64748B" size={18} />
+          <ArrowLeft color={colors["neutral-slate"]} size={18} />
           <Text className="ml-2 text-sm font-bold text-slate-600">
             Back to cart
           </Text>
         </Pressable>
 
-        <Text className="text-xs font-extrabold uppercase tracking-[3px] text-[#A34F32]">
+        <Text className="text-xs font-extrabold uppercase tracking-[3px] text-brand-warning-rust">
           Almost there
         </Text>
-        <Text className="mt-1 text-3xl font-extrabold text-[#17251E]">
+        <Text className="mt-1 text-3xl font-extrabold text-brand-neutral-text-primary">
           Checkout
         </Text>
         <Text className="mt-2 text-sm text-slate-500">
           Your details, your food, and the finishing touch.
         </Text>
 
-        <View className="mt-6 rounded-2xl border border-[#E7E0D8] bg-white p-5">
+        <View className="mt-6 rounded-2xl border border-brand-neutral-border-warm bg-white p-5">
           <SectionHeading
             detail="Who should we contact about your order?"
-            icon={<ShoppingBag color="#A05C2A" size={19} />}
+            icon={<ShoppingBag color={colors["gold-copper"]} size={19} />}
             title="Customer details"
           />
           <Field
@@ -611,13 +612,13 @@ export default function CheckoutScreen() {
           />
         </View>
 
-        <View className="mt-4 rounded-2xl border border-[#E7E0D8] bg-white p-5">
+        <View className="mt-4 rounded-2xl border border-brand-neutral-border-warm bg-white p-5">
           <SectionHeading
             detail="Choose how you would like to receive your order."
-            icon={<MapPin color="#A05C2A" size={19} />}
+            icon={<MapPin color={colors["gold-copper"]} size={19} />}
             title="Fulfilment"
           />
-          <View className="flex-row rounded-xl bg-[#F5EFE5] p-1">
+          <View className="flex-row rounded-xl bg-brand-surface-cream p-1">
             {[
               { value: "home_delivery" as const, label: "Home delivery" },
               { value: "pickup" as const, label: "Pickup" },
@@ -635,7 +636,7 @@ export default function CheckoutScreen() {
                 >
                   <Text
                     className={`text-sm font-bold ${
-                      isSelected ? "text-[#1A6A3B]" : "text-slate-600"
+                      isSelected ? "text-brand-green-primary" : "text-slate-600"
                     }`}
                   >
                     {option.label}
@@ -652,7 +653,7 @@ export default function CheckoutScreen() {
               ) : null}
               {savedAddresses.length > 0 ? (
                 <View className="mb-4">
-                  <Text className="mb-2 text-sm font-bold text-[#263830]">
+                  <Text className="mb-2 text-sm font-bold text-brand-neutral-text-deep">
                     Saved addresses
                   </Text>
                   {savedAddresses.map((saved, index) => {
@@ -664,8 +665,8 @@ export default function CheckoutScreen() {
                         accessibilityState={{ selected: isSelected }}
                         className={`mb-2 rounded-xl border p-3 ${
                           isSelected
-                            ? "border-[#1A6A3B] bg-[#F4F8F2]"
-                            : "border-[#E7E0D8] bg-white"
+                            ? "border-brand-green-primary bg-brand-green-surface"
+                            : "border-brand-neutral-border-warm bg-white"
                         }`}
                         key={id}
                         onPress={() => {
@@ -673,7 +674,7 @@ export default function CheckoutScreen() {
                           setSelectedAddressId(id);
                         }}
                       >
-                        <Text className="text-sm font-bold text-[#263830]">
+                        <Text className="text-sm font-bold text-brand-neutral-text-deep">
                           {formatAddress(saved) || "Saved delivery address"}
                         </Text>
                         <Text className="mt-1 text-xs text-slate-500">
@@ -686,15 +687,15 @@ export default function CheckoutScreen() {
                     accessibilityRole="button"
                     className={`rounded-xl border p-3 ${
                       selectedAddressId === null
-                        ? "border-[#1A6A3B] bg-[#F4F8F2]"
-                        : "border-[#E7E0D8] bg-white"
+                        ? "border-brand-green-primary bg-brand-green-surface"
+                        : "border-brand-neutral-border-warm bg-white"
                     }`}
                     onPress={() => {
                       setAddress(EMPTY_ADDRESS);
                       setSelectedAddressId(null);
                     }}
                   >
-                    <Text className="text-sm font-bold text-[#263830]">
+                    <Text className="text-sm font-bold text-brand-neutral-text-deep">
                       Enter a different address
                     </Text>
                   </Pressable>
@@ -764,10 +765,10 @@ export default function CheckoutScreen() {
           ) : null}
         </View>
 
-        <View className="mt-4 rounded-2xl border border-[#E7E0D8] bg-white p-5">
+        <View className="mt-4 rounded-2xl border border-brand-neutral-border-warm bg-white p-5">
           <SectionHeading
             detail="Choose how you want to pay."
-            icon={<PackageCheck color="#A05C2A" size={19} />}
+            icon={<PackageCheck color={colors["gold-copper"]} size={19} />}
             title="Payment method"
           />
           {[
@@ -789,13 +790,13 @@ export default function CheckoutScreen() {
                 accessibilityState={{ selected: isSelected }}
                 className={`mb-3 rounded-xl border p-4 ${
                   isSelected
-                    ? "border-[#A34F32] bg-[#FBF6F1]"
-                    : "border-[#E7E0D8]"
+                    ? "border-brand-warning-rust bg-brand-surface-warm"
+                    : "border-brand-neutral-border-warm"
                 }`}
                 key={method.value}
                 onPress={() => setPaymentMethod(method.value)}
               >
-                <Text className="text-sm font-extrabold text-[#263830]">
+                <Text className="text-sm font-extrabold text-brand-neutral-text-deep">
                   {method.label}
                 </Text>
                 <Text className="mt-1 text-xs text-slate-500">
@@ -806,10 +807,10 @@ export default function CheckoutScreen() {
           })}
         </View>
 
-        <View className="mt-4 rounded-2xl border border-[#E7E0D8] bg-white p-5">
+        <View className="mt-4 rounded-2xl border border-brand-neutral-border-warm bg-white p-5">
           <SectionHeading
             detail={`${itemCount} item${itemCount === 1 ? "" : "s"} in your order`}
-            icon={<UtensilsCrossed color="#A05C2A" size={19} />}
+            icon={<UtensilsCrossed color={colors["gold-copper"]} size={19} />}
             title="Your food"
           />
           <OrderItems items={items} />
@@ -821,8 +822,8 @@ export default function CheckoutScreen() {
               </Text>
             </View>
             <View className="mt-3 flex-row justify-between">
-              <Text className="text-base font-extrabold text-[#17251E]">Total</Text>
-              <Text className="text-base font-extrabold text-[#1A6A3B]">
+              <Text className="text-base font-extrabold text-brand-neutral-text-primary">Total</Text>
+              <Text className="text-base font-extrabold text-brand-green-primary">
                 ₹{subtotal.toFixed(2)}
               </Text>
             </View>
@@ -841,7 +842,7 @@ export default function CheckoutScreen() {
           accessibilityRole="button"
           accessibilityState={{ disabled: isSubmitting }}
           className={`mt-5 min-h-14 flex-row items-center justify-center rounded-xl px-5 ${
-            isSubmitting ? "bg-[#72937E]" : "bg-[#1A6A3B] active:bg-[#14542E]"
+            isSubmitting ? "bg-brand-green-muted-dark" : "bg-brand-green-primary active:bg-brand-green-action-hover"
           }`}
           disabled={isSubmitting}
           onPress={() => void placeOrder()}

@@ -108,8 +108,8 @@ export default function HomeCuisines() {
         <Text className="text-[11px] font-extrabold uppercase tracking-[2px] text-brand-gold">
           Our Cuisines
         </Text>
-        <Text className="mt-1 text-2xl font-black text-[#17251E]">
-          A World of <Text className="italic text-[#1A6A3B]">Cuisines</Text>
+        <Text className="mt-1 text-2xl font-black text-brand-neutral-text-primary">
+          A World of <Text className="italic text-brand-green-primary">Cuisines</Text>
         </Text>
       </View>
 
@@ -168,7 +168,7 @@ export default function HomeCuisines() {
           ))}
         </ScrollView>
       ) : (
-        <View className="items-center rounded-2xl border border-[#E5E5E5] bg-white px-4 py-8">
+        <View className="items-center rounded-2xl border border-brand-neutral-border-light bg-white px-4 py-8">
           <Text className="text-center text-sm font-medium text-slate-500">
             Cuisines will appear here soon.
           </Text>
@@ -191,7 +191,7 @@ function CuisineCard({
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={`Browse ${cuisine.name} cuisine`}
-      className="h-[152px] overflow-hidden rounded-2xl border border-[#E7E0D8] bg-[#F5EFE5] shadow-sm active:opacity-80"
+      className="h-[152px] overflow-hidden rounded-2xl border border-brand-neutral-border-warm bg-brand-surface-cream shadow-sm active:opacity-80"
       style={{ width: cardWidth }}
       onPress={() =>
         router.push({
@@ -210,7 +210,7 @@ function CuisineCard({
           source={{ uri: cuisine.image }}
         />
       ) : (
-        <View className="h-full w-full items-center justify-center bg-[#315D2D]">
+        <View className="h-full w-full items-center justify-center bg-brand-green-mid">
           {cuisine.image ? (
             <ImageIcon color={colors["gold-bright"]} size={28} />
           ) : (

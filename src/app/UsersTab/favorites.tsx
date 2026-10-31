@@ -1,3 +1,4 @@
+import colors from "../../theme/colors.json";
 import { router } from "expo-router";
 import { Heart, UtensilsCrossed } from "lucide-react-native";
 import { useState } from "react";
@@ -28,15 +29,15 @@ export default function FavoritesScreen() {
   return (
     <>
       <ScrollView
-        className="flex-1 bg-[#F3F4F3]"
+        className="flex-1 bg-brand-surface-app"
         contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 20, paddingBottom: 120 }}
         showsVerticalScrollIndicator={false}
       >
         <View className="mb-5">
-          <Text className="text-[11px] font-extrabold uppercase tracking-[2px] text-[#E86D16]">
+          <Text className="text-[11px] font-extrabold uppercase tracking-[2px] text-brand-gold">
             Saved for later
           </Text>
-          <Text className="mt-1 text-2xl font-black text-[#17251E]">
+          <Text className="mt-1 text-2xl font-black text-brand-neutral-text-primary">
             Your favorites
           </Text>
           <Text className="mt-1 text-sm text-slate-500">
@@ -72,9 +73,9 @@ export default function FavoritesScreen() {
         ) : (
           <View className="items-center rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-10">
             <View className="h-14 w-14 items-center justify-center rounded-full bg-rose-50">
-              <Heart color="#E11D48" size={26} />
+              <Heart color={colors["danger-heart"]} size={26} />
             </View>
-            <Text className="mt-4 text-base font-extrabold text-[#17251E]">
+            <Text className="mt-4 text-base font-extrabold text-brand-neutral-text-primary">
               No favorites yet
             </Text>
             <Text className="mt-1 text-center text-sm leading-5 text-slate-500">
@@ -82,10 +83,10 @@ export default function FavoritesScreen() {
             </Text>
             <Pressable
               accessibilityRole="button"
-              className="mt-5 flex-row items-center rounded-xl bg-[#1A6A3B] px-4 py-3 active:opacity-80"
+              className="mt-5 flex-row items-center rounded-xl bg-brand-green-primary px-4 py-3 active:opacity-80"
               onPress={() => router.push("/UsersTab/shop")}
             >
-              <UtensilsCrossed color="#FFFFFF" size={16} />
+              <UtensilsCrossed color={colors["white"]} size={16} />
               <Text className="ml-2 text-sm font-bold text-white">Browse the menu</Text>
             </Pressable>
           </View>

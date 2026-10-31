@@ -1,3 +1,4 @@
+import colors from "../../theme/colors.json";
 import { router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import {
@@ -102,7 +103,7 @@ export default function TopHeader({ title }: TopHeaderProps) {
       <StatusBar style="dark" />
       <View
         style={{ paddingTop: insets.top }}
-        className="relative overflow-hidden border-b border-[#B88A2E] px-5 py-1"
+        className="relative overflow-hidden border-b border-brand-gold-border px-5 py-1"
       >
         <BlurTargetView ref={blurTarget} style={StyleSheet.absoluteFill}>
           <ImageBackground
@@ -127,18 +128,18 @@ export default function TopHeader({ title }: TopHeaderProps) {
             <Image
               accessible
               accessibilityLabel="Buy Food restaurant logo"
-              className="mr-2 h-14 w-14 rounded-full border border-[#E9BE45] bg-white"
+              className="mr-2 h-14 w-14 rounded-full border border-brand-gold-bright bg-white"
               resizeMode="contain"
               source={require("../../../assets/images/logo.png")}
             />
             <View className="flex-1">
               <Text
-                className="text-base font-extrabold leading-5 text-[#183B2A]"
+                className="text-base font-extrabold leading-5 text-brand-green-forest"
                 numberOfLines={1}
               >
                 BuyFood
               </Text>
-              <Text className="text-[9px] leading-3 text-[#81786B]">
+              <Text className="text-[9px] leading-3 text-brand-neutral-text-warm">
                 Fresh Food, Happy You
               </Text>
             </View>
@@ -148,37 +149,37 @@ export default function TopHeader({ title }: TopHeaderProps) {
             <Pressable
               accessibilityLabel="Open your favorites"
               accessibilityRole="button"
-              className="mr-1.5 h-10 w-10 items-center justify-center rounded-full border border-[#E9DDC7] bg-white active:bg-[#FFF1F2]"
+              className="mr-1.5 h-10 w-10 items-center justify-center rounded-full border border-brand-neutral-border-cream bg-white active:bg-brand-rose-soft"
               onPress={() => router.push("/UsersTab/favorites")}
             >
-              <Heart color="#D83C55" size={20} />
-              <View className="absolute right-1 top-1 h-2 w-2 rounded-full border border-white bg-[#D83C55]" />
+              <Heart color={colors["heart"]} size={20} />
+              <View className="absolute right-1 top-1 h-2 w-2 rounded-full border border-white bg-brand-heart" />
             </Pressable>
             <Pressable
               accessibilityLabel="Open your orders"
               accessibilityRole="button"
-              className="mr-1.5 h-10 w-10 items-center justify-center rounded-full border border-[#E9DDC7] bg-white active:bg-[#EAF2E8]"
+              className="mr-1.5 h-10 w-10 items-center justify-center rounded-full border border-brand-neutral-border-cream bg-white active:bg-brand-green-muted-surface"
               onPress={() => router.push("/UsersTab/orders")}
             >
-              <ShoppingBag color="#17663D" size={20} />
-              <View className="absolute right-1 top-1 h-2 w-2 rounded-full border border-white bg-[#E9BE45]" />
+              <ShoppingBag color={colors["green-secondary"]} size={20} />
+              <View className="absolute right-1 top-1 h-2 w-2 rounded-full border border-white bg-brand-gold-bright" />
             </Pressable>
             <Pressable
               accessibilityLabel="Open profile menu"
               accessibilityRole="button"
               accessibilityState={{ expanded: isMenuVisible }}
-              className="h-11 w-11 items-center justify-center rounded-full border border-[#E9BE45] bg-[#EAF2E8] active:bg-[#DCEBDD]"
+              className="h-11 w-11 items-center justify-center rounded-full border border-brand-gold-bright bg-brand-green-muted-surface active:bg-brand-green-soft"
               disabled={isLoggingOut}
               onPress={() => setIsMenuVisible(true)}
             >
               {isLoggingOut ? (
-                <ActivityIndicator color="#17663D" />
+                <ActivityIndicator color={colors["green-secondary"]} />
               ) : (
                 <View className="flex-row items-center">
-                  <Text className="text-sm font-extrabold text-[#17663D]">
+                  <Text className="text-sm font-extrabold text-brand-green-secondary">
                     {account.initial || "U"}
                   </Text>
-                  <ChevronDown color="#17663D" size={14} />
+                  <ChevronDown color={colors["green-secondary"]} size={14} />
                 </View>
               )}
             </Pressable>
@@ -201,7 +202,7 @@ export default function TopHeader({ title }: TopHeaderProps) {
           />
           <View
             accessibilityViewIsModal
-            className="absolute right-3 overflow-hidden rounded-3xl border border-[#E9DDC7] bg-[#FFFCF6] shadow-2xl"
+            className="absolute right-3 overflow-hidden rounded-3xl border border-brand-neutral-border-cream bg-brand-surface-modal shadow-2xl"
             style={{
               top: insets.top + 68,
               right: windowWidth * 0.1,
@@ -218,20 +219,20 @@ export default function TopHeader({ title }: TopHeaderProps) {
                 style={{ backgroundColor: "rgba(255, 250, 242, 0.76)" }}
                 className="flex-row items-center px-4 py-3"
               >
-                <View className="mr-3 h-11 w-11 items-center justify-center rounded-full border border-[#D9E6D9] bg-[#EAF2E8]">
-                  <Text className="text-base font-extrabold text-[#17663D]">
+                <View className="mr-3 h-11 w-11 items-center justify-center rounded-full border border-brand-green-border bg-brand-green-muted-surface">
+                  <Text className="text-base font-extrabold text-brand-green-secondary">
                     {account.initial || "U"}
                   </Text>
                 </View>
                 <View className="flex-1">
                   <Text
-                    className="text-sm font-extrabold text-[#183B2A]"
+                    className="text-sm font-extrabold text-brand-green-forest"
                     numberOfLines={1}
                   >
                     {account.name || "Your account"}
                   </Text>
                   <Text
-                    className="mt-0.5 text-[10px] text-[#81786B]"
+                    className="mt-0.5 text-[10px] text-brand-neutral-text-warm"
                     numberOfLines={1}
                   >
                     {account.email || "Account details unavailable"}
@@ -242,80 +243,80 @@ export default function TopHeader({ title }: TopHeaderProps) {
 
             <Pressable
               accessibilityRole="button"
-              className="mx-2 mt-1 min-h-[46px] flex-row items-center rounded-xl px-2 active:bg-[#EAF2E8]"
+              className="mx-2 mt-1 min-h-[46px] flex-row items-center rounded-xl px-2 active:bg-brand-green-muted-surface"
               onPress={() => {
                 setIsMenuVisible(false);
                 router.push("/UsersTab/profile");
               }}
             >
-              <View className="mr-2 h-8 w-8 items-center justify-center rounded-full bg-[#E3F0E7]">
-                <UserRoundPen color="#17663D" size={17} />
+              <View className="mr-2 h-8 w-8 items-center justify-center rounded-full bg-brand-green-muted-surface">
+                <UserRoundPen color={colors["green-secondary"]} size={17} />
               </View>
               <View className="flex-1">
-                <Text className="text-xs font-bold text-[#24372D]">My Account</Text>
-                <Text className="mt-0.5 text-[9px] text-[#81786B]">
+                <Text className="text-xs font-bold text-brand-neutral-text-forest">My Account</Text>
+                <Text className="mt-0.5 text-[9px] text-brand-neutral-text-warm">
                   View and edit your profile
                 </Text>
               </View>
-              <ChevronRight color="#81786B" size={16} />
+              <ChevronRight color={colors["neutral-text-warm"]} size={16} />
             </Pressable>
-            <View className="mx-3 border-t border-[#EEE8DD]" />
+            <View className="mx-3 border-t border-brand-neutral-border" />
             <Pressable
               accessibilityRole="button"
-              className="mx-2 min-h-[46px] flex-row items-center rounded-xl px-2 active:bg-[#FFF3F4]"
+              className="mx-2 min-h-[46px] flex-row items-center rounded-xl px-2 active:bg-brand-rose-muted"
               onPress={() => {
                 setIsMenuVisible(false);
                 router.push("/UsersTab/favorites");
               }}
             >
-              <View className="mr-2 h-8 w-8 items-center justify-center rounded-full bg-[#FDE7E8]">
-                <Heart color="#D83C55" size={17} />
+              <View className="mr-2 h-8 w-8 items-center justify-center rounded-full bg-brand-danger-surface-alt">
+                <Heart color={colors["heart"]} size={17} />
               </View>
               <View className="flex-1">
-                <Text className="text-xs font-bold text-[#24372D]">My Favorites</Text>
-                <Text className="mt-0.5 text-[9px] text-[#81786B]">
+                <Text className="text-xs font-bold text-brand-neutral-text-forest">My Favorites</Text>
+                <Text className="mt-0.5 text-[9px] text-brand-neutral-text-warm">
                   View saved items
                 </Text>
               </View>
-              <ChevronRight color="#81786B" size={16} />
+              <ChevronRight color={colors["neutral-text-warm"]} size={16} />
             </Pressable>
-            <View className="mx-3 border-t border-[#EEE8DD]" />
+            <View className="mx-3 border-t border-brand-neutral-border" />
             <Pressable
               accessibilityRole="button"
-              className="mx-2 min-h-[46px] flex-row items-center rounded-xl px-2 active:bg-[#EAF2E8]"
+              className="mx-2 min-h-[46px] flex-row items-center rounded-xl px-2 active:bg-brand-green-muted-surface"
               onPress={() => {
                 setIsMenuVisible(false);
                 router.push("/UsersTab/orders");
               }}
             >
-              <View className="mr-2 h-8 w-8 items-center justify-center rounded-full bg-[#FFF0C8]">
-                <ShoppingBag color="#17663D" size={17} />
+              <View className="mr-2 h-8 w-8 items-center justify-center rounded-full bg-brand-gold-soft">
+                <ShoppingBag color={colors["green-secondary"]} size={17} />
               </View>
               <View className="flex-1">
-                <Text className="text-xs font-bold text-[#24372D]">My Orders</Text>
-                <Text className="mt-0.5 text-[9px] text-[#81786B]">
+                <Text className="text-xs font-bold text-brand-neutral-text-forest">My Orders</Text>
+                <Text className="mt-0.5 text-[9px] text-brand-neutral-text-warm">
                   Check your order history
                 </Text>
               </View>
-              <ChevronRight color="#81786B" size={16} />
+              <ChevronRight color={colors["neutral-text-warm"]} size={16} />
             </Pressable>
-            <View className="mx-3 border-t border-[#EEE8DD]" />
+            <View className="mx-3 border-t border-brand-neutral-border" />
             <Pressable
               accessibilityRole="button"
-              className="mx-2 mb-2 mt-1 min-h-[48px] flex-row items-center rounded-xl bg-[#FFF0EC] px-2 active:bg-[#FFE2D9]"
+              className="mx-2 mb-2 mt-1 min-h-[48px] flex-row items-center rounded-xl bg-brand-warning-surface px-2 active:bg-brand-danger-soft"
               disabled={isLoggingOut}
               onPress={() => confirmLogout(showAlert, setIsLoggingOut)}
             >
-              <View className="mr-2 h-8 w-8 items-center justify-center rounded-full bg-[#FADAD3]">
-                <LogOut color="#C2412D" size={17} />
+              <View className="mr-2 h-8 w-8 items-center justify-center rounded-full bg-brand-danger-pale">
+                <LogOut color={colors["danger-dark"]} size={17} />
               </View>
               <View className="flex-1">
-                <Text className="text-xs font-bold text-[#B83E2E]">Log out</Text>
-                <Text className="mt-0.5 text-[9px] text-[#98756E]">
+                <Text className="text-xs font-bold text-brand-danger-strong">Log out</Text>
+                <Text className="mt-0.5 text-[9px] text-brand-danger-text-muted">
                   Sign out from your account
                 </Text>
               </View>
-              <ChevronRight color="#B83E2E" size={16} />
+              <ChevronRight color={colors["danger-strong"]} size={16} />
             </Pressable>
           </View>
         </View>

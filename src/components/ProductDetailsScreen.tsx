@@ -85,7 +85,7 @@ function RecommendationSection({
   return (
     <View className="mt-8">
       <View className="mb-3 px-5">
-        <Text className="text-lg font-extrabold text-[#17251E]">{title}</Text>
+        <Text className="text-lg font-extrabold text-brand-neutral-text-primary">{title}</Text>
         <Text className="mt-1 text-xs text-slate-500">{description}</Text>
       </View>
       <ScrollView
@@ -169,7 +169,7 @@ export default function ProductDetailsScreen() {
   if (loading || (food !== null && getFoodId(food) !== foodId)) {
     return (
       <View className="flex-1 items-center justify-center bg-white">
-        <ActivityIndicator accessibilityLabel="Loading product details" color="#1A6A3B" />
+        <ActivityIndicator accessibilityLabel="Loading product details" color={colors["green-primary"]} />
       </View>
     );
   }
@@ -182,7 +182,7 @@ export default function ProductDetailsScreen() {
         </Text>
         <Pressable
           accessibilityRole="button"
-          className="mt-4 rounded-xl bg-[#1A6A3B] px-5 py-3"
+          className="mt-4 rounded-xl bg-brand-green-primary px-5 py-3"
           onPress={() => {
             setLoading(true);
             setRetryCount((count) => count + 1);
@@ -373,7 +373,7 @@ function ProductDetailsContent({
           keyboardDismissMode={Platform.OS === "ios" ? "interactive" : "on-drag"}
           showsVerticalScrollIndicator={false}
         >
-          <View className="relative bg-[#F5EFE5]" style={{ height: 300 }}>
+          <View className="relative bg-brand-surface-cream" style={{ height: 300 }}>
             {imageUri ? (
               <Image
                 accessible
@@ -394,7 +394,7 @@ function ProductDetailsContent({
               style={{ top: Math.max(insets.top, 12) }}
               onPress={() => router.back()}
             >
-              <ArrowLeft color="#FFFFFF" size={22} />
+              <ArrowLeft color={colors["white"]} size={22} />
             </Pressable>
 
             {discount > 0 ? (
@@ -449,11 +449,11 @@ function ProductDetailsContent({
               ) : null}
             </View>
 
-            <Text className="text-2xl font-black leading-8 text-[#17251E]">
+            <Text className="text-2xl font-black leading-8 text-brand-neutral-text-primary">
             {getFoodName(food)}
             </Text>
             <View className="mt-2 flex-row items-baseline">
-            <Text className="text-xl font-black text-[#1A6A3B]">
+            <Text className="text-xl font-black text-brand-green-primary">
               ₹{getFoodPrice(food).toFixed(2)}
             </Text>
             {Number(food.mrp) > getFoodPrice(food) ? (
@@ -479,7 +479,7 @@ function ProductDetailsContent({
 
             {productDetails.length > 0 ? (
             <View className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4">
-              <Text className="mb-3 text-base font-extrabold text-[#17251E]">
+              <Text className="mb-3 text-base font-extrabold text-brand-neutral-text-primary">
                 Food details
               </Text>
               <View className="flex-row flex-wrap">
@@ -509,11 +509,11 @@ function ProductDetailsContent({
                   onPress={() => toggleAddon(option)}
                 >
                   <Text className="flex-1 text-sm font-semibold text-slate-700">{option.name}</Text>
-                  <Text className="ml-3 text-sm font-bold text-[#1A6A3B]">
+                  <Text className="ml-3 text-sm font-bold text-brand-green-primary">
                     {option.price > 0 ? `+₹${option.price.toFixed(2)}` : "Included"}
                   </Text>
-                  <View className={`ml-3 h-5 w-5 items-center justify-center rounded border ${selected ? "border-[#1A6A3B] bg-[#1A6A3B]" : "border-slate-300"}`}>
-                    {selected ? <Check color="#FFFFFF" size={14} /> : null}
+                  <View className={`ml-3 h-5 w-5 items-center justify-center rounded border ${selected ? "border-brand-green-primary bg-brand-green-primary" : "border-slate-300"}`}>
+                    {selected ? <Check color={colors["white"]} size={14} /> : null}
                   </View>
                 </Pressable>
               );
@@ -535,11 +535,11 @@ function ProductDetailsContent({
                       onPress={() => selectCustomization(group.name, group.options, option)}
                     >
                       <Text className="flex-1 text-sm font-semibold text-slate-700">{option.name}</Text>
-                      <Text className="ml-3 text-sm font-bold text-[#1A6A3B]">
+                      <Text className="ml-3 text-sm font-bold text-brand-green-primary">
                         {option.price > 0 ? `+₹${option.price.toFixed(2)}` : "Included"}
                       </Text>
-                      <View className={`ml-3 h-5 w-5 items-center justify-center rounded-full border ${selected ? "border-[#1A6A3B]" : "border-slate-300"}`}>
-                        {selected ? <View className="h-2.5 w-2.5 rounded-full bg-[#1A6A3B]" /> : null}
+                      <View className={`ml-3 h-5 w-5 items-center justify-center rounded-full border ${selected ? "border-brand-green-primary" : "border-slate-300"}`}>
+                        {selected ? <View className="h-2.5 w-2.5 rounded-full bg-brand-green-primary" /> : null}
                       </View>
                     </Pressable>
                   );
@@ -555,7 +555,7 @@ function ProductDetailsContent({
                 multiline
                 onChangeText={setAddonRequest}
                 placeholder="Enter extra add-ons, one per line (e.g. Extra sauce)"
-                placeholderTextColor="#94A3B8"
+                placeholderTextColor={colors["neutral-placeholder"]}
                 textAlignVertical="top"
                 value={addonRequest}
               />
@@ -574,7 +574,7 @@ function ProductDetailsContent({
                 multiline
                 onChangeText={setCustomizationRequest}
                 placeholder="e.g. Less oil, extra spicy, no onions"
-                placeholderTextColor="#94A3B8"
+                placeholderTextColor={colors["neutral-placeholder"]}
                 textAlignVertical="top"
                 value={customizationRequest}
               />
@@ -631,7 +631,7 @@ function ProductDetailsContent({
               className="h-12 w-11 items-center justify-center"
               onPress={() => setQuantity((current) => Math.max(1, current - 1))}
             >
-              <Minus color="#334155" size={17} />
+              <Minus color={colors["neutral-slate-dark"]} size={17} />
             </Pressable>
             <Text className="min-w-7 text-center text-base font-bold text-slate-800">{quantity}</Text>
             <Pressable
@@ -640,7 +640,7 @@ function ProductDetailsContent({
               className="h-12 w-11 items-center justify-center"
               onPress={() => setQuantity((current) => current + 1)}
             >
-              <Plus color="#334155" size={17} />
+              <Plus color={colors["neutral-slate-dark"]} size={17} />
             </Pressable>
           </View>
           <View className="flex-1">
@@ -650,7 +650,7 @@ function ProductDetailsContent({
             <Pressable
               accessibilityRole="button"
               accessibilityState={{ disabled: !available || saving }}
-              className={`h-11 items-center justify-center rounded-xl ${available && !saving ? "bg-[#1A6A3B]" : "bg-slate-400"}`}
+              className={`h-11 items-center justify-center rounded-xl ${available && !saving ? "bg-brand-green-primary" : "bg-slate-400"}`}
               disabled={!available || saving}
               onPress={() => void handleAdd()}
             >

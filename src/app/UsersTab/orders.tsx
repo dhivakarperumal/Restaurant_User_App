@@ -1,3 +1,4 @@
+import colors from "../../theme/colors.json";
 import {
     ArrowRight,
     CalendarDays,
@@ -140,26 +141,26 @@ function getOrderFilterGroup(status: unknown): Exclude<OrderFilter, "All Orders"
 function getStatusStyle(status: string): string {
   switch (status) {
     case "Delivered":
-      return "border-[#CFE3C4] bg-[#EAF4E4] text-[#075B20]";
+      return "border-brand-green-success-soft bg-brand-green-muted-surface text-brand-green-strong";
     case "Assigned":
-      return "border-[#CFDDFF] bg-[#EDF3FF] text-[#1749C6]";
+      return "border-brand-info-blue-border bg-brand-info-blue-pale text-brand-info-blue";
     case "Cancelled":
-      return "border-[#F6D1D9] bg-[#FFF0F2] text-[#C51D42]";
+      return "border-brand-heart-soft bg-brand-rose-surface text-brand-danger-red-strong";
     default:
-      return "border-[#F1D889] bg-[#FFF6D8] text-[#A85B00]";
+      return "border-brand-gold-sand bg-brand-gold-light text-brand-gold-orange";
   }
 }
 
 function getStatusColor(status: string): string {
   switch (status) {
     case "Delivered":
-      return "#075B20";
+      return colors["green-strong"];
     case "Assigned":
-      return "#1749C6";
+      return colors["info-blue"];
     case "Cancelled":
-      return "#C51D42";
+      return colors["danger-red-strong"];
     default:
-      return "#A85B00";
+      return colors["gold-orange"];
   }
 }
 
@@ -324,23 +325,23 @@ function OrderDetailsModal({
       visible
     >
       <View className="flex-1 justify-end bg-black/45">
-        <View className="max-h-[90%] rounded-t-3xl bg-[#FFFCF6]">
-          <View className="flex-row items-center justify-between border-b border-[#E7E0D8] px-5 py-4">
+        <View className="max-h-[90%] rounded-t-3xl bg-brand-surface-modal">
+          <View className="flex-row items-center justify-between border-b border-brand-neutral-border-warm px-5 py-4">
             <View className="flex-1 pr-3">
-              <Text className="text-xs font-semibold uppercase tracking-widest text-[#728071]">
+              <Text className="text-xs font-semibold uppercase tracking-widest text-brand-neutral-text-muted">
                 Order details
               </Text>
-              <Text className="mt-1 text-lg font-bold text-[#183B2A]">
+              <Text className="mt-1 text-lg font-bold text-brand-green-forest">
                 #{currentOrder.order_id}
               </Text>
             </View>
             <Pressable
               accessibilityLabel="Close order details"
               accessibilityRole="button"
-              className="h-10 w-10 items-center justify-center rounded-full bg-[#F0EEE7]"
+              className="h-10 w-10 items-center justify-center rounded-full bg-brand-surface-subtle"
               onPress={onClose}
             >
-              <X color="#183B2A" size={20} />
+              <X color={colors["green-forest"]} size={20} />
             </Pressable>
           </View>
 
@@ -349,23 +350,23 @@ function OrderDetailsModal({
             showsVerticalScrollIndicator={false}
           >
             {errorMessage ? (
-              <View className="mb-4 rounded-xl border border-[#F3C9C5] bg-[#FFF4F2] p-3">
-                <Text accessibilityRole="alert" className="text-sm text-[#A33424]">
+              <View className="mb-4 rounded-xl border border-brand-danger-border bg-brand-danger-surface p-3">
+                <Text accessibilityRole="alert" className="text-sm text-brand-danger">
                   {errorMessage}
                 </Text>
                 <Pressable
                   className="mt-2 self-start"
                   onPress={() => void refreshDetails()}
                 >
-                  <Text className="text-sm font-bold text-[#A33424]">Try again</Text>
+                  <Text className="text-sm font-bold text-brand-danger">Try again</Text>
                 </Pressable>
               </View>
             ) : null}
 
-            <View className="rounded-2xl border border-[#E7E0D8] bg-white p-4">
+            <View className="rounded-2xl border border-brand-neutral-border-warm bg-white p-4">
               <View className="flex-row flex-wrap items-center justify-between gap-3">
                 <OrderStatusBadge status={statusGroup} />
-                <Text className="text-xs text-[#728071]">
+                <Text className="text-xs text-brand-neutral-text-muted">
                   {formatDate(date)}
                   {date
                     ? ` · ${date.toLocaleTimeString("en-IN", {
@@ -384,12 +385,12 @@ function OrderDetailsModal({
                       <View key={step} className="flex-1 items-center">
                         <View
                           className={`h-3 w-3 rounded-full ${
-                            complete ? "bg-[#1A6A3B]" : "bg-[#D9DED5]"
+                            complete ? "bg-brand-green-primary" : "bg-brand-neutral-border-green"
                           }`}
                         />
                         <Text
                           className={`mt-2 text-center text-[9px] ${
-                            complete ? "font-bold text-[#1A6A3B]" : "text-[#8A9188]"
+                            complete ? "font-bold text-brand-green-primary" : "text-brand-neutral-text-light"
                           }`}
                         >
                           {step}
@@ -401,55 +402,55 @@ function OrderDetailsModal({
               ) : null}
             </View>
 
-            <View className="mt-4 rounded-2xl border border-[#E7E0D8] bg-white p-4">
-              <Text className="mb-3 text-base font-bold text-[#183B2A]">Items</Text>
+            <View className="mt-4 rounded-2xl border border-brand-neutral-border-warm bg-white p-4">
+              <Text className="mb-3 text-base font-bold text-brand-green-forest">Items</Text>
               {currentOrder.items.map((item, index) => {
                 const image = getItemImage(item);
                 const quantity = getNumber(item.quantity) || 1;
                 return (
                   <View
                     key={`${currentOrder.order_id}-${index}`}
-                    className="flex-row items-center border-t border-[#F0EEE7] py-3"
+                    className="flex-row items-center border-t border-brand-surface-subtle py-3"
                   >
                     {image ? (
                       <Image
                         accessibilityLabel={getItemName(item)}
-                        className="h-12 w-12 rounded-xl bg-[#F1F3EC]"
+                        className="h-12 w-12 rounded-xl bg-brand-surface-gray-green"
                         source={{ uri: image }}
                       />
                     ) : (
-                      <View className="h-12 w-12 items-center justify-center rounded-xl bg-[#F1F3EC]">
-                        <Utensils color="#1A6A3B" size={20} />
+                      <View className="h-12 w-12 items-center justify-center rounded-xl bg-brand-surface-gray-green">
+                        <Utensils color={colors["green-primary"]} size={20} />
                       </View>
                     )}
                     <View className="ml-3 flex-1">
-                      <Text className="text-sm font-semibold text-[#26352A]">
+                      <Text className="text-sm font-semibold text-brand-neutral-text-dark">
                         {getItemName(item)}
                       </Text>
-                      <Text className="mt-1 text-xs text-[#728071]">
+                      <Text className="mt-1 text-xs text-brand-neutral-text-muted">
                         Qty {quantity}
                       </Text>
                     </View>
-                    <Text className="text-sm font-bold text-[#26352A]">
+                    <Text className="text-sm font-bold text-brand-neutral-text-dark">
                       ₹{formatMoney(getItemTotal(item))}
                     </Text>
                   </View>
                 );
               })}
               {currentOrder.items.length === 0 ? (
-                <Text className="border-t border-[#F0EEE7] pt-3 text-sm text-[#728071]">
+                <Text className="border-t border-brand-surface-subtle pt-3 text-sm text-brand-neutral-text-muted">
                   Item details are not available.
                 </Text>
               ) : null}
             </View>
 
             {addressLines.length > 0 ? (
-              <View className="mt-4 flex-row rounded-2xl border border-[#E7E0D8] bg-white p-4">
-                <MapPin color="#1A6A3B" size={18} />
+              <View className="mt-4 flex-row rounded-2xl border border-brand-neutral-border-warm bg-white p-4">
+                <MapPin color={colors["green-primary"]} size={18} />
                 <View className="ml-3 flex-1">
-                  <Text className="font-bold text-[#183B2A]">Delivery address</Text>
+                  <Text className="font-bold text-brand-green-forest">Delivery address</Text>
                   {addressLines.map((line) => (
-                    <Text key={line} className="mt-1 text-sm text-[#647064]">
+                    <Text key={line} className="mt-1 text-sm text-brand-green-gray-muted">
                       {line}
                     </Text>
                   ))}
@@ -457,8 +458,8 @@ function OrderDetailsModal({
               </View>
             ) : null}
 
-            <View className="mt-4 rounded-2xl border border-[#E7E0D8] bg-white p-4">
-              <Text className="mb-3 text-base font-bold text-[#183B2A]">
+            <View className="mt-4 rounded-2xl border border-brand-neutral-border-warm bg-white p-4">
+              <Text className="mb-3 text-base font-bold text-brand-green-forest">
                 Payment summary
               </Text>
               <SummaryRow label="Subtotal" amount={subtotal} />
@@ -466,13 +467,13 @@ function OrderDetailsModal({
               {deliveryFee > 0 ? (
                 <SummaryRow label="Delivery fee" amount={deliveryFee} />
               ) : null}
-              <View className="mt-3 flex-row justify-between border-t border-[#E7E0D8] pt-3">
-                <Text className="font-bold text-[#183B2A]">Total</Text>
-                <Text className="font-bold text-[#183B2A]">
+              <View className="mt-3 flex-row justify-between border-t border-brand-neutral-border-warm pt-3">
+                <Text className="font-bold text-brand-green-forest">Total</Text>
+                <Text className="font-bold text-brand-green-forest">
                   ₹{formatMoney(getOrderTotal(currentOrder))}
                 </Text>
               </View>
-              <Text className="mt-2 text-xs capitalize text-[#728071]">
+              <Text className="mt-2 text-xs capitalize text-brand-neutral-text-muted">
                 {getText(currentOrder, ["payment_method"]).replace(/_/g, " ") ||
                   "Payment method unavailable"}
               </Text>
@@ -487,8 +488,8 @@ function OrderDetailsModal({
 function SummaryRow({ label, amount }: { label: string; amount: number }) {
   return (
     <View className="mt-2 flex-row justify-between">
-      <Text className="text-sm text-[#728071]">{label}</Text>
-      <Text className="text-sm font-medium text-[#26352A]">
+      <Text className="text-sm text-brand-neutral-text-muted">{label}</Text>
+      <Text className="text-sm font-medium text-brand-neutral-text-dark">
         ₹{formatMoney(amount)}
       </Text>
     </View>
@@ -586,30 +587,30 @@ export default function OrdersScreen() {
   const invalidDate = Boolean(dateFilter) && !normalizedDate;
 
   return (
-    <View className="flex-1 bg-[#F3F4F3]">
+    <View className="flex-1 bg-brand-surface-app">
       <ScrollView
         className="flex-1"
         contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 32 }}
         keyboardShouldPersistTaps="handled"
         refreshControl={
           <RefreshControl
-            colors={["#1A6A3B"]}
+            colors={[colors["green-primary"]]}
             onRefresh={() => void loadOrders(true)}
             refreshing={isRefreshing}
-            tintColor="#1A6A3B"
+            tintColor={colors["green-primary"]}
           />
         }
         showsVerticalScrollIndicator={false}
       >
-        <View className="mb-4 flex-row items-center justify-between rounded-2xl bg-[#183B2A] px-4 py-4">
+        <View className="mb-4 flex-row items-center justify-between rounded-2xl bg-brand-green-forest px-4 py-4">
           <View className="flex-1 pr-3">
             <Text className="text-xl font-bold text-white">Your Orders</Text>
-            <Text className="mt-1 text-sm text-[#D8E4D7]">
+            <Text className="mt-1 text-sm text-brand-green-soft">
               Track your meals, payments, and delivery updates.
             </Text>
           </View>
           <View className="items-center rounded-xl bg-white/10 px-3 py-2">
-            <ShoppingBag color="#F7BD48" size={19} />
+            <ShoppingBag color={colors["gold-warm"]} size={19} />
             <Text className="mt-1 text-xs font-bold text-white">
               {orders.length} {orders.length === 1 ? "order" : "orders"}
             </Text>
@@ -636,8 +637,8 @@ export default function OrdersScreen() {
                 accessibilityState={{ selected }}
                 className={`rounded-full border px-3.5 py-2 ${
                   selected
-                    ? "border-[#075B2B] bg-[#075B2B]"
-                    : "border-[#E1E5DF] bg-white"
+                    ? "border-brand-green-strong bg-brand-green-strong"
+                    : "border-brand-green-border-light bg-white"
                 }`}
                 key={filter}
                 onPress={() => {
@@ -647,7 +648,7 @@ export default function OrdersScreen() {
               >
                 <Text
                   className={`text-xs font-semibold ${
-                    selected ? "text-white" : "text-[#344035]"
+                    selected ? "text-white" : "text-brand-neutral-text-body"
                   }`}
                 >
                   {filter} ({count})
@@ -658,17 +659,17 @@ export default function OrdersScreen() {
         </ScrollView>
 
         <View className="mb-4 gap-2">
-          <View className="flex-row items-center rounded-xl border border-[#E1E5DF] bg-white px-3">
-            <Search color="#59645E" size={18} />
+          <View className="flex-row items-center rounded-xl border border-brand-green-border-light bg-white px-3">
+            <Search color={colors["neutral-text-secondary"]} size={18} />
             <TextInput
               accessibilityLabel="Search orders by order ID or dish name"
-              className="h-12 flex-1 px-3 text-sm text-[#183B2A]"
+              className="h-12 flex-1 px-3 text-sm text-brand-green-forest"
               onChangeText={(value) => {
                 setSearchQuery(value);
                 setPage(1);
               }}
               placeholder="Search order ID or dish"
-              placeholderTextColor="#879087"
+              placeholderTextColor={colors["neutral-text-disabled"]}
               returnKeyType="search"
               value={searchQuery}
             />
@@ -681,15 +682,15 @@ export default function OrdersScreen() {
                   setPage(1);
                 }}
               >
-                <X color="#728071" size={17} />
+                <X color={colors["neutral-text-muted"]} size={17} />
               </Pressable>
             ) : null}
           </View>
-          <View className="flex-row items-center rounded-xl border border-[#E1E5DF] bg-white px-3">
-            <CalendarDays color="#59645E" size={17} />
+          <View className="flex-row items-center rounded-xl border border-brand-green-border-light bg-white px-3">
+            <CalendarDays color={colors["neutral-text-secondary"]} size={17} />
             <TextInput
               accessibilityLabel="Filter orders by date in YYYY-MM-DD format"
-              className="h-12 flex-1 px-3 text-sm text-[#183B2A]"
+              className="h-12 flex-1 px-3 text-sm text-brand-green-forest"
               keyboardType="numbers-and-punctuation"
               maxLength={10}
               onChangeText={(value) => {
@@ -697,7 +698,7 @@ export default function OrdersScreen() {
                 setPage(1);
               }}
               placeholder="Filter date (YYYY-MM-DD)"
-              placeholderTextColor="#879087"
+              placeholderTextColor={colors["neutral-text-disabled"]}
               value={dateFilter}
             />
             {dateFilter ? (
@@ -709,12 +710,12 @@ export default function OrdersScreen() {
                   setPage(1);
                 }}
               >
-                <X color="#728071" size={17} />
+                <X color={colors["neutral-text-muted"]} size={17} />
               </Pressable>
             ) : null}
           </View>
           {invalidDate ? (
-            <Text className="ml-1 text-xs text-[#A33424]">
+            <Text className="ml-1 text-xs text-brand-danger">
               Enter a date as YYYY-MM-DD.
             </Text>
           ) : null}
@@ -722,16 +723,16 @@ export default function OrdersScreen() {
 
         {isLoading ? (
           <View className="items-center rounded-2xl bg-white px-5 py-12">
-            <ActivityIndicator color="#1A6A3B" size="large" />
-            <Text className="mt-3 text-sm text-[#728071]">Loading your orders…</Text>
+            <ActivityIndicator color={colors["green-primary"]} size="large" />
+            <Text className="mt-3 text-sm text-brand-neutral-text-muted">Loading your orders…</Text>
           </View>
         ) : errorMessage && orders.length === 0 ? (
-          <View className="items-center rounded-2xl border border-[#F3C9C5] bg-white px-5 py-10">
-            <Text accessibilityRole="alert" className="text-center text-sm text-[#A33424]">
+          <View className="items-center rounded-2xl border border-brand-danger-border bg-white px-5 py-10">
+            <Text accessibilityRole="alert" className="text-center text-sm text-brand-danger">
               {errorMessage}
             </Text>
             <Pressable
-              className="mt-4 rounded-xl bg-[#183B2A] px-5 py-3"
+              className="mt-4 rounded-xl bg-brand-green-forest px-5 py-3"
               onPress={() => {
                 setIsLoading(true);
                 void loadOrders();
@@ -741,20 +742,20 @@ export default function OrdersScreen() {
             </Pressable>
           </View>
         ) : errorMessage ? (
-          <Text accessibilityRole="alert" className="mb-3 text-sm text-[#A33424]">
+          <Text accessibilityRole="alert" className="mb-3 text-sm text-brand-danger">
             {errorMessage}
           </Text>
         ) : null}
 
         {!isLoading && !errorMessage && visibleOrders.length === 0 ? (
-          <View className="items-center rounded-2xl border border-dashed border-[#DCE8D5] bg-white px-5 py-12">
-            <View className="h-14 w-14 items-center justify-center rounded-2xl bg-[#EFF5E9]">
-              <Package color="#396F0B" size={25} />
+          <View className="items-center rounded-2xl border border-dashed border-brand-green-soft bg-white px-5 py-12">
+            <View className="h-14 w-14 items-center justify-center rounded-2xl bg-brand-green-surface">
+              <Package color={colors["green-olive"]} size={25} />
             </View>
-            <Text className="mt-4 text-lg font-bold text-[#183B2A]">
+            <Text className="mt-4 text-lg font-bold text-brand-green-forest">
               {orders.length ? "No matching orders" : "No orders yet"}
             </Text>
-            <Text className="mt-1 text-center text-sm text-[#7B8580]">
+            <Text className="mt-1 text-center text-sm text-brand-neutral-gray-mid">
               {orders.length
                 ? "Try changing your search or filters."
                 : "Your orders will appear here after your first purchase."}
@@ -776,7 +777,7 @@ export default function OrdersScreen() {
             return (
               <Pressable
                 accessibilityRole="button"
-                className="rounded-2xl border border-[#E8EDE6] bg-white p-3 shadow-sm active:opacity-80"
+                className="rounded-2xl border border-brand-green-soft bg-white p-3 shadow-sm active:opacity-80"
                 key={order.order_id}
                 onPress={() => setSelectedOrder(order)}
               >
@@ -784,19 +785,19 @@ export default function OrdersScreen() {
                   {image ? (
                     <Image
                       accessibilityLabel={getItemName(firstItem)}
-                      className="h-[76px] w-[76px] rounded-xl bg-[#EFF5E9]"
+                      className="h-[76px] w-[76px] rounded-xl bg-brand-green-surface"
                       source={{ uri: image }}
                     />
                   ) : (
-                    <View className="h-[76px] w-[76px] items-center justify-center rounded-xl bg-[#EFF5E9]">
-                      <Utensils color="#396F0B" size={25} />
+                    <View className="h-[76px] w-[76px] items-center justify-center rounded-xl bg-brand-green-surface">
+                      <Utensils color={colors["green-olive"]} size={25} />
                     </View>
                   )}
                   <View className="ml-3 flex-1 justify-center">
-                    <Text className="text-sm font-extrabold text-[#101820]">
+                    <Text className="text-sm font-extrabold text-brand-neutral-black">
                       #{order.order_id}
                     </Text>
-                    <Text className="mt-1 text-xs text-[#697386]">
+                    <Text className="mt-1 text-xs text-brand-neutral-gray">
                       {formatDate(date)}
                       {date
                         ? ` · ${date.toLocaleTimeString("en-IN", {
@@ -805,7 +806,7 @@ export default function OrdersScreen() {
                           })}`
                         : ""}
                     </Text>
-                    <Text className="mt-1 text-xs text-[#697386]">
+                    <Text className="mt-1 text-xs text-brand-neutral-gray">
                       {order.item_count} {order.item_count === 1 ? "item" : "items"}
                     </Text>
                     {previewImages.length > 1 ? (
@@ -821,15 +822,15 @@ export default function OrdersScreen() {
                     ) : null}
                   </View>
                   <View className="items-end justify-center">
-                    <Text className="text-sm font-extrabold text-[#183B2A]">
+                    <Text className="text-sm font-extrabold text-brand-green-forest">
                       ₹{formatMoney(getOrderTotal(order))}
                     </Text>
-                    <ArrowRight color="#8A9188" size={18} style={{ marginTop: 8 }} />
+                    <ArrowRight color={colors["neutral-text-light"]} size={18} style={{ marginTop: 8 }} />
                   </View>
                 </View>
-                <View className="mt-3 flex-row items-center justify-between border-t border-[#F0EEE7] pt-3">
+                <View className="mt-3 flex-row items-center justify-between border-t border-brand-surface-subtle pt-3">
                   <OrderStatusBadge status={status} />
-                  <Text className="text-xs font-semibold text-[#396F0B]">
+                  <Text className="text-xs font-semibold text-brand-green-olive">
                     View details
                   </Text>
                 </View>
@@ -844,26 +845,26 @@ export default function OrdersScreen() {
               accessibilityRole="button"
               accessibilityState={{ disabled: currentPage <= 1 }}
               className={`rounded-lg px-3 py-2 ${
-                currentPage <= 1 ? "bg-[#F1F2EF]" : "bg-[#EAF2E8]"
+                currentPage <= 1 ? "bg-brand-surface-quiet" : "bg-brand-green-muted-surface"
               }`}
               disabled={currentPage <= 1}
               onPress={() => setPage(Math.max(1, currentPage - 1))}
             >
-              <Text className="text-sm font-semibold text-[#183B2A]">Previous</Text>
+              <Text className="text-sm font-semibold text-brand-green-forest">Previous</Text>
             </Pressable>
-            <Text className="text-sm font-medium text-[#59645E]">
+            <Text className="text-sm font-medium text-brand-neutral-text-secondary">
               Page {currentPage} of {pageCount}
             </Text>
             <Pressable
               accessibilityRole="button"
               accessibilityState={{ disabled: currentPage >= pageCount }}
               className={`rounded-lg px-3 py-2 ${
-                currentPage >= pageCount ? "bg-[#F1F2EF]" : "bg-[#EAF2E8]"
+                currentPage >= pageCount ? "bg-brand-surface-quiet" : "bg-brand-green-muted-surface"
               }`}
               disabled={currentPage >= pageCount}
               onPress={() => setPage(Math.min(pageCount, currentPage + 1))}
             >
-              <Text className="text-sm font-semibold text-[#183B2A]">Next</Text>
+              <Text className="text-sm font-semibold text-brand-green-forest">Next</Text>
             </Pressable>
           </View>
         ) : null}

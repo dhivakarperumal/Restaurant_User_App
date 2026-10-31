@@ -146,8 +146,8 @@ export default function HomeCategories() {
           Popular Categories
         </Text>
         <View className="mt-1 flex-row items-baseline">
-          <Text className="text-2xl font-black text-[#17251E]">Choose Your </Text>
-          <Text className="text-2xl font-black italic text-[#1A6A3B]">Category</Text>
+          <Text className="text-2xl font-black text-brand-neutral-text-primary">Choose Your </Text>
+          <Text className="text-2xl font-black italic text-brand-green-primary">Category</Text>
         </View>
       </View>
 
@@ -206,7 +206,7 @@ export default function HomeCategories() {
           ))}
         </ScrollView>
       ) : (
-        <View className="rounded-2xl border border-[#E5E5E5] bg-white py-8 px-4 items-center">
+        <View className="rounded-2xl border border-brand-neutral-border-light bg-white py-8 px-4 items-center">
           <Text className="text-center text-sm font-medium text-slate-500">
             Categories will appear here soon.
           </Text>
@@ -253,7 +253,7 @@ function CategoryCard({
       >
         {/* Aspect Ratio Image Container */}
         <View
-          className="w-full items-center justify-center overflow-hidden rounded-xl bg-[#F5EFE5]"
+          className="w-full items-center justify-center overflow-hidden rounded-xl bg-brand-surface-cream"
           style={{ height: imageHeight }}
         >
           {category.image && !imageError ? (
@@ -275,7 +275,7 @@ function CategoryCard({
         {/* Title Container */}
         <View className="h-6 w-full items-center justify-center px-0.5">
           <Text
-            className="text-center text-[11px] font-extrabold text-[#202020]"
+            className="text-center text-[11px] font-extrabold text-brand-neutral-text-black"
             numberOfLines={1}
             ellipsizeMode="tail"
           >

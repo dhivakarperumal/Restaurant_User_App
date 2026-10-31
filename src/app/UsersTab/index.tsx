@@ -1,3 +1,4 @@
+import colors from "../../theme/colors.json";
 import { Redirect } from "expo-router";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, Text, View } from "react-native";
@@ -45,7 +46,7 @@ export default function Index() {
   }
 
   return (
-    <SafeAreaView className="flex-1 items-center justify-center bg-[#F3F4F3] px-8">
+    <SafeAreaView className="flex-1 items-center justify-center bg-brand-surface-app px-8">
       {hasLoadError ? (
         <View className="items-center">
           <Text className="text-center text-base font-semibold text-slate-800">
@@ -53,14 +54,14 @@ export default function Index() {
           </Text>
           <Pressable
             accessibilityRole="button"
-            className="mt-4 rounded-xl bg-[#8EA66B] px-5 py-3"
+            className="mt-4 rounded-xl bg-brand-green-muted-pale px-5 py-3"
             onPress={() => setRetryCount((count) => count + 1)}
           >
             <Text className="font-semibold text-white">Try again</Text>
           </Pressable>
         </View>
       ) : (
-        <ActivityIndicator accessibilityLabel="Restoring session" color="#8EA66B" />
+        <ActivityIndicator accessibilityLabel="Restoring session" color={colors["green-muted-pale"]} />
       )}
     </SafeAreaView>
   );

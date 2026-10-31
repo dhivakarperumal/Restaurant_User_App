@@ -426,7 +426,7 @@ export default function ShopScreen() {
   return (
     <>
     <ScrollView
-      className="flex-1 bg-[#F3F4F3]"
+      className="flex-1 bg-brand-surface-app"
       showsVerticalScrollIndicator={false}
       keyboardShouldPersistTaps="handled"
       contentContainerStyle={{ paddingHorizontal: 24, paddingTop: 18, paddingBottom: 120 }}
@@ -435,22 +435,22 @@ export default function ShopScreen() {
         <Text className="text-[11px] font-extrabold uppercase tracking-[2px] text-brand-gold">
           Fresh from our kitchen
         </Text>
-        <Text className="mt-1 text-2xl font-black text-[#17251E]">Shop the menu</Text>
+        <Text className="mt-1 text-2xl font-black text-brand-neutral-text-primary">Shop the menu</Text>
       </View>
 
       <View className="mb-4 flex-row flex-wrap gap-2">
-        <StatPill icon={<Utensils color="#D4A843" size={14} />} label={`${foods.length} Dishes`} />
-        <StatPill icon={<Filter color="#D4A843" size={14} />} label={`${categories.length} Categories`} />
-        <StatPill icon={<Star color="#D4A843" size={14} />} label={`${cuisines.length} Cuisines`} />
+        <StatPill icon={<Utensils color={colors["gold"]} size={14} />} label={`${foods.length} Dishes`} />
+        <StatPill icon={<Filter color={colors["gold"]} size={14} />} label={`${categories.length} Categories`} />
+        <StatPill icon={<Star color={colors["gold"]} size={14} />} label={`${cuisines.length} Cuisines`} />
       </View>
 
       <View className="mb-4 h-12 flex-row items-center rounded-xl border border-slate-200 bg-white px-3">
-        <Search color="#94A3B8" size={18} />
+        <Search color={colors["neutral-placeholder"]} size={18} />
         <TextInput
           accessibilityLabel="Search food, dish, or cuisine"
           className="ml-2 h-full flex-1 text-sm text-slate-800"
           placeholder="Search food, dish, cuisine..."
-          placeholderTextColor="#94A3B8"
+          placeholderTextColor={colors["neutral-placeholder"]}
           returnKeyType="search"
           value={searchQuery}
           onChangeText={setSearchFilter}
@@ -462,7 +462,7 @@ export default function ShopScreen() {
             onPress={() => setSearchFilter("")}
             hitSlop={8}
           >
-            <X color="#64748B" size={17} />
+            <X color={colors["neutral-slate"]} size={17} />
           </Pressable>
         ) : null}
       </View>
@@ -475,13 +475,13 @@ export default function ShopScreen() {
       >
         <View className="flex-row items-center">
           <SlidersHorizontal color={colors.green} size={17} />
-          <Text className="ml-2 text-sm font-bold text-[#17251E]">Filters</Text>
+          <Text className="ml-2 text-sm font-bold text-brand-neutral-text-primary">Filters</Text>
           {hasActiveFilters ? (
             <View className="ml-2 h-2 w-2 rounded-full bg-brand-gold" />
           ) : null}
         </View>
         <ChevronDown
-          color="#64748B"
+          color={colors["neutral-slate"]}
           size={18}
           style={{ transform: [{ rotate: filtersOpen ? "180deg" : "0deg" }] }}
         />
@@ -703,7 +703,7 @@ export default function ShopScreen() {
       <View className="mb-3 rounded-xl border border-slate-200 bg-white p-3">
         <View className="flex-row items-center justify-between">
           <View className="flex-1">
-            <Text className="text-sm font-extrabold text-[#17251E]">Our menu</Text>
+            <Text className="text-sm font-extrabold text-brand-neutral-text-primary">Our menu</Text>
             <Text className="mt-0.5 text-[11px] text-slate-500">
               Showing {filteredFoods.length === 0 ? 0 : (currentPage - 1) * productsPerPage + 1}
               –{Math.min(currentPage * productsPerPage, filteredFoods.length)} of {filteredFoods.length} dishes
@@ -714,13 +714,13 @@ export default function ShopScreen() {
               label="Grid view"
               selected={viewMode === "grid"}
               onPress={() => setViewMode("grid")}
-              icon={<Grid2X2 color={viewMode === "grid" ? "#FFFFFF" : "#64748B"} size={16} />}
+              icon={<Grid2X2 color={viewMode === "grid" ? colors["white"] : colors["neutral-slate"]} size={16} />}
             />
             <ViewModeButton
               label="List view"
               selected={viewMode === "list"}
               onPress={() => setViewMode("list")}
-              icon={<List color={viewMode === "list" ? "#FFFFFF" : "#64748B"} size={16} />}
+              icon={<List color={viewMode === "list" ? colors["white"] : colors["neutral-slate"]} size={16} />}
             />
           </View>
         </View>
@@ -789,7 +789,7 @@ export default function ShopScreen() {
         </View>
       ) : (
         <View className="items-center rounded-2xl border border-dashed border-slate-300 bg-white px-5 py-10">
-          <Utensils color="#94A3B8" size={30} />
+          <Utensils color={colors["neutral-placeholder"]} size={30} />
           <Text className="mt-3 text-base font-extrabold text-slate-700">No dishes found</Text>
           <Text className="mt-1 text-center text-xs text-slate-500">
             Try adjusting your search or filters.
@@ -797,7 +797,7 @@ export default function ShopScreen() {
           {hasActiveFilters ? (
             <Pressable
               accessibilityRole="button"
-              className="mt-4 rounded-xl bg-[#1A6A3B] px-4 py-2.5"
+              className="mt-4 rounded-xl bg-brand-green-primary px-4 py-2.5"
               onPress={resetFilters}
             >
               <Text className="text-xs font-bold text-white">View full menu</Text>
@@ -815,7 +815,7 @@ export default function ShopScreen() {
             disabled={currentPage === 1}
             onPress={() => setCurrentPage((page) => Math.max(1, page - 1))}
           >
-            <ChevronLeft color={currentPage === 1 ? "#CBD5E1" : "#334155"} size={17} />
+            <ChevronLeft color={currentPage === 1 ? colors["neutral-border-slate"] : colors["neutral-slate-dark"]} size={17} />
             <Text className={`text-xs font-bold ${currentPage === 1 ? "text-slate-300" : "text-slate-700"}`}>
               Previous
             </Text>
@@ -833,7 +833,7 @@ export default function ShopScreen() {
             <Text className={`text-xs font-bold ${currentPage === totalPages ? "text-slate-300" : "text-slate-700"}`}>
               Next
             </Text>
-            <ChevronRight color={currentPage === totalPages ? "#CBD5E1" : "#334155"} size={17} />
+            <ChevronRight color={currentPage === totalPages ? colors["neutral-border-slate"] : colors["neutral-slate-dark"]} size={17} />
           </Pressable>
         </View>
       ) : null}
@@ -853,7 +853,7 @@ function StatPill({ icon, label }: { icon: ReactNode; label: string }) {
   return (
     <View className="flex-row items-center rounded-lg bg-white px-3 py-2 shadow-sm">
       {icon}
-      <Text className="ml-1.5 text-[10px] font-bold text-[#1A3C36]">{label}</Text>
+      <Text className="ml-1.5 text-[10px] font-bold text-brand-green-forest-text">{label}</Text>
     </View>
   );
 }
@@ -882,7 +882,7 @@ function FilterChip({
       className={`min-h-9 flex-row items-center rounded-lg px-3 ${selected ? "bg-brand-green" : "bg-slate-100"}`}
       onPress={onPress}
     >
-      {selected ? <Check color="#FFFFFF" size={13} /> : null}
+      {selected ? <Check color={colors["white"]} size={13} /> : null}
       <Text className={`text-[11px] font-bold ${selected ? "ml-1 text-white" : "text-slate-600"}`}>
         {label}
       </Text>
@@ -911,7 +911,7 @@ function PriceInput({
           className="ml-1 h-full flex-1 text-xs text-slate-800"
           keyboardType="numeric"
           placeholder={placeholder}
-          placeholderTextColor="#94A3B8"
+          placeholderTextColor={colors["neutral-placeholder"]}
           value={value}
           onChangeText={onChange}
         />
@@ -923,7 +923,7 @@ function PriceInput({
 function ActiveFilter({ label, onClear }: { label: string; onClear: () => void }) {
   return (
     <View className="flex-row items-center rounded-lg bg-emerald-50 px-2.5 py-1.5">
-      <Tag color="#047857" size={11} />
+      <Tag color={colors["success"]} size={11} />
       <Text className="ml-1 text-[10px] font-semibold text-emerald-800" numberOfLines={1}>
         {label}
       </Text>
@@ -934,7 +934,7 @@ function ActiveFilter({ label, onClear }: { label: string; onClear: () => void }
         onPress={onClear}
         hitSlop={6}
       >
-        <X color="#047857" size={12} />
+        <X color={colors["success"]} size={12} />
       </Pressable>
     </View>
   );
@@ -956,7 +956,7 @@ function ViewModeButton({
       accessibilityRole="button"
       accessibilityLabel={label}
       accessibilityState={{ selected }}
-      className={`h-8 w-9 items-center justify-center rounded-md ${selected ? "bg-[#1A6A3B]" : ""}`}
+      className={`h-8 w-9 items-center justify-center rounded-md ${selected ? "bg-brand-green-primary" : ""}`}
       onPress={onPress}
     >
       {icon}

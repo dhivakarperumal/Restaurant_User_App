@@ -1,3 +1,4 @@
+import colors from "../../theme/colors.json";
 import {
     CalendarDays,
     CheckCircle2,
@@ -178,11 +179,11 @@ function FormField({
 }) {
   return (
     <View className="mb-3">
-      <Text className="mb-1.5 text-xs font-bold uppercase tracking-wide text-[#59645E]">
+      <Text className="mb-1.5 text-xs font-bold uppercase tracking-wide text-brand-neutral-text-secondary">
         {label}
       </Text>
       <TextInput
-        className={`rounded-xl border border-[#E1E5DF] bg-white px-3.5 text-sm text-[#183B2A] ${
+        className={`rounded-xl border border-brand-green-border-light bg-white px-3.5 text-sm text-brand-green-forest ${
           multiline ? "min-h-24 py-3" : "h-12"
         }`}
         keyboardType={keyboardType}
@@ -190,7 +191,7 @@ function FormField({
         multiline={multiline}
         onChangeText={onChangeText}
         placeholder={placeholder}
-        placeholderTextColor="#879087"
+        placeholderTextColor={colors["neutral-text-disabled"]}
         textAlignVertical={multiline ? "top" : "center"}
         value={value}
       />
@@ -222,13 +223,13 @@ function ChoiceRow({
             accessibilityState={{ selected: active }}
             className={`rounded-full border px-3.5 py-2 ${
               active
-                ? "border-[#1A6A3B] bg-[#1A6A3B]"
-                : "border-[#E1E5DF] bg-white"
+                ? "border-brand-green-primary bg-brand-green-primary"
+                : "border-brand-green-border-light bg-white"
             }`}
             key={choice}
             onPress={() => onSelect(choice)}
           >
-            <Text className={`text-xs font-semibold ${active ? "text-white" : "text-[#344035]"}`}>
+            <Text className={`text-xs font-semibold ${active ? "text-white" : "text-brand-neutral-text-body"}`}>
               {choice}
             </Text>
           </Pressable>
@@ -568,33 +569,33 @@ export default function EventOrdersScreen() {
 
   return (
     <ScrollView
-      className="flex-1 bg-[#F3F4F3]"
+      className="flex-1 bg-brand-surface-app"
       contentContainerStyle={{ padding: 16, paddingBottom: 32 }}
       keyboardShouldPersistTaps="handled"
       refreshControl={
         <RefreshControl
-          colors={["#1A6A3B"]}
+          colors={[colors["green-primary"]]}
           onRefresh={() => void refreshScreen()}
           refreshing={isRefreshing}
-          tintColor="#1A6A3B"
+          tintColor={colors["green-primary"]}
         />
       }
       showsVerticalScrollIndicator={false}
     >
-      <View className="mb-4 rounded-2xl bg-[#183B2A] p-4">
+      <View className="mb-4 rounded-2xl bg-brand-green-forest p-4">
         <View className="flex-row items-center">
           <View className="mr-3 h-10 w-10 items-center justify-center rounded-xl bg-white/10">
-            <PartyPopper color="#F7BD48" size={21} />
+            <PartyPopper color={colors["gold-warm"]} size={21} />
           </View>
           <View className="flex-1">
             <Text className="text-lg font-extrabold text-white">Catering & Event Orders</Text>
-            <Text className="mt-1 text-xs leading-5 text-[#D8E4D7]">
+            <Text className="mt-1 text-xs leading-5 text-brand-green-soft">
               Plan your menu and request a custom quotation for groups of 5 or more.
             </Text>
           </View>
         </View>
         <View className="mt-4 flex-row rounded-xl bg-black/15 p-3">
-          <Users color="#F7BD48" size={17} />
+          <Users color={colors["gold-warm"]} size={17} />
           <Text className="ml-2 flex-1 text-xs font-semibold text-white">
             Choose from the full catering menu. Final pricing is confirmed in your quotation.
           </Text>
@@ -602,22 +603,22 @@ export default function EventOrdersScreen() {
       </View>
 
       {success ? (
-        <View className="mb-4 rounded-2xl border border-[#CFE3C4] bg-[#EAF4E4] p-4">
+        <View className="mb-4 rounded-2xl border border-brand-green-success-soft bg-brand-green-muted-surface p-4">
           <View className="flex-row items-center">
-            <CheckCircle2 color="#075B2B" size={21} />
-            <Text className="ml-2 flex-1 text-base font-extrabold text-[#075B2B]">
+            <CheckCircle2 color={colors["green-strong"]} size={21} />
+            <Text className="ml-2 flex-1 text-base font-extrabold text-brand-green-strong">
               Event request submitted
             </Text>
           </View>
-          <Text className="mt-2 text-sm leading-5 text-[#344035]">
+          <Text className="mt-2 text-sm leading-5 text-brand-neutral-text-body">
             Request #{success.orderNumber} is with our team for review. Your menu estimate is ₹
             {success.amount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}.
           </Text>
         </View>
       ) : null}
 
-      <View className="mb-4 rounded-2xl border border-[#E1E5DF] bg-white p-4">
-        <SectionTitle icon={<Users color="#1A6A3B" size={19} />} title="Contact & event details" />
+      <View className="mb-4 rounded-2xl border border-brand-green-border-light bg-white p-4">
+        <SectionTitle icon={<Users color={colors["green-primary"]} size={19} />} title="Contact & event details" />
         <FormField
           label="Organizer name *"
           onChangeText={(value) => updateForm("customer_name", value)}
@@ -638,7 +639,7 @@ export default function EventOrdersScreen() {
           placeholder="name@example.com"
           value={form.customer_email}
         />
-        <Text className="mb-2 mt-1 text-xs font-bold uppercase tracking-wide text-[#59645E]">
+        <Text className="mb-2 mt-1 text-xs font-bold uppercase tracking-wide text-brand-neutral-text-secondary">
           Occasion *
         </Text>
         <ChoiceRow
@@ -675,7 +676,7 @@ export default function EventOrdersScreen() {
           placeholder="25"
           value={form.guest_count}
         />
-        <Text className="mb-2 mt-1 text-xs font-bold uppercase tracking-wide text-[#59645E]">
+        <Text className="mb-2 mt-1 text-xs font-bold uppercase tracking-wide text-brand-neutral-text-secondary">
           Dietary preference
         </Text>
         <ChoiceRow
@@ -699,16 +700,16 @@ export default function EventOrdersScreen() {
         />
       </View>
 
-      <View className="mb-4 rounded-2xl border border-[#E1E5DF] bg-white p-4">
-        <SectionTitle icon={<Utensils color="#1A6A3B" size={19} />} title="Choose your event menu" />
-        <View className="mb-3 flex-row items-center rounded-xl border border-[#E1E5DF] bg-[#FAFAF7] px-3">
-          <Search color="#59645E" size={17} />
+      <View className="mb-4 rounded-2xl border border-brand-green-border-light bg-white p-4">
+        <SectionTitle icon={<Utensils color={colors["green-primary"]} size={19} />} title="Choose your event menu" />
+        <View className="mb-3 flex-row items-center rounded-xl border border-brand-green-border-light bg-brand-surface-white-soft px-3">
+          <Search color={colors["neutral-text-secondary"]} size={17} />
           <TextInput
             accessibilityLabel="Search catering menu"
-            className="h-11 flex-1 px-2.5 text-sm text-[#183B2A]"
+            className="h-11 flex-1 px-2.5 text-sm text-brand-green-forest"
             onChangeText={setSearch}
             placeholder="Search dishes"
-            placeholderTextColor="#879087"
+            placeholderTextColor={colors["neutral-text-disabled"]}
             returnKeyType="search"
             value={search}
           />
@@ -721,16 +722,16 @@ export default function EventOrdersScreen() {
 
         {isMenuLoading ? (
           <View className="items-center py-8">
-            <ActivityIndicator color="#1A6A3B" />
-            <Text className="mt-2 text-sm text-[#728071]">Loading the catering menu…</Text>
+            <ActivityIndicator color={colors["green-primary"]} />
+            <Text className="mt-2 text-sm text-brand-neutral-text-muted">Loading the catering menu…</Text>
           </View>
         ) : menuError ? (
-          <View className="mt-4 rounded-xl border border-[#F3C9C5] bg-[#FFF4F2] p-3">
-            <Text accessibilityRole="alert" className="text-sm text-[#A33424]">
+          <View className="mt-4 rounded-xl border border-brand-danger-border bg-brand-danger-surface p-3">
+            <Text accessibilityRole="alert" className="text-sm text-brand-danger">
               {menuError}
             </Text>
             <Pressable className="mt-2 self-start" onPress={() => void loadMenu()}>
-              <Text className="text-sm font-bold text-[#A33424]">Try again</Text>
+              <Text className="text-sm font-bold text-brand-danger">Try again</Text>
             </Pressable>
           </View>
         ) : visibleFoods.length ? (
@@ -743,61 +744,61 @@ export default function EventOrdersScreen() {
             />
           ))
         ) : (
-          <Text className="py-8 text-center text-sm text-[#728071]">
+          <Text className="py-8 text-center text-sm text-brand-neutral-text-muted">
             No dishes match your search or dietary filter.
           </Text>
         )}
       </View>
 
-      <View className="mb-4 rounded-2xl border border-[#D9E6D9] bg-white p-4">
+      <View className="mb-4 rounded-2xl border border-brand-green-border bg-white p-4">
         <View className="flex-row items-center justify-between">
           <View className="flex-row items-center">
-            <PartyPopper color="#1A6A3B" size={19} />
-            <Text className="ml-2 text-base font-extrabold text-[#183B2A]">
+            <PartyPopper color={colors["green-primary"]} size={19} />
+            <Text className="ml-2 text-base font-extrabold text-brand-green-forest">
               Request summary
             </Text>
           </View>
-          <Text className="text-xs font-bold text-[#728071]">
+          <Text className="text-xs font-bold text-brand-neutral-text-muted">
             {selectedList.length} {selectedList.length === 1 ? "dish" : "dishes"}
           </Text>
         </View>
         {selectedList.map(({ food, quantity }) => (
           <View className="mt-2 flex-row justify-between" key={getFoodId(food)}>
-            <Text className="flex-1 pr-2 text-sm text-[#59645E]" numberOfLines={1}>
+            <Text className="flex-1 pr-2 text-sm text-brand-neutral-text-secondary" numberOfLines={1}>
               {getFoodName(food)} × {quantity}
             </Text>
-            <Text className="text-sm font-semibold text-[#344035]">
+            <Text className="text-sm font-semibold text-brand-neutral-text-body">
               ₹{(getFoodPrice(food) * quantity).toFixed(2)}
             </Text>
           </View>
         ))}
-        <View className="mt-3 flex-row justify-between border-t border-[#EEE8DD] pt-3">
-          <Text className="text-sm font-semibold text-[#59645E]">Estimated menu value</Text>
-          <Text className="text-base font-extrabold text-[#1A6A3B]">
+        <View className="mt-3 flex-row justify-between border-t border-brand-neutral-border pt-3">
+          <Text className="text-sm font-semibold text-brand-neutral-text-secondary">Estimated menu value</Text>
+          <Text className="text-base font-extrabold text-brand-green-primary">
             ₹{estimatedTotal.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
           </Text>
         </View>
-        <Text className="mt-2 text-xs leading-5 text-[#728071]">
+        <Text className="mt-2 text-xs leading-5 text-brand-neutral-text-muted">
           This is an estimate only. Our team will review your quantities and send the final quotation.
         </Text>
         {submitError ? (
-          <Text accessibilityRole="alert" className="mt-3 text-sm font-semibold text-[#A33424]">
+          <Text accessibilityRole="alert" className="mt-3 text-sm font-semibold text-brand-danger">
             {submitError}
           </Text>
         ) : null}
         <Pressable
           accessibilityRole="button"
           className={`mt-4 min-h-12 flex-row items-center justify-center rounded-xl ${
-            isSubmitting ? "bg-[#72937B]" : "bg-[#1A6A3B] active:bg-[#14542E]"
+            isSubmitting ? "bg-brand-green-muted-mid" : "bg-brand-green-primary active:bg-brand-green-action-hover"
           }`}
           disabled={isSubmitting}
           onPress={() => void submitEventOrder()}
         >
           {isSubmitting ? (
-            <ActivityIndicator color="#FFFFFF" />
+            <ActivityIndicator color={colors["white"]} />
           ) : (
             <>
-              <Send color="#FFFFFF" size={16} />
+              <Send color={colors["white"]} size={16} />
               <Text className="ml-2 text-sm font-extrabold text-white">
                 Submit quotation request
               </Text>
@@ -806,17 +807,17 @@ export default function EventOrdersScreen() {
         </Pressable>
       </View>
 
-      <View className="rounded-2xl border border-[#E1E5DF] bg-white p-4">
+      <View className="rounded-2xl border border-brand-green-border-light bg-white p-4">
         <SectionTitle
-          icon={<CalendarDays color="#1A6A3B" size={19} />}
+          icon={<CalendarDays color={colors["green-primary"]} size={19} />}
           title="Your event orders"
           subtitle="Review status and respond to quotations."
         />
         {ordersError ? (
-          <Text className="mt-1 text-sm leading-5 text-[#728071]">{ordersError}</Text>
+          <Text className="mt-1 text-sm leading-5 text-brand-neutral-text-muted">{ordersError}</Text>
         ) : isOrdersLoading ? (
           <View className="items-center py-5">
-            <ActivityIndicator color="#1A6A3B" />
+            <ActivityIndicator color={colors["green-primary"]} />
           </View>
         ) : orders.length ? (
           orders.map((order) => (
@@ -828,7 +829,7 @@ export default function EventOrdersScreen() {
             />
           ))
         ) : (
-          <Text className="mt-1 text-sm text-[#728071]">
+          <Text className="mt-1 text-sm text-brand-neutral-text-muted">
             Event requests submitted while signed in will appear here.
           </Text>
         )}
@@ -848,12 +849,12 @@ function SectionTitle({
 }) {
   return (
     <View className="mb-4 flex-row items-center">
-      <View className="mr-2.5 h-9 w-9 items-center justify-center rounded-xl bg-[#EAF2E8]">
+      <View className="mr-2.5 h-9 w-9 items-center justify-center rounded-xl bg-brand-green-muted-surface">
         {icon}
       </View>
       <View className="flex-1">
-        <Text className="text-base font-extrabold text-[#183B2A]">{title}</Text>
-        {subtitle ? <Text className="mt-0.5 text-xs text-[#728071]">{subtitle}</Text> : null}
+        <Text className="text-base font-extrabold text-brand-green-forest">{title}</Text>
+        {subtitle ? <Text className="mt-0.5 text-xs text-brand-neutral-text-muted">{subtitle}</Text> : null}
       </View>
     </View>
   );
@@ -870,9 +871,9 @@ function MenuFoodRow({
 }) {
   const image = getFoodImage(food);
   return (
-    <View className="mt-3 rounded-xl border border-[#EEE8DD] bg-[#FFFEFB] p-3">
+    <View className="mt-3 rounded-xl border border-brand-neutral-border bg-brand-surface-offwhite p-3">
       <View className="flex-row items-center">
-        <View className="h-14 w-14 items-center justify-center overflow-hidden rounded-xl bg-[#F1F3EC]">
+        <View className="h-14 w-14 items-center justify-center overflow-hidden rounded-xl bg-brand-surface-gray-green">
           {image ? (
             <Image
               accessibilityLabel={getFoodName(food)}
@@ -881,60 +882,60 @@ function MenuFoodRow({
               source={{ uri: image }}
             />
           ) : (
-            <Utensils color="#1A6A3B" size={20} />
+            <Utensils color={colors["green-primary"]} size={20} />
           )}
         </View>
         <View className="ml-3 flex-1">
-          <Text className="text-[10px] font-bold uppercase tracking-wide text-[#728071]">
+          <Text className="text-[10px] font-bold uppercase tracking-wide text-brand-neutral-text-muted">
             {String(food.category_name ?? "Dish")}
           </Text>
-          <Text className="mt-0.5 text-sm font-extrabold text-[#183B2A]" numberOfLines={1}>
+          <Text className="mt-0.5 text-sm font-extrabold text-brand-green-forest" numberOfLines={1}>
             {getFoodName(food)}
           </Text>
-          <Text className="mt-0.5 text-xs font-semibold text-[#1A6A3B]">
+          <Text className="mt-0.5 text-xs font-semibold text-brand-green-primary">
             ₹{getFoodPrice(food).toFixed(2)} / {String(food.portion_size ?? "portion")}
           </Text>
         </View>
       </View>
-      <View className="mt-3 flex-row items-center justify-between border-t border-[#EEE8DD] pt-3">
+      <View className="mt-3 flex-row items-center justify-between border-t border-brand-neutral-border pt-3">
         {quantity === 0 ? (
           <Pressable
             accessibilityRole="button"
-            className="min-h-10 flex-1 flex-row items-center justify-center rounded-lg border border-[#1A6A3B] bg-white active:bg-[#EAF2E8]"
+            className="min-h-10 flex-1 flex-row items-center justify-center rounded-lg border border-brand-green-primary bg-white active:bg-brand-green-muted-surface"
             onPress={() => onQuantityChange(10)}
           >
-            <Plus color="#1A6A3B" size={15} />
-            <Text className="ml-1.5 text-xs font-bold text-[#1A6A3B]">Add 10 portions</Text>
+            <Plus color={colors["green-primary"]} size={15} />
+            <Text className="ml-1.5 text-xs font-bold text-brand-green-primary">Add 10 portions</Text>
           </Pressable>
         ) : (
           <>
             <Pressable
               accessibilityLabel={`Remove ten ${getFoodName(food)} portions`}
               accessibilityRole="button"
-              className="h-9 w-9 items-center justify-center rounded-lg bg-[#F0EEE7]"
+              className="h-9 w-9 items-center justify-center rounded-lg bg-brand-surface-subtle"
               onPress={() => onQuantityChange(quantity - 10)}
             >
-              <Text className="text-[10px] font-extrabold text-[#344035]">-10</Text>
+              <Text className="text-[10px] font-extrabold text-brand-neutral-text-body">-10</Text>
             </Pressable>
             <Pressable
               accessibilityLabel={`Remove five ${getFoodName(food)} portions`}
               accessibilityRole="button"
-              className="h-9 w-9 items-center justify-center rounded-lg bg-[#F0EEE7]"
+              className="h-9 w-9 items-center justify-center rounded-lg bg-brand-surface-subtle"
               onPress={() => onQuantityChange(quantity - 5)}
             >
-              <Text className="text-[10px] font-extrabold text-[#344035]">-5</Text>
+              <Text className="text-[10px] font-extrabold text-brand-neutral-text-body">-5</Text>
             </Pressable>
             <Pressable
               accessibilityLabel={`Remove one ${getFoodName(food)} portion`}
               accessibilityRole="button"
-              className="h-9 w-8 items-center justify-center rounded-lg bg-[#F0EEE7]"
+              className="h-9 w-8 items-center justify-center rounded-lg bg-brand-surface-subtle"
               onPress={() => onQuantityChange(quantity - 1)}
             >
-              <Minus color="#344035" size={15} />
+              <Minus color={colors["neutral-text-body"]} size={15} />
             </Pressable>
             <TextInput
               accessibilityLabel={`${getFoodName(food)} quantity`}
-              className="mx-1 h-11 w-14 rounded-lg border border-[#D9E6D9] py-0 text-center text-sm font-bold text-[#183B2A]"
+              className="mx-1 h-11 w-14 rounded-lg border border-brand-green-border py-0 text-center text-sm font-bold text-brand-green-forest"
               keyboardType="number-pad"
               onChangeText={(value) =>
                 onQuantityChange(value ? Math.max(0, Number(value.replace(/[^\d]/g, ""))) : 0)
@@ -945,15 +946,15 @@ function MenuFoodRow({
             <Pressable
               accessibilityLabel={`Add one ${getFoodName(food)} portion`}
               accessibilityRole="button"
-              className="h-9 w-8 items-center justify-center rounded-lg bg-[#1A6A3B]"
+              className="h-9 w-8 items-center justify-center rounded-lg bg-brand-green-primary"
               onPress={() => onQuantityChange(quantity + 1)}
             >
-              <Plus color="#FFFFFF" size={15} />
+              <Plus color={colors["white"]} size={15} />
             </Pressable>
             <Pressable
               accessibilityLabel={`Add five ${getFoodName(food)} portions`}
               accessibilityRole="button"
-              className="h-9 w-9 items-center justify-center rounded-lg bg-[#1A6A3B]"
+              className="h-9 w-9 items-center justify-center rounded-lg bg-brand-green-primary"
               onPress={() => onQuantityChange(quantity + 5)}
             >
               <Text className="text-[10px] font-extrabold text-white">+5</Text>
@@ -961,7 +962,7 @@ function MenuFoodRow({
             <Pressable
               accessibilityLabel={`Add ten ${getFoodName(food)} portions`}
               accessibilityRole="button"
-              className="h-9 w-9 items-center justify-center rounded-lg bg-[#1A6A3B]"
+              className="h-9 w-9 items-center justify-center rounded-lg bg-brand-green-primary"
               onPress={() => onQuantityChange(quantity + 10)}
             >
               <Text className="text-[10px] font-extrabold text-white">+10</Text>
@@ -995,42 +996,42 @@ function EventOrderCard({
   const eventType = getText(order, ["event_type"]) || "Event";
   const guestCount = getText(order, ["guest_count"]);
   return (
-    <View className="mt-3 rounded-xl border border-[#EEE8DD] bg-[#FFFEFB] p-3">
+    <View className="mt-3 rounded-xl border border-brand-neutral-border bg-brand-surface-offwhite p-3">
       <View className="flex-row items-start justify-between">
         <View className="flex-1 pr-2">
-          <Text className="text-xs font-bold uppercase tracking-wide text-[#728071]">
+          <Text className="text-xs font-bold uppercase tracking-wide text-brand-neutral-text-muted">
             Event order #{orderNumber}
           </Text>
-          <Text className="mt-1 text-sm font-extrabold text-[#183B2A]">{eventType}</Text>
+          <Text className="mt-1 text-sm font-extrabold text-brand-green-forest">{eventType}</Text>
         </View>
-        <Text className="rounded-full bg-[#F5EFE5] px-2.5 py-1 text-[10px] font-bold text-[#8A5A14]">
+        <Text className="rounded-full bg-brand-surface-cream px-2.5 py-1 text-[10px] font-bold text-brand-gold-brown">
           {status}
         </Text>
       </View>
       <View className="mt-2 flex-row flex-wrap">
         {date ? (
           <View className="mr-3 mt-1 flex-row items-center">
-            <Clock3 color="#728071" size={13} />
-            <Text className="ml-1 text-xs text-[#59645E]">{date}</Text>
+            <Clock3 color={colors["neutral-text-muted"]} size={13} />
+            <Text className="ml-1 text-xs text-brand-neutral-text-secondary">{date}</Text>
           </View>
         ) : null}
         {guestCount ? (
           <View className="mt-1 flex-row items-center">
-            <Users color="#728071" size={13} />
-            <Text className="ml-1 text-xs text-[#59645E]">{guestCount} guests</Text>
+            <Users color={colors["neutral-text-muted"]} size={13} />
+            <Text className="ml-1 text-xs text-brand-neutral-text-secondary">{guestCount} guests</Text>
           </View>
         ) : null}
         {order.venue_address ? (
           <View className="mt-1 w-full flex-row items-center">
-            <MapPin color="#728071" size={13} />
-            <Text className="ml-1 flex-1 text-xs text-[#59645E]" numberOfLines={2}>
+            <MapPin color={colors["neutral-text-muted"]} size={13} />
+            <Text className="ml-1 flex-1 text-xs text-brand-neutral-text-secondary" numberOfLines={2}>
               {String(order.venue_address)}
             </Text>
           </View>
         ) : null}
       </View>
       {quotedAmount > 0 ? (
-        <Text className="mt-3 text-sm font-extrabold text-[#1A6A3B]">
+        <Text className="mt-3 text-sm font-extrabold text-brand-green-primary">
           Quoted total: ₹{quotedAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
         </Text>
       ) : null}
@@ -1038,7 +1039,7 @@ function EventOrderCard({
         <View className="mt-3 flex-row">
           <Pressable
             accessibilityRole="button"
-            className="mr-2 min-h-10 flex-1 items-center justify-center rounded-lg bg-[#1A6A3B] active:bg-[#14542E]"
+            className="mr-2 min-h-10 flex-1 items-center justify-center rounded-lg bg-brand-green-primary active:bg-brand-green-action-hover"
             disabled={isResponding}
             onPress={() => onRespond("accept")}
           >
@@ -1048,15 +1049,15 @@ function EventOrderCard({
           </Pressable>
           <Pressable
             accessibilityRole="button"
-            className="min-h-10 flex-1 items-center justify-center rounded-lg border border-[#E7C6C1] bg-white active:bg-[#FFF4F2]"
+            className="min-h-10 flex-1 items-center justify-center rounded-lg border border-brand-danger-border-muted bg-white active:bg-brand-danger-surface"
             disabled={isResponding}
             onPress={() => onRespond("reject")}
           >
-            <Text className="text-xs font-bold text-[#A33424]">Reject</Text>
+            <Text className="text-xs font-bold text-brand-danger">Reject</Text>
           </Pressable>
         </View>
       ) : action ? (
-        <Text className="mt-2 text-xs font-semibold text-[#59645E]">
+        <Text className="mt-2 text-xs font-semibold text-brand-neutral-text-secondary">
           Quotation {action}.
         </Text>
       ) : null}

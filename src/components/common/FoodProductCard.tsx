@@ -40,13 +40,13 @@ export default function FoodProductCard({
   if (viewMode === "list") {
     return (
       <View
-        className="flex-row items-center rounded-2xl border border-[#E7E0D8] bg-white p-2.5 shadow-sm"
+        className="flex-row items-center rounded-2xl border border-brand-neutral-border-warm bg-white p-2.5 shadow-sm"
         style={{ width }}
       >
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={`View ${name}`}
-          className="h-[88px] w-[88px] items-center justify-center overflow-hidden rounded-xl bg-[#F5EFE5]"
+          className="h-[88px] w-[88px] items-center justify-center overflow-hidden rounded-xl bg-brand-surface-cream"
           onPress={() => onSelect(food)}
         >
           {image && !imageError ? (
@@ -82,7 +82,7 @@ export default function FoodProductCard({
             className="mt-1"
             onPress={() => onSelect(food)}
           >
-            <Text className="text-sm font-extrabold text-[#17251E]" numberOfLines={1}>
+            <Text className="text-sm font-extrabold text-brand-neutral-text-primary" numberOfLines={1}>
               {name}
             </Text>
           </Pressable>
@@ -91,7 +91,7 @@ export default function FoodProductCard({
           </Text>
           <View className="mt-1.5 flex-row items-center justify-between">
             <View className="flex-row items-baseline">
-              <Text className="text-sm font-black text-[#1A6A3B]">₹{price.toFixed(0)}</Text>
+              <Text className="text-sm font-black text-brand-green-primary">₹{price.toFixed(0)}</Text>
               {discount > 0 && mrp > price && (
                 <Text className="ml-1 text-[9px] text-slate-400 line-through">
                   ₹{mrp.toFixed(0)}
@@ -106,8 +106,8 @@ export default function FoodProductCard({
                 onPress={() => onToggleWishlist(food)}
               >
                 <Heart
-                  color={isInWishlist ? "#E11D48" : "#64748B"}
-                  fill={isInWishlist ? "#E11D48" : "transparent"}
+                  color={isInWishlist ? colors["danger-heart"] : colors["neutral-slate"]}
+                  fill={isInWishlist ? colors["danger-heart"] : "transparent"}
                   size={15}
                 />
               </Pressable>
@@ -115,11 +115,11 @@ export default function FoodProductCard({
                 accessibilityRole="button"
                 accessibilityLabel={`Customize ${name}`}
                 accessibilityState={{ disabled: !isAvailable }}
-                className={`h-8 flex-row items-center rounded-lg px-2.5 ${isAvailable ? "bg-[#1A6A3B]" : "bg-slate-300"}`}
+                className={`h-8 flex-row items-center rounded-lg px-2.5 ${isAvailable ? "bg-brand-green-primary" : "bg-slate-300"}`}
                 disabled={!isAvailable}
                 onPress={() => onCustomize(food)}
               >
-                {isAvailable ? <Plus color="#FFFFFF" size={15} /> : null}
+                {isAvailable ? <Plus color={colors["white"]} size={15} /> : null}
                 <Text className="ml-1 text-[10px] font-bold text-white">
                   {isAvailable
                     ? cartQuantity > 0
@@ -137,14 +137,14 @@ export default function FoodProductCard({
 
   return (
     <View
-      className="overflow-hidden rounded-2xl border border-[#E7E0D8] bg-white shadow-sm"
+      className="overflow-hidden rounded-2xl border border-brand-neutral-border-warm bg-white shadow-sm"
       style={{ width }}
     >
       <View className="relative h-[132px]">
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={`View ${name}`}
-          className="h-full items-center justify-center overflow-hidden bg-[#F5EFE5]"
+          className="h-full items-center justify-center overflow-hidden bg-brand-surface-cream"
           onPress={() => onSelect(food)}
         >
           {image && !imageError ? (
@@ -187,8 +187,8 @@ export default function FoodProductCard({
           hitSlop={6}
         >
           <Heart
-            color={isInWishlist ? "#E11D48" : "#64748B"}
-            fill={isInWishlist ? "#E11D48" : "transparent"}
+            color={isInWishlist ? colors["danger-heart"] : colors["neutral-slate"]}
+            fill={isInWishlist ? colors["danger-heart"] : "transparent"}
             size={16}
           />
         </Pressable>
@@ -214,7 +214,7 @@ export default function FoodProductCard({
           className="mt-1"
           onPress={() => onSelect(food)}
         >
-          <Text className="text-sm font-extrabold text-[#17251E]" numberOfLines={1}>
+          <Text className="text-sm font-extrabold text-brand-neutral-text-primary" numberOfLines={1}>
             {name}
           </Text>
         </Pressable>
@@ -224,13 +224,13 @@ export default function FoodProductCard({
 
         <View className="mt-auto flex-row items-center justify-between pt-2">
           <View>
-            <Text className="text-sm font-black text-[#1A6A3B]">₹{price.toFixed(0)}</Text>
+            <Text className="text-sm font-black text-brand-green-primary">₹{price.toFixed(0)}</Text>
             {discount > 0 && mrp > price && (
               <Text className="text-[9px] text-slate-400 line-through">₹{mrp.toFixed(0)}</Text>
             )}
             {Number(food.preparation_time) > 0 && (
               <View className="mt-0.5 flex-row items-center">
-                <Clock3 color="#64748B" size={10} />
+                <Clock3 color={colors["neutral-slate"]} size={10} />
                 <Text className="ml-1 text-[9px] text-slate-500">
                   {food.preparation_time} min
                 </Text>
@@ -241,11 +241,11 @@ export default function FoodProductCard({
             accessibilityRole="button"
             accessibilityLabel={`Add ${name} to cart${cartQuantity > 0 ? `, ${cartQuantity} already in cart` : ""}`}
             accessibilityState={{ disabled: !isAvailable }}
-            className={`h-9 min-w-9 flex-row items-center justify-center rounded-xl px-2 active:opacity-75 ${isAvailable ? "bg-[#1A6A3B]" : "bg-slate-300"}`}
+            className={`h-9 min-w-9 flex-row items-center justify-center rounded-xl px-2 active:opacity-75 ${isAvailable ? "bg-brand-green-primary" : "bg-slate-300"}`}
             disabled={!isAvailable}
             onPress={() => onCustomize(food)}
           >
-            {isAvailable ? <Plus color="#FFFFFF" size={19} /> : null}
+            {isAvailable ? <Plus color={colors["white"]} size={19} /> : null}
             {isAvailable && cartQuantity > 0 ? (
               <Text className="ml-1 text-[10px] font-bold text-white">{cartQuantity}</Text>
             ) : !isAvailable ? (

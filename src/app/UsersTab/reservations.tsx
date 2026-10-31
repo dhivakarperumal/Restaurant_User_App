@@ -1,3 +1,4 @@
+import colors from "../../theme/colors.json";
 import DateTimePicker, {
     DateTimePickerAndroid,
 } from "@react-native-community/datetimepicker";
@@ -175,12 +176,12 @@ function Field({
 }) {
   return (
     <View className="mb-3">
-      <Text className="mb-1.5 text-xs font-bold uppercase tracking-wide text-[#59645E]">
+      <Text className="mb-1.5 text-xs font-bold uppercase tracking-wide text-brand-neutral-text-secondary">
         {label}
       </Text>
       <TextInput
         autoCapitalize={keyboardType === "email-address" ? "none" : "sentences"}
-        className={`rounded-xl border border-[#E1E5DF] bg-white px-3.5 text-sm text-[#183B2A] ${
+        className={`rounded-xl border border-brand-green-border-light bg-white px-3.5 text-sm text-brand-green-forest ${
           multiline ? "min-h-20 py-3" : "h-12"
         }`}
         keyboardType={keyboardType}
@@ -188,7 +189,7 @@ function Field({
         multiline={multiline}
         onChangeText={onChangeText}
         placeholder={placeholder}
-        placeholderTextColor="#879087"
+        placeholderTextColor={colors["neutral-text-disabled"]}
         textAlignVertical={multiline ? "top" : "center"}
         value={value}
       />
@@ -510,36 +511,36 @@ export default function ReservationsScreen() {
 
   if (isLoadingProfile) {
     return (
-      <View className="flex-1 items-center justify-center bg-[#F3F4F3]">
-        <ActivityIndicator color="#1A6A3B" size="large" />
-        <Text className="mt-3 text-sm text-[#728071]">Loading table booking…</Text>
+      <View className="flex-1 items-center justify-center bg-brand-surface-app">
+        <ActivityIndicator color={colors["green-primary"]} size="large" />
+        <Text className="mt-3 text-sm text-brand-neutral-text-muted">Loading table booking…</Text>
       </View>
     );
   }
 
   return (
     <ScrollView
-      className="flex-1 bg-[#F3F4F3]"
+      className="flex-1 bg-brand-surface-app"
       contentContainerStyle={{ padding: 16, paddingBottom: 36 }}
       keyboardShouldPersistTaps="handled"
       refreshControl={
         <RefreshControl
-          colors={["#1A6A3B"]}
+          colors={[colors["green-primary"]]}
           onRefresh={() => void refresh()}
           refreshing={isRefreshing}
-          tintColor="#1A6A3B"
+          tintColor={colors["green-primary"]}
         />
       }
       showsVerticalScrollIndicator={false}
     >
-      <View className="mb-4 rounded-2xl bg-[#183B2A] p-4">
+      <View className="mb-4 rounded-2xl bg-brand-green-forest p-4">
         <View className="flex-row items-center">
           <View className="mr-3 h-11 w-11 items-center justify-center rounded-xl bg-white/10">
-            <TableProperties color="#F7BD48" size={22} />
+            <TableProperties color={colors["gold-warm"]} size={22} />
           </View>
           <View className="flex-1">
             <Text className="text-lg font-extrabold text-white">Reserve a table</Text>
-            <Text className="mt-1 text-xs leading-5 text-[#D8E4D7]">
+            <Text className="mt-1 text-xs leading-5 text-brand-green-soft">
               Pick a time and group size to see tables that are free.
             </Text>
           </View>
@@ -547,16 +548,16 @@ export default function ReservationsScreen() {
       </View>
 
       {!isSignedIn ? (
-        <View className="mb-4 rounded-xl border border-[#F1D889] bg-[#FFF6D8] p-3.5">
-          <Text className="text-sm font-bold text-[#80500A]">
+        <View className="mb-4 rounded-xl border border-brand-gold-sand bg-brand-gold-light p-3.5">
+          <Text className="text-sm font-bold text-brand-gold-brown">
             Sign in to reserve a table
           </Text>
-          <Text className="mt-1 text-xs leading-5 text-[#80500A]">
+          <Text className="mt-1 text-xs leading-5 text-brand-gold-brown">
             Reservation requests are linked to your customer account.
           </Text>
           <Pressable
             accessibilityRole="button"
-            className="mt-3 self-start rounded-lg bg-[#183B2A] px-4 py-2.5"
+            className="mt-3 self-start rounded-lg bg-brand-green-forest px-4 py-2.5"
             onPress={() => router.push("/Auth/login")}
           >
             <Text className="text-xs font-bold text-white">Sign in</Text>
@@ -565,20 +566,20 @@ export default function ReservationsScreen() {
       ) : null}
 
       {error ? (
-        <View className="mb-4 rounded-xl border border-[#F3C9C5] bg-[#FFF4F2] p-3">
-          <Text accessibilityRole="alert" className="text-sm leading-5 text-[#A33424]">
+        <View className="mb-4 rounded-xl border border-brand-danger-border bg-brand-danger-surface p-3">
+          <Text accessibilityRole="alert" className="text-sm leading-5 text-brand-danger">
             {error}
           </Text>
         </View>
       ) : null}
       {success ? (
-        <View className="mb-4 flex-row rounded-xl border border-[#CFE3C4] bg-[#EAF4E4] p-3">
-          <CheckCircle2 color="#075B2B" size={18} />
-          <Text className="ml-2 flex-1 text-sm leading-5 text-[#075B2B]">{success}</Text>
+        <View className="mb-4 flex-row rounded-xl border border-brand-green-success-soft bg-brand-green-muted-surface p-3">
+          <CheckCircle2 color={colors["green-strong"]} size={18} />
+          <Text className="ml-2 flex-1 text-sm leading-5 text-brand-green-strong">{success}</Text>
         </View>
       ) : null}
 
-      <View className="mb-4 rounded-2xl border border-[#E1E5DF] bg-white p-4">
+      <View className="mb-4 rounded-2xl border border-brand-green-border-light bg-white p-4">
         <SectionHeading
           Icon={Users}
           title="Reservation details"
@@ -617,26 +618,26 @@ export default function ReservationsScreen() {
           />
         ) : (
           <View className="mb-3">
-            <Text className="mb-1.5 text-xs font-bold uppercase tracking-wide text-[#59645E]">
+            <Text className="mb-1.5 text-xs font-bold uppercase tracking-wide text-brand-neutral-text-secondary">
               Reservation date *
             </Text>
             <Pressable
               accessibilityLabel={`Choose reservation date, currently ${formatDate(date)}`}
               accessibilityRole="button"
-              className="h-12 flex-row items-center rounded-xl border border-[#E1E5DF] bg-white px-3.5"
+              className="h-12 flex-row items-center rounded-xl border border-brand-green-border-light bg-white px-3.5"
               onPress={() => openPicker("date")}
             >
-              <CalendarDays color="#1A6A3B" size={17} />
-              <Text className="ml-2.5 flex-1 text-sm font-semibold text-[#183B2A]">
+              <CalendarDays color={colors["green-primary"]} size={17} />
+              <Text className="ml-2.5 flex-1 text-sm font-semibold text-brand-green-forest">
                 {formatDate(date)}
               </Text>
-              <Text className="text-xs font-semibold text-[#728071]">Choose date</Text>
+              <Text className="text-xs font-semibold text-brand-neutral-text-muted">Choose date</Text>
             </Pressable>
           </View>
         )}
         <View className="mb-2 flex-row items-center">
-          <Clock3 color="#59645E" size={15} />
-          <Text className="ml-2 text-xs font-bold uppercase tracking-wide text-[#59645E]">
+          <Clock3 color={colors["neutral-text-secondary"]} size={15} />
+          <Text className="ml-2 text-xs font-bold uppercase tracking-wide text-brand-neutral-text-secondary">
             Reservation time *
           </Text>
         </View>
@@ -655,15 +656,15 @@ export default function ReservationsScreen() {
                   accessibilityState={{ selected }}
                   className={`rounded-full border px-3.5 py-2 ${
                     selected
-                      ? "border-[#1A6A3B] bg-[#1A6A3B]"
-                      : "border-[#E1E5DF] bg-white"
+                      ? "border-brand-green-primary bg-brand-green-primary"
+                      : "border-brand-green-border-light bg-white"
                   }`}
                   key={slot}
                   onPress={() => updateTime(slot)}
                 >
                   <Text
                     className={`text-xs font-semibold ${
-                      selected ? "text-white" : "text-[#344035]"
+                      selected ? "text-white" : "text-brand-neutral-text-body"
                     }`}
                   >
                     {formatTime(slot)}
@@ -676,34 +677,34 @@ export default function ReservationsScreen() {
           <Pressable
             accessibilityLabel={`Choose reservation time, currently ${formatTime(time)}`}
             accessibilityRole="button"
-            className="mb-3 h-12 flex-row items-center rounded-xl border border-[#E1E5DF] bg-white px-3.5"
+            className="mb-3 h-12 flex-row items-center rounded-xl border border-brand-green-border-light bg-white px-3.5"
             onPress={() => openPicker("time")}
           >
-            <Clock3 color="#1A6A3B" size={17} />
-            <Text className="ml-2.5 flex-1 text-sm font-semibold text-[#183B2A]">
+            <Clock3 color={colors["green-primary"]} size={17} />
+            <Text className="ml-2.5 flex-1 text-sm font-semibold text-brand-green-forest">
               {formatTime(time)}
             </Text>
-            <Text className="text-xs font-semibold text-[#728071]">Choose time</Text>
+            <Text className="text-xs font-semibold text-brand-neutral-text-muted">Choose time</Text>
           </Pressable>
         )}
         <View className="mb-3">
-          <Text className="mb-1.5 text-xs font-bold uppercase tracking-wide text-[#59645E]">
+          <Text className="mb-1.5 text-xs font-bold uppercase tracking-wide text-brand-neutral-text-secondary">
             Guests (1–20) *
           </Text>
-          <View className="h-12 flex-row items-center justify-between rounded-xl border border-[#E1E5DF] bg-white px-2">
+          <View className="h-12 flex-row items-center justify-between rounded-xl border border-brand-green-border-light bg-white px-2">
             <Pressable
               accessibilityLabel="Remove one guest"
               accessibilityRole="button"
-              className="h-9 w-9 items-center justify-center rounded-lg bg-[#F0EEE7]"
+              className="h-9 w-9 items-center justify-center rounded-lg bg-brand-surface-subtle"
               onPress={() =>
                 updateGuests(String(Math.max(1, (Number(guests) || 1) - 1)))
               }
             >
-              <Minus color="#344035" size={16} />
+              <Minus color={colors["neutral-text-body"]} size={16} />
             </Pressable>
             <TextInput
               accessibilityLabel="Number of guests"
-              className="h-10 w-20 py-0 text-center text-base font-extrabold text-[#183B2A]"
+              className="h-10 w-20 py-0 text-center text-base font-extrabold text-brand-green-forest"
               keyboardType="number-pad"
               maxLength={2}
               onChangeText={updateGuests}
@@ -713,12 +714,12 @@ export default function ReservationsScreen() {
             <Pressable
               accessibilityLabel="Add one guest"
               accessibilityRole="button"
-              className="h-9 w-9 items-center justify-center rounded-lg bg-[#1A6A3B]"
+              className="h-9 w-9 items-center justify-center rounded-lg bg-brand-green-primary"
               onPress={() =>
                 updateGuests(String(Math.min(20, (Number(guests) || 0) + 1)))
               }
             >
-              <Plus color="#FFFFFF" size={16} />
+              <Plus color={colors["white"]} size={16} />
             </Pressable>
           </View>
         </View>
@@ -733,16 +734,16 @@ export default function ReservationsScreen() {
         <Pressable
           accessibilityRole="button"
           className={`min-h-12 flex-row items-center justify-center rounded-xl ${
-            isLoadingTables ? "bg-[#72937B]" : "bg-[#183B2A] active:bg-[#14542E]"
+            isLoadingTables ? "bg-brand-green-muted-mid" : "bg-brand-green-forest active:bg-brand-green-action-hover"
           }`}
           disabled={isLoadingTables || !isSignedIn}
           onPress={() => void searchTables()}
         >
           {isLoadingTables ? (
-            <ActivityIndicator color="#FFFFFF" />
+            <ActivityIndicator color={colors["white"]} />
           ) : (
             <>
-              <RefreshCw color="#FFFFFF" size={16} />
+              <RefreshCw color={colors["white"]} size={16} />
               <Text className="ml-2 text-sm font-extrabold text-white">
                 Check available tables
               </Text>
@@ -752,7 +753,7 @@ export default function ReservationsScreen() {
       </View>
 
       {hasSearched ? (
-        <View className="mb-4 rounded-2xl border border-[#E1E5DF] bg-white p-4">
+        <View className="mb-4 rounded-2xl border border-brand-green-border-light bg-white p-4">
           <SectionHeading
             Icon={TableProperties}
             title="Available tables"
@@ -760,8 +761,8 @@ export default function ReservationsScreen() {
           />
           {isLoadingTables ? (
             <View className="items-center py-8">
-              <ActivityIndicator color="#1A6A3B" />
-              <Text className="mt-2 text-sm text-[#728071]">Checking table availability…</Text>
+              <ActivityIndicator color={colors["green-primary"]} />
+              <Text className="mt-2 text-sm text-brand-neutral-text-muted">Checking table availability…</Text>
             </View>
           ) : tables.length ? (
             tables.map((table) => {
@@ -773,13 +774,13 @@ export default function ReservationsScreen() {
                   accessibilityState={{ selected }}
                   className={`mb-3 flex-row items-center rounded-xl border p-3 ${
                     selected
-                      ? "border-[#1A6A3B] bg-[#F4F8F2]"
-                      : "border-[#E8EDE6] bg-[#FFFEFB]"
+                      ? "border-brand-green-primary bg-brand-green-surface"
+                      : "border-brand-green-soft bg-brand-surface-offwhite"
                   }`}
                   key={table.table_id}
                   onPress={() => setSelectedTableId(table.table_id)}
                 >
-                  <View className="h-16 w-16 items-center justify-center overflow-hidden rounded-xl bg-[#EAF2E8]">
+                  <View className="h-16 w-16 items-center justify-center overflow-hidden rounded-xl bg-brand-green-muted-surface">
                     {image ? (
                       <Image
                         accessibilityLabel={`Table ${table.table_number}`}
@@ -788,40 +789,40 @@ export default function ReservationsScreen() {
                         source={{ uri: image }}
                       />
                     ) : (
-                      <TableProperties color="#1A6A3B" size={25} />
+                      <TableProperties color={colors["green-primary"]} size={25} />
                     )}
                   </View>
                   <View className="ml-3 flex-1">
-                    <Text className="text-base font-extrabold text-[#183B2A]">
+                    <Text className="text-base font-extrabold text-brand-green-forest">
                       Table {table.table_number}
                     </Text>
                     <View className="mt-1 flex-row items-center">
-                      <Users color="#728071" size={14} />
-                      <Text className="ml-1.5 text-xs text-[#59645E]">
+                      <Users color={colors["neutral-text-muted"]} size={14} />
+                      <Text className="ml-1.5 text-xs text-brand-neutral-text-secondary">
                         Seats up to {table.no_of_seats}
                       </Text>
                     </View>
-                    <Text className="mt-1 text-[10px] font-semibold text-[#1A6A3B]">
+                    <Text className="mt-1 text-[10px] font-semibold text-brand-green-primary">
                       {selected ? "Selected for your reservation" : "Available"}
                     </Text>
                   </View>
                   <View
                     className={`h-6 w-6 items-center justify-center rounded-full border ${
-                      selected ? "border-[#1A6A3B] bg-[#1A6A3B]" : "border-[#D4DBD1]"
+                      selected ? "border-brand-green-primary bg-brand-green-primary" : "border-brand-green-soft-alt"
                     }`}
                   >
-                    {selected ? <CheckCircle2 color="#FFFFFF" size={16} /> : null}
+                    {selected ? <CheckCircle2 color={colors["white"]} size={16} /> : null}
                   </View>
                 </Pressable>
               );
             })
           ) : (
-            <View className="items-center rounded-xl border border-dashed border-[#DCE8D5] bg-[#FAFCF9] px-4 py-7">
-              <TableProperties color="#789078" size={28} />
-              <Text className="mt-3 text-base font-bold text-[#183B2A]">
+            <View className="items-center rounded-xl border border-dashed border-brand-green-soft bg-brand-green-surface px-4 py-7">
+              <TableProperties color={colors["green-muted-alt"]} size={28} />
+              <Text className="mt-3 text-base font-bold text-brand-green-forest">
                 No tables available
               </Text>
-              <Text className="mt-1 text-center text-xs leading-5 text-[#728071]">
+              <Text className="mt-1 text-center text-xs leading-5 text-brand-neutral-text-muted">
                 Try a different time or reduce the number of guests.
               </Text>
             </View>
@@ -831,16 +832,16 @@ export default function ReservationsScreen() {
               <Pressable
                 accessibilityRole="button"
                 className={`min-h-12 flex-row items-center justify-center rounded-xl ${
-                  isSubmitting ? "bg-[#72937B]" : "bg-[#1A6A3B] active:bg-[#14542E]"
+                  isSubmitting ? "bg-brand-green-muted-mid" : "bg-brand-green-primary active:bg-brand-green-action-hover"
                 }`}
                 disabled={isSubmitting}
                 onPress={() => void submitReservation()}
               >
                 {isSubmitting ? (
-                  <ActivityIndicator color="#FFFFFF" />
+                  <ActivityIndicator color={colors["white"]} />
                 ) : (
                   <>
-                    <CheckCircle2 color="#FFFFFF" size={17} />
+                    <CheckCircle2 color={colors["white"]} size={17} />
                     <Text className="ml-2 text-sm font-extrabold text-white">
                       Request Table {selectedTable.table_number}
                     </Text>
@@ -853,7 +854,7 @@ export default function ReservationsScreen() {
       ) : null}
 
       {isSignedIn ? (
-        <View className="rounded-2xl border border-[#E1E5DF] bg-white p-4">
+        <View className="rounded-2xl border border-brand-green-border-light bg-white p-4">
           <SectionHeading
             Icon={CalendarDays}
             title="My reservations"
@@ -867,12 +868,12 @@ export default function ReservationsScreen() {
               />
             ))
           ) : (
-            <View className="items-center rounded-xl border border-dashed border-[#DCE8D5] bg-[#FAFCF9] px-4 py-7">
-              <CalendarDays color="#789078" size={27} />
-              <Text className="mt-3 text-base font-bold text-[#183B2A]">
+            <View className="items-center rounded-xl border border-dashed border-brand-green-soft bg-brand-green-surface px-4 py-7">
+              <CalendarDays color={colors["green-muted-alt"]} size={27} />
+              <Text className="mt-3 text-base font-bold text-brand-green-forest">
                 No reservations yet
               </Text>
-              <Text className="mt-1 text-center text-xs leading-5 text-[#728071]">
+              <Text className="mt-1 text-center text-xs leading-5 text-brand-neutral-text-muted">
                 Once you request a table, its status will appear here.
               </Text>
             </View>
@@ -887,16 +888,16 @@ export default function ReservationsScreen() {
           visible
         >
           <View className="flex-1 justify-end bg-black/45">
-            <View className="rounded-t-3xl bg-[#FFFCF6] px-4 pb-8 pt-4">
+            <View className="rounded-t-3xl bg-brand-surface-modal px-4 pb-8 pt-4">
               <View className="mb-2 flex-row items-center justify-between">
                 <Pressable
                   accessibilityRole="button"
                   className="min-h-11 justify-center px-2"
                   onPress={() => setPickerMode(null)}
                 >
-                  <Text className="text-sm font-semibold text-[#728071]">Cancel</Text>
+                  <Text className="text-sm font-semibold text-brand-neutral-text-muted">Cancel</Text>
                 </Pressable>
-                <Text className="text-base font-extrabold text-[#183B2A]">
+                <Text className="text-base font-extrabold text-brand-green-forest">
                   {pickerMode === "date" ? "Select date" : "Select time"}
                 </Text>
                 <Pressable
@@ -904,11 +905,11 @@ export default function ReservationsScreen() {
                   className="min-h-11 justify-center px-2"
                   onPress={confirmIOSPicker}
                 >
-                  <Text className="text-sm font-extrabold text-[#1A6A3B]">Done</Text>
+                  <Text className="text-sm font-extrabold text-brand-green-primary">Done</Text>
                 </Pressable>
               </View>
               <DateTimePicker
-                accentColor="#1A6A3B"
+                accentColor={colors["green-primary"]}
                 display="spinner"
                 is24Hour
                 minuteInterval={5}
@@ -936,13 +937,13 @@ function SectionHeading({
   detail: string;
 }) {
   return (
-    <View className="mb-4 flex-row items-center border-b border-[#E8EDE6] pb-3">
-      <View className="mr-3 h-10 w-10 items-center justify-center rounded-xl bg-[#EFF5E9]">
-        <Icon color="#1A6A3B" size={19} />
+    <View className="mb-4 flex-row items-center border-b border-brand-green-soft pb-3">
+      <View className="mr-3 h-10 w-10 items-center justify-center rounded-xl bg-brand-green-surface">
+        <Icon color={colors["green-primary"]} size={19} />
       </View>
       <View className="flex-1">
-        <Text className="text-base font-extrabold text-[#183B2A]">{title}</Text>
-        <Text className="mt-0.5 text-xs leading-5 text-[#728071]">{detail}</Text>
+        <Text className="text-base font-extrabold text-brand-green-forest">{title}</Text>
+        <Text className="mt-0.5 text-xs leading-5 text-brand-neutral-text-muted">{detail}</Text>
       </View>
     </View>
   );
@@ -952,16 +953,16 @@ function ReservationCard({ reservation }: { reservation: Reservation }) {
   const status = getText(reservation, ["status"]) || "Pending";
   const statusStyle =
     status === "Confirmed"
-      ? "border-[#CFE3C4] bg-[#EAF4E4] text-[#075B2B]"
+      ? "border-brand-green-success-soft bg-brand-green-muted-surface text-brand-green-strong"
       : status === "Declined" || status === "Cancelled"
-        ? "border-[#F3C9C5] bg-[#FFF4F2] text-[#A33424]"
-        : "border-[#F1D889] bg-[#FFF6D8] text-[#A85B00]";
+        ? "border-brand-danger-border bg-brand-danger-surface text-brand-danger"
+        : "border-brand-gold-sand bg-brand-gold-light text-brand-gold-orange";
   return (
-    <View className="mb-3 rounded-xl border border-[#E8EDE6] bg-[#FFFEFB] p-3.5">
+    <View className="mb-3 rounded-xl border border-brand-green-soft bg-brand-surface-offwhite p-3.5">
       <View className="flex-row items-center justify-between">
         <View className="flex-row items-center">
-          <TableProperties color="#1A6A3B" size={17} />
-          <Text className="ml-2 text-sm font-extrabold text-[#183B2A]">
+          <TableProperties color={colors["green-primary"]} size={17} />
+          <Text className="ml-2 text-sm font-extrabold text-brand-green-forest">
             Table {getText(reservation, ["table_number"])}
           </Text>
         </View>
@@ -971,34 +972,34 @@ function ReservationCard({ reservation }: { reservation: Reservation }) {
       </View>
       <View className="mt-3 flex-row flex-wrap">
         <View className="mb-2 mr-4 flex-row items-center">
-          <CalendarDays color="#728071" size={14} />
-          <Text className="ml-1.5 text-xs text-[#59645E]">
+          <CalendarDays color={colors["neutral-text-muted"]} size={14} />
+          <Text className="ml-1.5 text-xs text-brand-neutral-text-secondary">
             {formatDate(reservation.reservation_date)}
           </Text>
         </View>
         <View className="mb-2 mr-4 flex-row items-center">
-          <Clock3 color="#728071" size={14} />
-          <Text className="ml-1.5 text-xs text-[#59645E]">
+          <Clock3 color={colors["neutral-text-muted"]} size={14} />
+          <Text className="ml-1.5 text-xs text-brand-neutral-text-secondary">
             {formatTime(reservation.start_time)}
             {reservation.end_time ? ` – ${formatTime(reservation.end_time)}` : ""}
           </Text>
         </View>
         <View className="mb-2 flex-row items-center">
-          <Users color="#728071" size={14} />
-          <Text className="ml-1.5 text-xs text-[#59645E]">
+          <Users color={colors["neutral-text-muted"]} size={14} />
+          <Text className="ml-1.5 text-xs text-brand-neutral-text-secondary">
             {getText(reservation, ["guests", "guest_count"])} guests
           </Text>
         </View>
       </View>
       {reservation.notes ? (
-        <View className="mt-1 flex-row border-t border-[#EEE8DD] pt-2">
-          <MapPin color="#728071" size={14} />
-          <Text className="ml-1.5 flex-1 text-xs leading-5 text-[#59645E]">
+        <View className="mt-1 flex-row border-t border-brand-neutral-border pt-2">
+          <MapPin color={colors["neutral-text-muted"]} size={14} />
+          <Text className="ml-1.5 flex-1 text-xs leading-5 text-brand-neutral-text-secondary">
             {String(reservation.notes)}
           </Text>
         </View>
       ) : null}
-      <Text className="mt-2 border-t border-[#EEE8DD] pt-2 font-mono text-[10px] text-[#879087]">
+      <Text className="mt-2 border-t border-brand-neutral-border pt-2 font-mono text-[10px] text-brand-neutral-text-disabled">
         Ref: {reservation.reservation_id}
       </Text>
     </View>

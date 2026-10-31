@@ -1,3 +1,4 @@
+import colors from "../../theme/colors.json";
 import { router } from "expo-router";
 import {
     Minus,
@@ -83,13 +84,13 @@ export default function CartScreen() {
 
   return (
     <ScrollView
-      className="flex-1 bg-[#F3F4F3]"
+      className="flex-1 bg-brand-surface-app"
       showsVerticalScrollIndicator={false}
       contentContainerStyle={{ padding: 24, paddingBottom: 120 }}
     >
       <View className="flex-row items-center">
-        <ShoppingCart color="#1A6A3B" size={22} />
-        <Text className="ml-2 text-lg font-extrabold text-[#17251E]">
+        <ShoppingCart color={colors["green-primary"]} size={22} />
+        <Text className="ml-2 text-lg font-extrabold text-brand-neutral-text-primary">
           Your cart
         </Text>
       </View>
@@ -97,11 +98,11 @@ export default function CartScreen() {
       {items.length > 0 && isHydrated ? (
         <Pressable
           accessibilityRole="button"
-          className="mt-4 self-end flex-row items-center rounded-xl border border-[#E7E0D8] bg-white px-3 py-2 active:bg-[#F5EFE5]"
+          className="mt-4 self-end flex-row items-center rounded-xl border border-brand-neutral-border-warm bg-white px-3 py-2 active:bg-brand-surface-cream"
           onPress={confirmClearCart}
         >
-          <Trash2 color="#B83E2E" size={14} />
-          <Text className="ml-2 text-xs font-bold text-[#B83E2E]">
+          <Trash2 color={colors["danger-strong"]} size={14} />
+          <Text className="ml-2 text-xs font-bold text-brand-danger-strong">
             Clear cart
           </Text>
         </Pressable>
@@ -111,7 +112,7 @@ export default function CartScreen() {
         <View className="mt-6 h-24 rounded-2xl bg-slate-200" />
       ) : cartError ? null : items.length === 0 ? (
         <View className="mt-6 items-center rounded-2xl border border-dashed border-slate-300 bg-white px-5 py-12">
-          <UtensilsCrossed color="#94A3B8" size={32} />
+          <UtensilsCrossed color={colors["neutral-placeholder"]} size={32} />
           <Text className="mt-3 text-center text-base font-bold text-slate-700">
             Your cart is empty
           </Text>
@@ -139,14 +140,14 @@ export default function CartScreen() {
             </View>
             <View className="mt-3 border-t border-slate-100 pt-3">
               <View className="flex-row justify-between">
-                <Text className="text-base font-extrabold text-[#17251E]">Total</Text>
-                <Text className="text-base font-extrabold text-[#1A6A3B]">
+                <Text className="text-base font-extrabold text-brand-neutral-text-primary">Total</Text>
+                <Text className="text-base font-extrabold text-brand-green-primary">
                   ₹{total.toFixed(2)}
                 </Text>
               </View>
               <Pressable
                 accessibilityRole="button"
-                className="mt-4 min-h-12 items-center justify-center rounded-xl bg-[#1A6A3B] active:bg-[#14542E]"
+                className="mt-4 min-h-12 items-center justify-center rounded-xl bg-brand-green-primary active:bg-brand-green-action-hover"
                 onPress={() => router.push("/UsersTab/checkout")}
               >
                 <Text className="text-sm font-extrabold text-white">
@@ -203,7 +204,7 @@ function CartRow({
 
   return (
     <View className="mt-4 flex-row rounded-2xl border border-slate-200 bg-white p-3">
-      <View className="h-20 w-20 items-center justify-center overflow-hidden rounded-xl bg-[#F5EFE5]">
+      <View className="h-20 w-20 items-center justify-center overflow-hidden rounded-xl bg-brand-surface-cream">
         {image ? (
           <Image
             accessible
@@ -213,7 +214,7 @@ function CartRow({
             source={{ uri: image }}
           />
         ) : (
-          <UtensilsCrossed color="#A05C2A" size={24} />
+          <UtensilsCrossed color={colors["gold-copper"]} size={24} />
         )}
       </View>
 
@@ -221,7 +222,7 @@ function CartRow({
         <View className="flex-row items-start justify-between">
           <View className="mr-2 flex-1">
             <Text
-              className="text-sm font-extrabold text-[#17251E]"
+              className="text-sm font-extrabold text-brand-neutral-text-primary"
               numberOfLines={1}
             >
               {getFoodName(item.food)}
@@ -239,7 +240,7 @@ function CartRow({
                 {selectedOptions.map((option) => option.name).join(", ")}
               </Text>
             )}
-            <Text className="mt-1 text-xs font-bold text-[#1A6A3B]">
+            <Text className="mt-1 text-xs font-bold text-brand-green-primary">
               ₹{item.unitPrice.toFixed(2)} each
             </Text>
           </View>
@@ -249,7 +250,7 @@ function CartRow({
             className="h-8 w-8 items-center justify-center rounded-full active:bg-rose-50"
             onPress={onRemove}
           >
-            <Trash2 color="#B83E2E" size={15} />
+            <Trash2 color={colors["danger-strong"]} size={15} />
           </Pressable>
         </View>
 
@@ -261,7 +262,7 @@ function CartRow({
               className="h-8 w-9 items-center justify-center"
               onPress={() => onQuantityChange(item.quantity - 1)}
             >
-              <Minus color="#334155" size={15} />
+              <Minus color={colors["neutral-slate-dark"]} size={15} />
             </Pressable>
             <Text className="min-w-6 text-center text-sm font-bold text-slate-800">
               {item.quantity}
@@ -272,10 +273,10 @@ function CartRow({
               className="h-8 w-9 items-center justify-center"
               onPress={() => onQuantityChange(item.quantity + 1)}
             >
-              <Plus color="#334155" size={15} />
+              <Plus color={colors["neutral-slate-dark"]} size={15} />
             </Pressable>
           </View>
-          <Text className="text-sm font-extrabold text-[#17251E]">
+          <Text className="text-sm font-extrabold text-brand-neutral-text-primary">
             ₹{(item.unitPrice * item.quantity).toFixed(2)}
           </Text>
         </View>

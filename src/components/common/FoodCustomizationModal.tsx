@@ -1,3 +1,4 @@
+import colors from "../../theme/colors.json";
 import { useEffect, useMemo, useState } from "react";
 import {
   KeyboardAvoidingView,
@@ -147,10 +148,10 @@ export default function FoodCustomizationModal({
         >
           <View className="flex-row items-center justify-between border-b border-slate-100 px-5 py-4">
             <View className="flex-1 pr-4">
-              <Text className="text-lg font-extrabold text-[#17251E]" numberOfLines={1}>
+              <Text className="text-lg font-extrabold text-brand-neutral-text-primary" numberOfLines={1}>
                 {food ? getFoodName(food) : ""}
               </Text>
-              <Text className="mt-1 text-sm font-bold text-[#1A6A3B]">
+              <Text className="mt-1 text-sm font-bold text-brand-green-primary">
                 ₹{unitPrice.toFixed(2)} each
               </Text>
             </View>
@@ -160,7 +161,7 @@ export default function FoodCustomizationModal({
               className="h-10 w-10 items-center justify-center rounded-full bg-slate-100"
               onPress={onClose}
             >
-              <X color="#334155" size={20} />
+              <X color={colors["neutral-slate-dark"]} size={20} />
             </Pressable>
           </View>
 
@@ -173,7 +174,7 @@ export default function FoodCustomizationModal({
           >
             {addons.length > 0 && (
               <View className="mb-5">
-                <Text className="mb-2 text-base font-extrabold text-[#17251E]">Add-ons</Text>
+                <Text className="mb-2 text-base font-extrabold text-brand-neutral-text-primary">Add-ons</Text>
                 {addons.map((option) => {
                   const selected = selectedAddons.some((item) => item.id === option.id);
                   return (
@@ -187,10 +188,10 @@ export default function FoodCustomizationModal({
                       <Text className="flex-1 text-sm font-semibold text-slate-700">
                         {option.name}
                       </Text>
-                      <Text className="ml-3 text-sm font-bold text-[#1A6A3B]">
+                      <Text className="ml-3 text-sm font-bold text-brand-green-primary">
                         {option.price > 0 ? `+₹${option.price.toFixed(2)}` : "Included"}
                       </Text>
-                      <View className={`ml-3 h-5 w-5 rounded border ${selected ? "border-[#1A6A3B] bg-[#1A6A3B]" : "border-slate-300"}`} />
+                      <View className={`ml-3 h-5 w-5 rounded border ${selected ? "border-brand-green-primary bg-brand-green-primary" : "border-slate-300"}`} />
                     </Pressable>
                   );
                 })}
@@ -199,7 +200,7 @@ export default function FoodCustomizationModal({
 
             {customizationGroups.map((group) => (
               <View key={group.id} className="mb-5">
-                <Text className="mb-2 text-base font-extrabold text-[#17251E]">
+                <Text className="mb-2 text-base font-extrabold text-brand-neutral-text-primary">
                   {group.name}
                   {group.required && <Text className="text-rose-600"> *</Text>}
                 </Text>
@@ -218,11 +219,11 @@ export default function FoodCustomizationModal({
                       <Text className="flex-1 text-sm font-semibold text-slate-700">
                         {option.name}
                       </Text>
-                      <Text className="ml-3 text-sm font-bold text-[#1A6A3B]">
+                      <Text className="ml-3 text-sm font-bold text-brand-green-primary">
                         {option.price > 0 ? `+₹${option.price.toFixed(2)}` : "Included"}
                       </Text>
-                      <View className={`ml-3 h-5 w-5 items-center justify-center rounded-full border ${selected ? "border-[#1A6A3B]" : "border-slate-300"}`}>
-                        {selected && <View className="h-2.5 w-2.5 rounded-full bg-[#1A6A3B]" />}
+                      <View className={`ml-3 h-5 w-5 items-center justify-center rounded-full border ${selected ? "border-brand-green-primary" : "border-slate-300"}`}>
+                        {selected && <View className="h-2.5 w-2.5 rounded-full bg-brand-green-primary" />}
                       </View>
                     </Pressable>
                   );
@@ -240,7 +241,7 @@ export default function FoodCustomizationModal({
                 multiline
                 onChangeText={setAddonRequest}
                 placeholder="Enter extra add-ons, one per line (e.g. Extra sauce)"
-                placeholderTextColor="#94A3B8"
+                placeholderTextColor={colors["neutral-placeholder"]}
                 textAlignVertical="top"
                 value={addonRequest}
               />
@@ -259,7 +260,7 @@ export default function FoodCustomizationModal({
                 multiline
                 onChangeText={setCustomizationRequest}
                 placeholder="e.g. Less oil, extra spicy, no onions"
-                placeholderTextColor="#94A3B8"
+                placeholderTextColor={colors["neutral-placeholder"]}
                 textAlignVertical="top"
                 value={customizationRequest}
               />
@@ -280,7 +281,7 @@ export default function FoodCustomizationModal({
                 className="h-12 w-11 items-center justify-center"
                 onPress={() => setQuantity((current) => Math.max(1, current - 1))}
               >
-                <Minus color="#334155" size={17} />
+                <Minus color={colors["neutral-slate-dark"]} size={17} />
               </Pressable>
               <Text className="min-w-7 text-center text-base font-bold text-slate-800">
                 {quantity}
@@ -291,12 +292,12 @@ export default function FoodCustomizationModal({
                 className="h-12 w-11 items-center justify-center"
                 onPress={() => setQuantity((current) => current + 1)}
               >
-                <Plus color="#334155" size={17} />
+                <Plus color={colors["neutral-slate-dark"]} size={17} />
               </Pressable>
             </View>
             <Pressable
               accessibilityRole="button"
-              className={`h-12 flex-1 items-center justify-center rounded-xl ${saving ? "bg-slate-400" : "bg-[#1A6A3B]"}`}
+              className={`h-12 flex-1 items-center justify-center rounded-xl ${saving ? "bg-slate-400" : "bg-brand-green-primary"}`}
               disabled={saving}
               onPress={() => void handleAdd()}
             >

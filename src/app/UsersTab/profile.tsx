@@ -1,3 +1,4 @@
+import colors from "../../theme/colors.json";
 import { router } from "expo-router";
 import type { LucideIcon } from "lucide-react-native";
 import {
@@ -248,19 +249,19 @@ function InputField({
 }) {
   return (
     <View className="mb-4">
-      <Text className="mb-1.5 text-xs font-bold uppercase tracking-wide text-[#59645E]">
+      <Text className="mb-1.5 text-xs font-bold uppercase tracking-wide text-brand-neutral-text-secondary">
         {label}
       </Text>
-      <View className="min-h-12 flex-row items-center rounded-xl border border-[#E1E5DF] bg-[#F8FAF7] px-3.5">
+      <View className="min-h-12 flex-row items-center rounded-xl border border-brand-green-border-light bg-brand-green-surface px-3.5">
         <TextInput
           autoCapitalize={keyboardType === "email-address" ? "none" : "sentences"}
-          className="min-h-12 flex-1 py-2 text-sm text-[#183B2A]"
+          className="min-h-12 flex-1 py-2 text-sm text-brand-green-forest"
           editable={Boolean(onChangeText)}
           keyboardType={keyboardType}
           maxLength={maxLength}
           onChangeText={onChangeText}
           placeholder={placeholder}
-          placeholderTextColor="#879087"
+          placeholderTextColor={colors["neutral-text-disabled"]}
           secureTextEntry={secureTextEntry}
           value={value}
         />
@@ -280,13 +281,13 @@ function SectionHeading({
   detail: string;
 }) {
   return (
-    <View className="mb-5 flex-row items-center border-b border-[#E8EDE6] pb-4">
-      <View className="mr-3 h-11 w-11 items-center justify-center rounded-xl bg-[#EFF5E9]">
-        <Icon color="#1A6A3B" size={21} />
+    <View className="mb-5 flex-row items-center border-b border-brand-green-soft pb-4">
+      <View className="mr-3 h-11 w-11 items-center justify-center rounded-xl bg-brand-green-surface">
+        <Icon color={colors["green-primary"]} size={21} />
       </View>
       <View className="flex-1">
-        <Text className="text-lg font-extrabold text-[#183B2A]">{title}</Text>
-        <Text className="mt-0.5 text-xs leading-5 text-[#728071]">{detail}</Text>
+        <Text className="text-lg font-extrabold text-brand-green-forest">{title}</Text>
+        <Text className="mt-0.5 text-xs leading-5 text-brand-neutral-text-muted">{detail}</Text>
       </View>
     </View>
   );
@@ -300,9 +301,9 @@ function Notice({
   tone?: "error" | "success" | "info";
 }) {
   const styles = {
-    error: "border-[#F3C9C5] bg-[#FFF4F2] text-[#A33424]",
-    success: "border-[#CFE3C4] bg-[#EAF4E4] text-[#075B2B]",
-    info: "border-[#D9E6D9] bg-[#F4F8F2] text-[#344035]",
+    error: "border-brand-danger-border bg-brand-danger-surface text-brand-danger",
+    success: "border-brand-green-success-soft bg-brand-green-muted-surface text-brand-green-strong",
+    info: "border-brand-green-border bg-brand-green-surface text-brand-neutral-text-body",
   } as const;
   return (
     <View className={`mb-4 rounded-xl border p-3 ${styles[tone]}`}>
@@ -329,11 +330,11 @@ function ActionButton({
   destructive?: boolean;
 }) {
   const className = destructive
-    ? "border border-[#F3C9C5] bg-white active:bg-[#FFF4F2]"
+    ? "border border-brand-danger-border bg-white active:bg-brand-danger-surface"
     : secondary
-      ? "border border-[#D9E6D9] bg-white active:bg-[#F4F8F2]"
-      : "bg-[#183B2A] active:bg-[#14542E]";
-  const textClass = destructive ? "text-[#A33424]" : secondary ? "text-[#1A6A3B]" : "text-white";
+      ? "border border-brand-green-border bg-white active:bg-brand-green-surface"
+      : "bg-brand-green-forest active:bg-brand-green-action-hover";
+  const textClass = destructive ? "text-brand-danger" : secondary ? "text-brand-green-primary" : "text-white";
   return (
     <Pressable
       accessibilityRole="button"
@@ -342,10 +343,10 @@ function ActionButton({
       onPress={onPress}
     >
       {busy ? (
-        <ActivityIndicator color={destructive || secondary ? "#1A6A3B" : "#FFFFFF"} />
+        <ActivityIndicator color={destructive || secondary ? colors["green-primary"] : colors["white"]} />
       ) : (
         <>
-          {Icon ? <Icon color={destructive || secondary ? "#1A6A3B" : "#FFFFFF"} size={17} /> : null}
+          {Icon ? <Icon color={destructive || secondary ? colors["green-primary"] : colors["white"]} size={17} /> : null}
           <Text className={`text-sm font-bold ${Icon ? "ml-2" : ""} ${textClass}`}>
             {label}
           </Text>
@@ -777,36 +778,36 @@ export default function ProfileScreen() {
   const activeTabConfig = ACCOUNT_TABS.find((tab) => tab.id === activeTab) ?? ACCOUNT_TABS[0];
 
   return (
-    <View className="flex-1 bg-[#F3F4F3]">
+    <View className="flex-1 bg-brand-surface-app">
       <ScrollView
         className="flex-1"
         contentContainerStyle={{ padding: 16, paddingBottom: 36 }}
         keyboardShouldPersistTaps="handled"
         refreshControl={
           <RefreshControl
-            colors={["#1A6A3B"]}
+            colors={[colors["green-primary"]]}
             onRefresh={() => void refresh()}
             refreshing={isRefreshing}
-            tintColor="#1A6A3B"
+            tintColor={colors["green-primary"]}
           />
         }
         showsVerticalScrollIndicator={false}
       >
-        <View className="mb-4 overflow-hidden rounded-3xl bg-[#183B2A] p-5">
+        <View className="mb-4 overflow-hidden rounded-3xl bg-brand-green-forest p-5">
           <View className="flex-row items-center">
             <View className="mr-3 h-14 w-14 items-center justify-center rounded-2xl bg-white/10">
-              <Text className="text-2xl font-extrabold text-[#F7BD48]">
+              <Text className="text-2xl font-extrabold text-brand-gold-warm">
                 {displayName.charAt(0).toUpperCase()}
               </Text>
             </View>
             <View className="flex-1">
-              <Text className="text-xs font-bold uppercase tracking-[2px] text-[#F7BD48]">
+              <Text className="text-xs font-bold uppercase tracking-[2px] text-brand-gold-warm">
                 Your account
               </Text>
               <Text className="mt-1 text-xl font-extrabold text-white" numberOfLines={1}>
                 {displayName}
               </Text>
-              <Text className="mt-0.5 text-xs text-[#D8E4D7]" numberOfLines={1}>
+              <Text className="mt-0.5 text-xs text-brand-green-soft" numberOfLines={1}>
                 {profile.email || "Manage your foodie details"}
               </Text>
             </View>
@@ -816,7 +817,7 @@ export default function ProfileScreen() {
               className="h-10 w-10 items-center justify-center rounded-full bg-white/10"
               onPress={() => confirmLogout(showAlert)}
             >
-              <LogOut color="#FFE2D8" size={18} />
+              <LogOut color={colors["danger-pale-alt"]} size={18} />
             </Pressable>
           </View>
           <View className="mt-5 flex-row gap-2">
@@ -842,8 +843,8 @@ export default function ProfileScreen() {
                 accessibilityState={{ selected: active }}
                 className={`min-h-11 flex-row items-center rounded-xl border px-3.5 ${
                   active
-                    ? "border-[#183B2A] bg-[#183B2A]"
-                    : "border-[#E1E5DF] bg-white"
+                    ? "border-brand-green-forest bg-brand-green-forest"
+                    : "border-brand-green-border-light bg-white"
                 }`}
                 key={id}
                 onPress={() => {
@@ -852,10 +853,10 @@ export default function ProfileScreen() {
                   setSuccessMessage("");
                 }}
               >
-                <Icon color={active ? "#FFFFFF" : "#1A6A3B"} size={16} />
+                <Icon color={active ? colors["white"] : colors["green-primary"]} size={16} />
                 <Text
                   className={`ml-2 text-xs font-bold ${
-                    active ? "text-white" : "text-[#344035]"
+                    active ? "text-white" : "text-brand-neutral-text-body"
                   }`}
                 >
                   {label}
@@ -865,7 +866,7 @@ export default function ProfileScreen() {
           })}
         </ScrollView>
 
-        <View className="rounded-2xl border border-[#E1E5DF] bg-white p-4">
+        <View className="rounded-2xl border border-brand-green-border-light bg-white p-4">
           <SectionHeading
             Icon={activeTabConfig.Icon}
             title={activeTabConfig.label}
@@ -875,13 +876,13 @@ export default function ProfileScreen() {
           {successMessage ? <Notice message={successMessage} tone="success" /> : null}
           {isLoading ? (
             <View className="items-center py-12">
-              <ActivityIndicator color="#1A6A3B" size="large" />
-              <Text className="mt-3 text-sm text-[#728071]">Loading your account…</Text>
+              <ActivityIndicator color={colors["green-primary"]} size="large" />
+              <Text className="mt-3 text-sm text-brand-neutral-text-muted">Loading your account…</Text>
             </View>
           ) : !account ? (
             <View className="items-center py-5">
-              <ShieldCheck color="#1A6A3B" size={34} />
-              <Text className="mt-3 text-center text-sm leading-5 text-[#59645E]">
+              <ShieldCheck color={colors["green-primary"]} size={34} />
+              <Text className="mt-3 text-center text-sm leading-5 text-brand-neutral-text-secondary">
                 Sign in to view and update your account details.
               </Text>
               <View className="mt-4 w-full">
@@ -917,7 +918,7 @@ export default function ProfileScreen() {
                     label="Email address"
                     value={profile.email}
                   />
-                  <Text className="-mt-2 mb-4 text-xs leading-5 text-[#879087]">
+                  <Text className="-mt-2 mb-4 text-xs leading-5 text-brand-neutral-text-disabled">
                     Your email is linked to your sign-in and cannot be changed here.
                   </Text>
                   <ActionButton
@@ -934,26 +935,26 @@ export default function ProfileScreen() {
                   {addresses.length ? (
                     addresses.map((address, index) => (
                       <View
-                        className="mb-3 rounded-xl border border-[#E8EDE6] bg-[#FFFEFB] p-3.5"
+                        className="mb-3 rounded-xl border border-brand-green-soft bg-brand-surface-offwhite p-3.5"
                         key={String(address.id ?? `${address.address_line}-${index}`)}
                       >
                         <View className="flex-row items-start">
-                          <View className="mr-3 h-10 w-10 items-center justify-center rounded-xl bg-[#EAF2E8]">
-                            <MapPin color="#1A6A3B" size={19} />
+                          <View className="mr-3 h-10 w-10 items-center justify-center rounded-xl bg-brand-green-muted-surface">
+                            <MapPin color={colors["green-primary"]} size={19} />
                           </View>
                           <View className="flex-1">
-                            <Text className="text-[10px] font-extrabold uppercase tracking-wide text-[#728071]">
+                            <Text className="text-[10px] font-extrabold uppercase tracking-wide text-brand-neutral-text-muted">
                               {index === 0 ? "Default address" : "Saved address"}
                             </Text>
-                            <Text className="mt-1 text-sm font-bold text-[#183B2A]">
+                            <Text className="mt-1 text-sm font-bold text-brand-green-forest">
                               {profile.username || displayName}
                             </Text>
                             {profile.mobile_number ? (
-                              <Text className="mt-0.5 text-xs text-[#59645E]">
+                              <Text className="mt-0.5 text-xs text-brand-neutral-text-secondary">
                                 {profile.mobile_number}
                               </Text>
                             ) : null}
-                            <Text className="mt-2 text-xs leading-5 text-[#59645E]">
+                            <Text className="mt-2 text-xs leading-5 text-brand-neutral-text-secondary">
                               {[address.address_line, address.area_locality]
                                 .filter(Boolean)
                                 .join(", ")}
@@ -962,7 +963,7 @@ export default function ProfileScreen() {
                               {address.pincode ? ` - ${address.pincode}` : ""}
                             </Text>
                             {address.landmark ? (
-                              <Text className="mt-1 text-xs font-semibold text-[#1A6A3B]">
+                              <Text className="mt-1 text-xs font-semibold text-brand-green-primary">
                                 Landmark: {address.landmark}
                               </Text>
                             ) : null}
@@ -971,20 +972,20 @@ export default function ProfileScreen() {
                         <View className="mt-3 flex-row gap-2">
                           <Pressable
                             accessibilityRole="button"
-                            className="min-h-10 flex-1 flex-row items-center justify-center rounded-lg border border-[#D9E6D9] bg-white"
+                            className="min-h-10 flex-1 flex-row items-center justify-center rounded-lg border border-brand-green-border bg-white"
                             onPress={() => startAddressEdit(address)}
                           >
-                            <Pencil color="#1A6A3B" size={15} />
-                            <Text className="ml-1.5 text-xs font-bold text-[#1A6A3B]">Edit</Text>
+                            <Pencil color={colors["green-primary"]} size={15} />
+                            <Text className="ml-1.5 text-xs font-bold text-brand-green-primary">Edit</Text>
                           </Pressable>
                           <Pressable
                             accessibilityRole="button"
-                            className="min-h-10 flex-1 flex-row items-center justify-center rounded-lg border border-[#F3C9C5] bg-white"
+                            className="min-h-10 flex-1 flex-row items-center justify-center rounded-lg border border-brand-danger-border bg-white"
                             disabled={isSaving}
                             onPress={() => deleteAddress(address)}
                           >
-                            <Trash2 color="#A33424" size={15} />
-                            <Text className="ml-1.5 text-xs font-bold text-[#A33424]">Delete</Text>
+                            <Trash2 color={colors["danger"]} size={15} />
+                            <Text className="ml-1.5 text-xs font-bold text-brand-danger">Delete</Text>
                           </Pressable>
                         </View>
                       </View>
@@ -996,8 +997,8 @@ export default function ProfileScreen() {
                       detail="Add an address to make your next delivery checkout faster."
                     />
                   )}
-                  <View className="mt-2 rounded-xl border border-[#E8EDE6] bg-[#F8FAF7] p-3.5">
-                    <Text className="mb-3 text-sm font-extrabold text-[#183B2A]">
+                  <View className="mt-2 rounded-xl border border-brand-green-soft bg-brand-green-surface p-3.5">
+                    <Text className="mb-3 text-sm font-extrabold text-brand-green-forest">
                       {editingAddressId ? "Edit address" : "Add a delivery address"}
                     </Text>
                     <InputField
@@ -1071,7 +1072,7 @@ export default function ProfileScreen() {
                         className="mt-3 min-h-10 items-center justify-center"
                         onPress={cancelAddressEdit}
                       >
-                        <Text className="text-sm font-semibold text-[#728071]">Cancel editing</Text>
+                        <Text className="text-sm font-semibold text-brand-neutral-text-muted">Cancel editing</Text>
                       </Pressable>
                     ) : null}
                   </View>
@@ -1080,16 +1081,16 @@ export default function ProfileScreen() {
 
               {activeTab === "orders" ? (
                 <View>
-                  <View className="mb-4 flex-row items-center justify-between rounded-xl bg-[#F4F8F2] p-3.5">
+                  <View className="mb-4 flex-row items-center justify-between rounded-xl bg-brand-green-surface p-3.5">
                     <View className="flex-1 pr-2">
-                      <Text className="text-sm font-extrabold text-[#183B2A]">
+                      <Text className="text-sm font-extrabold text-brand-green-forest">
                         {orders.length} {orders.length === 1 ? "order" : "orders"}
                       </Text>
-                      <Text className="mt-1 text-xs text-[#728071]">
+                      <Text className="mt-1 text-xs text-brand-neutral-text-muted">
                         Track meals, payments, and delivery updates.
                       </Text>
                     </View>
-                    <Package color="#1A6A3B" size={22} />
+                    <Package color={colors["green-primary"]} size={22} />
                   </View>
                   <ScrollView
                     className="mb-3 max-h-12"
@@ -1111,15 +1112,15 @@ export default function ProfileScreen() {
                           accessibilityState={{ selected }}
                           className={`rounded-full border px-3 py-2 ${
                             selected
-                              ? "border-[#1A6A3B] bg-[#1A6A3B]"
-                              : "border-[#E1E5DF] bg-white"
+                              ? "border-brand-green-primary bg-brand-green-primary"
+                              : "border-brand-green-border-light bg-white"
                           }`}
                           key={filter}
                           onPress={() => setOrderStatusFilter(filter)}
                         >
                           <Text
                             className={`text-[10px] font-bold ${
-                              selected ? "text-white" : "text-[#344035]"
+                              selected ? "text-white" : "text-brand-neutral-text-body"
                             }`}
                           >
                             {filter} ({count})
@@ -1130,22 +1131,22 @@ export default function ProfileScreen() {
                   </ScrollView>
                   {filteredOrders.slice(0, 4).map((order) => (
                     <View
-                      className="mb-2 flex-row items-center rounded-xl border border-[#E8EDE6] bg-[#FFFEFB] p-3"
+                      className="mb-2 flex-row items-center rounded-xl border border-brand-green-soft bg-brand-surface-offwhite p-3"
                       key={order.order_id}
                     >
-                      <View className="mr-3 h-10 w-10 items-center justify-center rounded-xl bg-[#EAF2E8]">
-                        <Package color="#1A6A3B" size={18} />
+                      <View className="mr-3 h-10 w-10 items-center justify-center rounded-xl bg-brand-green-muted-surface">
+                        <Package color={colors["green-primary"]} size={18} />
                       </View>
                       <View className="flex-1">
-                        <Text className="text-sm font-bold text-[#183B2A]">
+                        <Text className="text-sm font-bold text-brand-green-forest">
                           #{order.order_id}
                         </Text>
-                        <Text className="mt-0.5 text-xs text-[#728071]">
+                        <Text className="mt-0.5 text-xs text-brand-neutral-text-muted">
                           {order.item_count} {order.item_count === 1 ? "item" : "items"} ·{" "}
                           {formatDate(order.created_at ?? order.order_date)}
                         </Text>
                       </View>
-                      <Text className="rounded-full bg-[#F4F8F2] px-2.5 py-1 text-[10px] font-bold text-[#1A6A3B]">
+                      <Text className="rounded-full bg-brand-green-surface px-2.5 py-1 text-[10px] font-bold text-brand-green-primary">
                         {getOrderStatusGroup(order.order_status)}
                       </Text>
                     </View>
@@ -1175,15 +1176,15 @@ export default function ProfileScreen() {
               {activeTab === "reservations" ? (
                 <View>
                   <View className="mb-4 flex-row items-center justify-between">
-                    <Text className="flex-1 pr-2 text-xs leading-5 text-[#728071]">
+                    <Text className="flex-1 pr-2 text-xs leading-5 text-brand-neutral-text-muted">
                       Table bookings associated with your account.
                     </Text>
                     <Pressable
                       accessibilityRole="button"
-                      className="flex-row items-center rounded-lg bg-[#183B2A] px-3 py-2.5"
+                      className="flex-row items-center rounded-lg bg-brand-green-forest px-3 py-2.5"
                       onPress={() => router.push("/UsersTab/reservations")}
                     >
-                      <Plus color="#FFFFFF" size={14} />
+                      <Plus color={colors["white"]} size={14} />
                       <Text className="ml-1 text-[10px] font-bold text-white">
                         Book table
                       </Text>
@@ -1192,14 +1193,14 @@ export default function ProfileScreen() {
                   {reservations.length ? (
                     reservations.map((reservation) => (
                       <View
-                        className="mb-3 rounded-xl border border-[#E8EDE6] bg-[#FFFEFB] p-3.5"
+                        className="mb-3 rounded-xl border border-brand-green-soft bg-brand-surface-offwhite p-3.5"
                         key={reservation.reservation_id}
                       >
                         <View className="flex-row items-center justify-between">
-                          <Text className="text-base font-extrabold text-[#183B2A]">
+                          <Text className="text-base font-extrabold text-brand-green-forest">
                             {text(reservation, ["table_number"]) || "Table reservation"}
                           </Text>
-                          <Text className="rounded-full border border-[#F1D889] bg-[#FFF6D8] px-2.5 py-1 text-[10px] font-bold text-[#A85B00]">
+                          <Text className="rounded-full border border-brand-gold-sand bg-brand-gold-light px-2.5 py-1 text-[10px] font-bold text-brand-gold-orange">
                             {text(reservation, ["status"]) || "Pending"}
                           </Text>
                         </View>
@@ -1222,11 +1223,11 @@ export default function ProfileScreen() {
                           />
                         </View>
                         {reservation.notes ? (
-                          <Text className="mt-2 text-xs leading-5 text-[#59645E]">
+                          <Text className="mt-2 text-xs leading-5 text-brand-neutral-text-secondary">
                             Special request: {String(reservation.notes)}
                           </Text>
                         ) : null}
-                        <Text className="mt-3 border-t border-[#EEE8DD] pt-2 font-mono text-[10px] text-[#879087]">
+                        <Text className="mt-3 border-t border-brand-neutral-border pt-2 font-mono text-[10px] text-brand-neutral-text-disabled">
                           Booking reference: {reservation.reservation_id}
                         </Text>
                       </View>
@@ -1251,15 +1252,15 @@ export default function ProfileScreen() {
               {activeTab === "event-orders" ? (
                 <View>
                   <View className="mb-4 flex-row items-center justify-between">
-                    <Text className="flex-1 pr-2 text-xs leading-5 text-[#728071]">
+                    <Text className="flex-1 pr-2 text-xs leading-5 text-brand-neutral-text-muted">
                       Track catering requests, event details, and quotations.
                     </Text>
                     <Pressable
                       accessibilityRole="button"
-                      className="flex-row items-center rounded-lg bg-[#183B2A] px-3 py-2.5"
+                      className="flex-row items-center rounded-lg bg-brand-green-forest px-3 py-2.5"
                       onPress={() => router.push("/UsersTab/event-orders")}
                     >
-                      <Plus color="#FFFFFF" size={14} />
+                      <Plus color={colors["white"]} size={14} />
                       <Text className="ml-1 text-[10px] font-bold text-white">New event</Text>
                     </Pressable>
                   </View>
@@ -1297,9 +1298,9 @@ export default function ProfileScreen() {
 
               {activeTab === "password" ? (
                 <View>
-                  <View className="mb-4 flex-row rounded-xl border border-[#D9E6D9] bg-[#F4F8F2] p-3">
-                    <ShieldCheck color="#1A6A3B" size={18} />
-                    <Text className="ml-2 flex-1 text-xs leading-5 text-[#59645E]">
+                  <View className="mb-4 flex-row rounded-xl border border-brand-green-border bg-brand-green-surface p-3">
+                    <ShieldCheck color={colors["green-primary"]} size={18} />
+                    <Text className="ml-2 flex-1 text-xs leading-5 text-brand-neutral-text-secondary">
                       Choose a strong password with at least 8 characters.
                     </Text>
                   </View>
@@ -1357,11 +1358,11 @@ export default function ProfileScreen() {
         {account ? (
           <Pressable
             accessibilityRole="button"
-            className="mt-4 min-h-12 flex-row items-center justify-center rounded-xl border border-[#F3C9C5] bg-white"
+            className="mt-4 min-h-12 flex-row items-center justify-center rounded-xl border border-brand-danger-border bg-white"
             onPress={() => confirmLogout(showAlert)}
           >
-            <LogOut color="#A33424" size={17} />
-            <Text className="ml-2 text-sm font-bold text-[#A33424]">Sign out</Text>
+            <LogOut color={colors["danger"]} size={17} />
+            <Text className="ml-2 text-sm font-bold text-brand-danger">Sign out</Text>
           </Pressable>
         ) : null}
       </ScrollView>
@@ -1373,13 +1374,13 @@ export default function ProfileScreen() {
         visible={Boolean(selectedEventOrder)}
       >
         <View className="flex-1 justify-end bg-black/45">
-          <View className="max-h-[88%] rounded-t-3xl bg-[#FFFCF6]">
-            <View className="flex-row items-center justify-between border-b border-[#E7E0D8] px-5 py-4">
+          <View className="max-h-[88%] rounded-t-3xl bg-brand-surface-modal">
+            <View className="flex-row items-center justify-between border-b border-brand-neutral-border-warm px-5 py-4">
               <View className="flex-1 pr-3">
-                <Text className="text-xs font-semibold uppercase tracking-widest text-[#728071]">
+                <Text className="text-xs font-semibold uppercase tracking-widest text-brand-neutral-text-muted">
                   Event order details
                 </Text>
-                <Text className="mt-1 text-lg font-bold text-[#183B2A]">
+                <Text className="mt-1 text-lg font-bold text-brand-green-forest">
                   #
                   {text(selectedEventOrder ?? {}, [
                     "event_order_number",
@@ -1390,10 +1391,10 @@ export default function ProfileScreen() {
               <Pressable
                 accessibilityLabel="Close event order details"
                 accessibilityRole="button"
-                className="h-10 w-10 items-center justify-center rounded-full bg-[#F0EEE7]"
+                className="h-10 w-10 items-center justify-center rounded-full bg-brand-surface-subtle"
                 onPress={() => setSelectedEventOrder(null)}
               >
-                <X color="#183B2A" size={20} />
+                <X color={colors["green-forest"]} size={20} />
               </Pressable>
             </View>
             <ScrollView
@@ -1426,13 +1427,13 @@ export default function ProfileScreen() {
         visible={Boolean(rejectingOrder)}
       >
         <View className="flex-1 justify-end bg-black/45">
-          <View className="rounded-t-3xl bg-[#FFFCF6] p-5 pb-8">
+          <View className="rounded-t-3xl bg-brand-surface-modal p-5 pb-8">
             <View className="mb-4 flex-row items-center justify-between">
               <View className="flex-1 pr-4">
-                <Text className="text-lg font-extrabold text-[#183B2A]">
+                <Text className="text-lg font-extrabold text-brand-green-forest">
                   Decline quotation?
                 </Text>
-                <Text className="mt-1 text-xs leading-5 text-[#728071]">
+                <Text className="mt-1 text-xs leading-5 text-brand-neutral-text-muted">
                   This will cancel event order #
                   {text(rejectingOrder ?? {}, ["event_order_number", "order_number"]) ||
                     rejectingOrder?.orderKey}
@@ -1442,18 +1443,18 @@ export default function ProfileScreen() {
               <Pressable
                 accessibilityLabel="Close rejection form"
                 accessibilityRole="button"
-                className="h-9 w-9 items-center justify-center rounded-full bg-[#F0EEE7]"
+                className="h-9 w-9 items-center justify-center rounded-full bg-brand-surface-subtle"
                 onPress={() => setRejectingOrder(null)}
               >
-                <X color="#344035" size={18} />
+                <X color={colors["neutral-text-body"]} size={18} />
               </Pressable>
             </View>
             <TextInput
-              className="min-h-24 rounded-xl border border-[#E1E5DF] bg-white px-3.5 py-3 text-sm text-[#183B2A]"
+              className="min-h-24 rounded-xl border border-brand-green-border-light bg-white px-3.5 py-3 text-sm text-brand-green-forest"
               multiline
               onChangeText={setRejectReason}
               placeholder="Reason (optional)"
-              placeholderTextColor="#879087"
+              placeholderTextColor={colors["neutral-text-disabled"]}
               textAlignVertical="top"
               value={rejectReason}
             />
@@ -1500,10 +1501,10 @@ function SummaryPill({
 }) {
   return (
     <View className="min-h-14 flex-1 flex-row items-center rounded-xl bg-white/10 px-2.5">
-      <Icon color="#F7BD48" size={16} />
+      <Icon color={colors["gold-warm"]} size={16} />
       <View className="ml-2">
         <Text className="text-sm font-extrabold text-white">{value}</Text>
-        <Text className="text-[10px] text-[#D8E4D7]">{label}</Text>
+        <Text className="text-[10px] text-brand-green-soft">{label}</Text>
       </View>
     </View>
   );
@@ -1521,12 +1522,12 @@ function EmptyState({
   action?: React.ReactNode;
 }) {
   return (
-    <View className="items-center rounded-xl border border-dashed border-[#DCE8D5] bg-[#FAFCF9] px-4 py-8">
-      <View className="h-12 w-12 items-center justify-center rounded-2xl bg-[#EFF5E9]">
-        <Icon color="#396F0B" size={23} />
+    <View className="items-center rounded-xl border border-dashed border-brand-green-soft bg-brand-green-surface px-4 py-8">
+      <View className="h-12 w-12 items-center justify-center rounded-2xl bg-brand-green-surface">
+        <Icon color={colors["green-olive"]} size={23} />
       </View>
-      <Text className="mt-3 text-base font-extrabold text-[#183B2A]">{title}</Text>
-      <Text className="mt-1 text-center text-xs leading-5 text-[#728071]">{detail}</Text>
+      <Text className="mt-3 text-base font-extrabold text-brand-green-forest">{title}</Text>
+      <Text className="mt-1 text-center text-xs leading-5 text-brand-neutral-text-muted">{detail}</Text>
       {action ? <View className="mt-4 w-full">{action}</View> : null}
     </View>
   );
@@ -1535,10 +1536,10 @@ function EmptyState({
 function ReservationDetail({ label, value }: { label: string; value: string }) {
   return (
     <View className="mb-2 mr-4">
-      <Text className="text-[10px] font-bold uppercase tracking-wide text-[#879087]">
+      <Text className="text-[10px] font-bold uppercase tracking-wide text-brand-neutral-text-disabled">
         {label}
       </Text>
-      <Text className="mt-0.5 text-xs font-bold text-[#344035]">{value}</Text>
+      <Text className="mt-0.5 text-xs font-bold text-brand-neutral-text-body">{value}</Text>
     </View>
   );
 }
@@ -1571,7 +1572,7 @@ function PasswordField({
           className="ml-2 h-10 w-9 items-center justify-center"
           onPress={onToggle}
         >
-          {visible ? <EyeOff color="#728071" size={18} /> : <Eye color="#728071" size={18} />}
+          {visible ? <EyeOff color={colors["neutral-text-muted"]} size={18} /> : <Eye color={colors["neutral-text-muted"]} size={18} />}
         </Pressable>
       }
     />
@@ -1599,26 +1600,26 @@ function EventOrderCard({
   const isQuoted = isPendingQuote || number(eventOrder.quoted_amount) > 0;
   return (
     <View
-      className={`mb-3 rounded-xl border bg-[#FFFEFB] p-3.5 ${
+      className={`mb-3 rounded-xl border bg-brand-surface-offwhite p-3.5 ${
         isPendingQuote
-          ? "border-[#A8D7F0]"
+          ? "border-brand-info-blue-soft"
           : customerAction === "accepted"
-            ? "border-[#CFE3C4]"
+            ? "border-brand-green-success-soft"
             : customerAction === "rejected"
-              ? "border-[#F3C9C5]"
-              : "border-[#E8EDE6]"
+              ? "border-brand-danger-border"
+              : "border-brand-green-soft"
       }`}
     >
       <View className="flex-row items-start justify-between">
         <View className="flex-1 pr-2">
-          <Text className="font-mono text-[10px] font-bold text-[#1A6A3B]">
+          <Text className="font-mono text-[10px] font-bold text-brand-green-primary">
             {orderNumber}
           </Text>
-          <Text className="mt-1 text-sm font-extrabold text-[#183B2A]">
+          <Text className="mt-1 text-sm font-extrabold text-brand-green-forest">
             {text(eventOrder, ["event_type"]) || "Event catering"}
           </Text>
         </View>
-        <Text className="rounded-full border border-[#E7E0D8] bg-[#F5EFE5] px-2.5 py-1 text-[10px] font-bold text-[#59645E]">
+        <Text className="rounded-full border border-brand-neutral-border-warm bg-brand-surface-cream px-2.5 py-1 text-[10px] font-bold text-brand-neutral-text-secondary">
           {status === "Quotation Sent" ? "Quotation received" : status}
         </Text>
       </View>
@@ -1641,26 +1642,26 @@ function EventOrderCard({
         />
       </View>
       {eventOrder.venue_address ? (
-        <Text className="mb-2 text-xs leading-5 text-[#59645E]">
+        <Text className="mb-2 text-xs leading-5 text-brand-neutral-text-secondary">
           {String(eventOrder.venue_address)}
         </Text>
       ) : null}
       <Pressable
         accessibilityRole="button"
-        className="min-h-10 flex-row items-center justify-center rounded-lg border border-[#D9E6D9] bg-white"
+        className="min-h-10 flex-row items-center justify-center rounded-lg border border-brand-green-border bg-white"
         onPress={onDetails}
       >
-        <Text className="text-xs font-bold text-[#1A6A3B]">View full event details</Text>
-        <ArrowRight color="#1A6A3B" size={14} style={{ marginLeft: 6 }} />
+        <Text className="text-xs font-bold text-brand-green-primary">View full event details</Text>
+        <ArrowRight color={colors["green-primary"]} size={14} style={{ marginLeft: 6 }} />
       </Pressable>
       {customerAction === "accepted" || customerAction === "rejected" ? (
-        <View className="mt-1 flex-row items-center border-t border-[#EEE8DD] pt-3">
+        <View className="mt-1 flex-row items-center border-t border-brand-neutral-border pt-3">
           {customerAction === "accepted" ? (
-            <CheckCircle2 color="#1A6A3B" size={16} />
+            <CheckCircle2 color={colors["green-primary"]} size={16} />
           ) : (
-            <X color="#A33424" size={16} />
+            <X color={colors["danger"]} size={16} />
           )}
-          <Text className="ml-2 flex-1 text-xs font-semibold text-[#59645E]">
+          <Text className="ml-2 flex-1 text-xs font-semibold text-brand-neutral-text-secondary">
             Quotation {customerAction}.
             {eventOrder.customer_action_reason
               ? ` Reason: ${String(eventOrder.customer_action_reason)}`
@@ -1713,7 +1714,7 @@ function EventOrderDetails({
     text(eventOrder, ["status"]).toLowerCase() === "quotation sent";
   return (
     <View>
-      <View className="rounded-2xl border border-[#E7E0D8] bg-white p-4">
+      <View className="rounded-2xl border border-brand-neutral-border-warm bg-white p-4">
         <View className="flex-row flex-wrap justify-between">
           <ReservationDetail
             label="Occasion"
@@ -1741,39 +1742,39 @@ function EventOrderDetails({
           />
         </View>
         {eventOrder.venue_address ? (
-          <View className="mt-1 border-t border-[#EEE8DD] pt-3">
-            <Text className="text-[10px] font-bold uppercase tracking-wide text-[#879087]">
+          <View className="mt-1 border-t border-brand-neutral-border pt-3">
+            <Text className="text-[10px] font-bold uppercase tracking-wide text-brand-neutral-text-disabled">
               Venue
             </Text>
-            <Text className="mt-1 text-sm leading-5 text-[#344035]">
+            <Text className="mt-1 text-sm leading-5 text-brand-neutral-text-body">
               {String(eventOrder.venue_address)}
             </Text>
           </View>
         ) : null}
         {eventOrder.special_requests ? (
-          <View className="mt-3 border-t border-[#EEE8DD] pt-3">
-            <Text className="text-[10px] font-bold uppercase tracking-wide text-[#879087]">
+          <View className="mt-3 border-t border-brand-neutral-border pt-3">
+            <Text className="text-[10px] font-bold uppercase tracking-wide text-brand-neutral-text-disabled">
               Special requests
             </Text>
-            <Text className="mt-1 text-sm leading-5 text-[#344035]">
+            <Text className="mt-1 text-sm leading-5 text-brand-neutral-text-body">
               {String(eventOrder.special_requests)}
             </Text>
           </View>
         ) : null}
         {eventOrder.admin_notes ? (
-          <View className="mt-3 border-t border-[#EEE8DD] pt-3">
-            <Text className="text-[10px] font-bold uppercase tracking-wide text-[#879087]">
+          <View className="mt-3 border-t border-brand-neutral-border pt-3">
+            <Text className="text-[10px] font-bold uppercase tracking-wide text-brand-neutral-text-disabled">
               Restaurant notes
             </Text>
-            <Text className="mt-1 text-sm leading-5 text-[#344035]">
+            <Text className="mt-1 text-sm leading-5 text-brand-neutral-text-body">
               {String(eventOrder.admin_notes)}
             </Text>
           </View>
         ) : null}
       </View>
 
-      <View className="mt-4 rounded-2xl border border-[#E7E0D8] bg-white p-4">
-        <Text className="mb-2 text-base font-extrabold text-[#183B2A]">
+      <View className="mt-4 rounded-2xl border border-brand-neutral-border-warm bg-white p-4">
+        <Text className="mb-2 text-base font-extrabold text-brand-green-forest">
           Menu items ({items.length})
         </Text>
         {items.length ? (
@@ -1787,34 +1788,34 @@ function EventOrderDetails({
                 : number(item.discounted_unit_price);
             return (
               <View
-                className="flex-row items-start justify-between border-t border-[#F0EEE7] py-3"
+                className="flex-row items-start justify-between border-t border-brand-surface-subtle py-3"
                 key={`${text(item, ["food_id", "id", "product_name"])}-${index}`}
               >
                 <View className="flex-1 pr-3">
-                  <Text className="text-sm font-bold text-[#183B2A]">
+                  <Text className="text-sm font-bold text-brand-green-forest">
                     {text(item, ["product_name", "food_name", "name"]) || "Food item"}
                   </Text>
-                  <Text className="mt-1 text-xs text-[#728071]">
+                  <Text className="mt-1 text-xs text-brand-neutral-text-muted">
                     {quantity} portions · ₹{formatMoney(discountedPrice)} each
                   </Text>
                   {item.notes ? (
-                    <Text className="mt-1 text-xs italic text-[#879087]">
+                    <Text className="mt-1 text-xs italic text-brand-neutral-text-disabled">
                       {String(item.notes)}
                     </Text>
                   ) : null}
                 </View>
-                <Text className="text-sm font-bold text-[#344035]">
+                <Text className="text-sm font-bold text-brand-neutral-text-body">
                   ₹{formatMoney(discountedPrice * quantity)}
                 </Text>
               </View>
             );
           })
         ) : (
-          <Text className="py-3 text-sm text-[#728071]">
+          <Text className="py-3 text-sm text-brand-neutral-text-muted">
             Item details are not available for this request.
           </Text>
         )}
-        <View className="border-t border-[#EEE8DD] pt-3">
+        <View className="border-t border-brand-neutral-border pt-3">
           {number(eventOrder.discount_amount) > 0 ? (
             <CostRow
               label="Bulk discount"
@@ -1836,11 +1837,11 @@ function EventOrderDetails({
       </View>
 
       {quoteAvailable ? (
-        <View className="mt-4 rounded-2xl border border-[#D5EAF6] bg-[#F1F9FD] p-4">
-          <Text className="text-sm font-extrabold text-[#183B2A]">
+        <View className="mt-4 rounded-2xl border border-brand-info-blue-muted bg-brand-info-blue-surface p-4">
+          <Text className="text-sm font-extrabold text-brand-green-forest">
             Quotation received: ₹{formatMoney(eventOrder.quoted_amount)}
           </Text>
-          <Text className="mt-1 text-xs leading-5 text-[#59645E]">
+          <Text className="mt-1 text-xs leading-5 text-brand-neutral-text-secondary">
             Review the menu and final amount, then choose whether to confirm the event order.
           </Text>
           <View className="mt-3 flex-row">
@@ -1881,14 +1882,14 @@ function CostRow({
     <View className="mt-2 flex-row justify-between">
       <Text
         className={`text-sm ${
-          emphasized ? "font-extrabold text-[#183B2A]" : "text-[#59645E]"
+          emphasized ? "font-extrabold text-brand-green-forest" : "text-brand-neutral-text-secondary"
         }`}
       >
         {label}
       </Text>
       <Text
         className={`text-sm ${
-          emphasized ? "font-extrabold text-[#1A6A3B]" : "text-[#59645E]"
+          emphasized ? "font-extrabold text-brand-green-primary" : "text-brand-neutral-text-secondary"
         }`}
       >
         ₹{formatMoney(amount)}

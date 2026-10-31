@@ -1,3 +1,4 @@
+import colors from "../theme/colors.json";
 import { LogOut } from "lucide-react-native";
 import { useState } from "react";
 import { ActivityIndicator, Pressable, Text } from "react-native";
@@ -16,10 +17,10 @@ export default function AuthLogoutButton() {
       onPress={() => confirmLogout(showAlert, setIsLoggingOut)}
     >
       {isLoggingOut ? (
-        <ActivityIndicator color="#DC2626" />
+        <ActivityIndicator color={colors["danger-red"]} />
       ) : (
         <>
-          <LogOut color="#DC2626" size={19} />
+          <LogOut color={colors["danger-red"]} size={19} />
           <Text className="ml-2 text-base font-semibold text-red-600">Log out</Text>
         </>
       )}

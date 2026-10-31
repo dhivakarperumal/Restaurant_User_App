@@ -1,3 +1,4 @@
+import colors from "../theme/colors.json";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { router } from "expo-router";
 import { ArrowRight, UtensilsCrossed } from "lucide-react-native";
@@ -156,7 +157,7 @@ export default function HomeProducts() {
         <Text className="text-center text-[11px] font-extrabold uppercase tracking-[2px] text-brand-gold">
           {eyebrow}
         </Text>
-        <Text className="mt-1 text-center text-2xl font-black text-[#17251E]">
+        <Text className="mt-1 text-center text-2xl font-black text-brand-neutral-text-primary">
           {title}
         </Text>
         <Text className="mt-1 text-center text-xs text-slate-500">{subtitle}</Text>
@@ -165,7 +166,7 @@ export default function HomeProducts() {
         renderFoodCards(sectionFoods)
       ) : (
         <View className="items-center rounded-2xl border border-dashed border-slate-300 bg-white px-5 py-8">
-          <UtensilsCrossed color="#94A3B8" size={30} />
+          <UtensilsCrossed color={colors["neutral-placeholder"]} size={30} />
           <Text className="mt-3 text-center text-sm font-semibold text-slate-600">
             {emptyMessage}
           </Text>
@@ -180,8 +181,8 @@ export default function HomeProducts() {
         <Text className="text-center text-[11px] font-extrabold uppercase tracking-[2px] text-brand-gold">
           A taste of what we make
         </Text>
-        <Text className="mt-1 text-center text-2xl font-black text-[#17251E]">
-          Guest <Text className="font-serif italic text-[#1A6A3B]">Favorites</Text>
+        <Text className="mt-1 text-center text-2xl font-black text-brand-neutral-text-primary">
+          Guest <Text className="font-serif italic text-brand-green-primary">Favorites</Text>
         </Text>
         <Text className="mt-1 text-center text-xs text-slate-500">
           Fresh picks from our menu, ready for your next meal.
@@ -246,7 +247,7 @@ export default function HomeProducts() {
         </ScrollView>
       ) : (
         <View className="items-center rounded-2xl border border-dashed border-slate-300 bg-white px-5 py-8">
-          <UtensilsCrossed color="#94A3B8" size={30} />
+          <UtensilsCrossed color={colors["neutral-placeholder"]} size={30} />
           <Text className="mt-3 text-center text-sm font-semibold text-slate-600">
             Menu favorites will appear here.
           </Text>
@@ -264,8 +265,8 @@ export default function HomeProducts() {
         className="mt-3 flex-row items-center justify-center py-2"
         onPress={() => router.push("/UsersTab/shop")}
       >
-        <Text className="text-sm font-bold text-[#1A6A3B]">View the full menu</Text>
-        <ArrowRight color="#1A6A3B" size={16} className="ml-2" />
+        <Text className="text-sm font-bold text-brand-green-primary">View the full menu</Text>
+        <ArrowRight color={colors["green-primary"]} size={16} className="ml-2" />
       </Pressable>
 
       {!loading && !error ? (

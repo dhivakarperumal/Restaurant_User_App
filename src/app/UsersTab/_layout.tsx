@@ -1,3 +1,4 @@
+import colors from "../../theme/colors.json";
 import { NavigationBar } from "expo-navigation-bar";
 import { Tabs } from "expo-router";
 import {
@@ -54,10 +55,10 @@ function RootTabs() {
     borderRadius: 22,
   };
   const activeTabIconStyle = {
-    backgroundColor: "#FFF8E7",
-    borderColor: "#E9BE45",
+    backgroundColor: colors["gold-white"],
+    borderColor: colors["gold-bright"],
     borderWidth: 2,
-    shadowColor: "#E9BE45",
+    shadowColor: colors["gold-bright"],
     shadowOpacity: 0.24,
     shadowRadius: 5,
     shadowOffset: { width: 0, height: 1 },
@@ -69,9 +70,9 @@ function RootTabs() {
       screenOptions={({ route }) => ({
         headerShown: Boolean(headerTitles[route.name]),
         header: () => <TopHeader title={headerTitles[route.name] ?? route.name} />,
-        headerStyle: { backgroundColor: "#F3F4F3" },
-        tabBarActiveTintColor: "#155A32",
-        tabBarInactiveTintColor: "#F8F3E4",
+        headerStyle: { backgroundColor: colors["surface-app"] },
+        tabBarActiveTintColor: colors["green-action"],
+        tabBarInactiveTintColor: colors["surface-cream-alt"],
         tabBarShowLabel: true,
         tabBarIndicatorStyle: { display: "none" },
         tabBarBackground: () => (
@@ -79,7 +80,7 @@ function RootTabs() {
             style={[
               StyleSheet.absoluteFill,
               {
-                backgroundColor: "#FFFCF6",
+                backgroundColor: colors["surface-modal"],
               },
             ]}
           >
@@ -90,8 +91,8 @@ function RootTabs() {
                 right: 3,
                 bottom: insets.bottom + 4,
                 left: 3,
-                backgroundColor: "#084A2B",
-                borderColor: "#E9BE45",
+                backgroundColor: colors["green"],
+                borderColor: colors["gold-bright"],
                 borderWidth: 2,
                 borderRadius: 32,
               }}
@@ -132,8 +133,8 @@ function RootTabs() {
           marginBottom: 0,
         },
         tabBarBadgeStyle: {
-          backgroundColor: "#E86D16",
-          color: "#FFFFFF",
+          backgroundColor: colors["gold"],
+          color: colors["white"],
           fontSize: 10,
           minWidth: 18,
           height: 18,
@@ -143,7 +144,7 @@ function RootTabs() {
           route.name === "cart" && itemCount > 0 ? String(itemCount) : undefined,
         tabBarIcon: ({ color, size, focused }) => {
           const commonProps = {
-            color: focused ? "#155A32" : color,
+            color: focused ? colors["green-action"] : color,
             size,
             strokeWidth: focused ? 2.5 : 2,
           };
@@ -255,7 +256,7 @@ function RootTabs() {
           return (
             <Text
               style={{
-                color: focused ? "#FFF8E7" : color,
+                color: focused ? colors["gold-white"] : color,
                 fontSize: 10,
                 fontWeight: focused ? "700" : "600",
                 lineHeight: 14,
