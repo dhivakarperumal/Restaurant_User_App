@@ -103,9 +103,10 @@ export default function DeliveryTopBar() {
           <Image
             accessible
             accessibilityLabel="Buy Food logo"
-            className="mr-3 h-10 w-10"
+            className="mr-3 h-10 w-10 rounded-full"
             resizeMode="contain"
             source={require("../../../assets/images/logo.png")}
+            style={{ borderRadius: 20 }}
           />
           <View className="min-w-0 flex-1">
             <Text
