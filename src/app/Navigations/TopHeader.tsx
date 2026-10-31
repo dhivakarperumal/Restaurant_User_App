@@ -102,7 +102,7 @@ export default function TopHeader({ title }: TopHeaderProps) {
       <StatusBar style="dark" />
       <View
         style={{ paddingTop: insets.top }}
-        className="relative overflow-hidden px-8 py-1"
+        className="relative overflow-hidden px-5 py-1"
       >
         <BlurTargetView
           ref={blurTarget}
