@@ -47,11 +47,21 @@ function RootTabs() {
   const insets = useSafeAreaInsets();
   const { itemCount } = useCart();
   const tabIconContainerStyle = {
-    width: 42,
-    height: 30,
+    width: 50,
+    height: 50,
     alignItems: "center" as const,
     justifyContent: "center" as const,
-    borderRadius: 12,
+    borderRadius: 25,
+  };
+  const activeTabIconStyle = {
+    backgroundColor: "#FFF8E7",
+    borderColor: "#E9BE45",
+    borderWidth: 2,
+    shadowColor: "#E9BE45",
+    shadowOpacity: 0.24,
+    shadowRadius: 5,
+    shadowOffset: { width: 0, height: 1 },
+    elevation: 3,
   };
 
   return (
@@ -60,8 +70,8 @@ function RootTabs() {
         headerShown: Boolean(headerTitles[route.name]),
         header: () => <TopHeader title={headerTitles[route.name] ?? route.name} />,
         headerStyle: { backgroundColor: "#F3F4F3" },
-        tabBarActiveTintColor: "#1A6A3B",
-        tabBarInactiveTintColor: "#8A8172",
+        tabBarActiveTintColor: "#155A32",
+        tabBarInactiveTintColor: "#F8F3E4",
         tabBarShowLabel: true,
         tabBarIndicatorStyle: { display: "none" },
         tabBarBackground: () => (
@@ -69,23 +79,16 @@ function RootTabs() {
             style={[
               StyleSheet.absoluteFill,
               {
-                backgroundColor: "#FFFCF6",
-                borderTopColor: "#E7E0D8",
-                borderTopWidth: StyleSheet.hairlineWidth,
+                marginHorizontal: 3,
+                marginTop: 4,
+                marginBottom: 4,
+                backgroundColor: "#084A2B",
+                borderColor: "#E9BE45",
+                borderWidth: 2,
+                borderRadius: 32,
               },
             ]}
-          >
-            <View
-              style={{
-                position: "absolute",
-                right: 0,
-                bottom: 0,
-                left: 0,
-                height: insets.bottom,
-                backgroundColor: "#FFFCF6",
-              }}
-            />
-          </View>
+          />
         ),
         tabBarStyle: {
           display:
@@ -97,22 +100,17 @@ function RootTabs() {
             route.name.startsWith("delivery/")
               ? "none"
               : "flex",
-          backgroundColor: "#FFFCF6",
-          borderTopWidth: StyleSheet.hairlineWidth,
-          borderTopColor: "#E7E0D8",
+          backgroundColor: "transparent",
+          borderTopWidth: 0,
           height: Platform.OS === "android" ? 72 + insets.bottom : 82 + insets.bottom,
           paddingBottom: Math.max(insets.bottom, 8),
-          paddingTop: 8,
+          paddingTop: 4,
           elevation: 0,
-          shadowColor: "#183B2A",
-          shadowOpacity: 0.08,
-          shadowRadius: 10,
-          shadowOffset: { width: 0, height: -3 },
         },
         tabBarLabelStyle: {
-          fontSize: 11,
+          fontSize: 10,
           fontWeight: "600",
-          marginTop: 2,
+          marginTop: 1,
         },
         tabBarIconStyle: {
           marginTop: 2,
@@ -140,7 +138,7 @@ function RootTabs() {
                 <View
                   style={[
                     tabIconContainerStyle,
-                    focused && { backgroundColor: "#EAF2E8" },
+                    focused && activeTabIconStyle,
                   ]}
                 >
                   <House {...commonProps} />
@@ -151,7 +149,7 @@ function RootTabs() {
                 <View
                   style={[
                     tabIconContainerStyle,
-                    focused && { backgroundColor: "#EAF2E8" },
+                    focused && activeTabIconStyle,
                   ]}
                 >
                   <Search {...commonProps} />
@@ -162,7 +160,7 @@ function RootTabs() {
                 <View
                   style={[
                     tabIconContainerStyle,
-                    focused && { backgroundColor: "#EAF2E8" },
+                    focused && activeTabIconStyle,
                   ]}
                 >
                   <Store {...commonProps} />
@@ -173,7 +171,7 @@ function RootTabs() {
                 <View
                   style={[
                     tabIconContainerStyle,
-                    focused && { backgroundColor: "#EAF2E8" },
+                    focused && activeTabIconStyle,
                   ]}
                 >
                   <ShoppingCart {...commonProps} />
@@ -184,7 +182,7 @@ function RootTabs() {
                 <View
                   style={[
                     tabIconContainerStyle,
-                    focused && { backgroundColor: "#EAF2E8" },
+                    focused && activeTabIconStyle,
                   ]}
                 >
                   <PartyPopper {...commonProps} />
@@ -195,7 +193,7 @@ function RootTabs() {
                 <View
                   style={[
                     tabIconContainerStyle,
-                    focused && { backgroundColor: "#EAF2E8" },
+                    focused && activeTabIconStyle,
                   ]}
                 >
                   <TableProperties {...commonProps} />
@@ -227,7 +225,7 @@ function RootTabs() {
               return null;
           }
         },
-        tabBarLabel: ({ color }) => {
+        tabBarLabel: ({ color, focused }) => {
           const labels: Record<string, string> = {
             home: "Home",
             explore: "Shop",
@@ -239,7 +237,14 @@ function RootTabs() {
           };
 
           return (
-            <Text style={{ color, fontSize: 11, fontWeight: "600", marginTop: 2 }}>
+            <Text
+              style={{
+                color,
+                fontSize: 10,
+                fontWeight: focused ? "700" : "600",
+                marginTop: focused ? -16 : 1,
+              }}
+            >
               {labels[route.name] ?? route.name}
             </Text>
           );
