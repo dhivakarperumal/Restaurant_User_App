@@ -59,7 +59,7 @@ export default function CustomerReviews() {
   const [reviews, setReviews] = useState<CustomerReview[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const cardWidth = Math.max(250, screenWidth - 64);
+  const cardWidth = Math.max(0, screenWidth - 32);
 
   const fetchReviews = useCallback(async () => {
     setLoading(true);
