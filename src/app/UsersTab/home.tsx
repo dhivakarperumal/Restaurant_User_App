@@ -3,6 +3,7 @@ import HomeBanner from "../../components/HomeBanner";
 import HomeCategories from "../../components/HomeCategories";
 import HomeCuisines from "../../components/HomeCuisines";
 import HomeProducts from "../../components/HomeProducts";
+import CustomerReviews from "../../components/CustomerReviews";
 
 export default function HomeScreen() {
   return (
@@ -19,6 +20,7 @@ export default function HomeScreen() {
       <HomeCategories />
       <HomeCuisines />
       <HomeProducts />
+      <CustomerReviews />
     </ScrollView>
   );
 }
