@@ -47,11 +47,11 @@ function RootTabs() {
   const insets = useSafeAreaInsets();
   const { itemCount } = useCart();
   const tabIconContainerStyle = {
-    width: 42,
-    height: 42,
+    width: 44,
+    height: 44,
     alignItems: "center" as const,
     justifyContent: "center" as const,
-    borderRadius: 21,
+    borderRadius: 22,
   };
   const activeTabIconStyle = {
     backgroundColor: "#FFF8E7",
@@ -110,19 +110,26 @@ function RootTabs() {
               : "flex",
           backgroundColor: "transparent",
           borderTopWidth: 0,
-          height: Platform.OS === "android" ? 86 + insets.bottom : 96 + insets.bottom,
+          height: Platform.OS === "android" ? 94 + insets.bottom : 104 + insets.bottom,
           paddingBottom: Math.max(insets.bottom, 8),
-          paddingTop: 4,
+          paddingTop: 2,
           elevation: 0,
+        },
+        tabBarItemStyle: {
+          flex: 1,
+          justifyContent: "center",
+          paddingVertical: 4,
         },
         tabBarLabelStyle: {
           fontSize: 10,
           fontWeight: "600",
-          lineHeight: 12,
-          marginTop: 1,
+          lineHeight: 14,
+          marginTop: 3,
         },
         tabBarIconStyle: {
+          height: 48,
           marginTop: 0,
+          marginBottom: 0,
         },
         tabBarBadgeStyle: {
           backgroundColor: "#E86D16",
@@ -251,8 +258,8 @@ function RootTabs() {
                 color: focused ? "#FFF8E7" : color,
                 fontSize: 10,
                 fontWeight: focused ? "700" : "600",
-                lineHeight: 12,
-                marginTop: 1,
+                lineHeight: 14,
+                marginTop: 3,
               }}
             >
               {labels[route.name] ?? route.name}
