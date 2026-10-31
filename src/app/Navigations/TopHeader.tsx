@@ -98,7 +98,7 @@ export default function TopHeader({ title }: TopHeaderProps) {
       <StatusBar style="dark" />
       <View
         style={{ paddingTop: insets.top }}
-        className="border-b border-[#E9BE45]/35 bg-[#FFF7E8] px-5 py-1"
+        className="border-b border-[#B88A2E] bg-[#F5E9D5] px-5 py-1"
       >
         <View
           accessibilityLabel={`${title} page header`}
