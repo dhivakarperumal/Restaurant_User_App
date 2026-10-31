@@ -914,31 +914,46 @@ export default function CheckoutScreen() {
             title="Fulfilment"
           />
           <View className="flex-row rounded-xl bg-brand-surface-cream p-1">
-            {[
-              { value: "home_delivery" as const, label: "Home delivery" },
-              { value: "pickup" as const, label: "Pickup" },
-            ].map((option) => {
-              const isSelected = fulfillmentType === option.value;
-              return (
-                <Pressable
-                  accessibilityRole="radio"
-                  accessibilityState={{ selected: isSelected }}
-                  className={`min-h-11 flex-1 items-center justify-center rounded-lg px-2 ${
-                    isSelected ? "bg-white shadow-sm" : ""
-                  }`}
-                  key={option.value}
-                  onPress={() => setFulfillmentType(option.value)}
-                >
-                  <Text
-                    className={`text-sm font-bold ${
-                      isSelected ? "text-brand-green-primary" : "text-slate-600"
-                    }`}
-                  >
-                    {option.label}
-                  </Text>
-                </Pressable>
-              );
-            })}
+            <Pressable
+              accessibilityRole="radio"
+              accessibilityState={{
+                selected: fulfillmentType === "home_delivery",
+              }}
+              className={`min-h-11 flex-1 items-center justify-center rounded-lg px-2 ${
+                fulfillmentType === "home_delivery"
+                  ? "bg-white shadow-sm"
+                  : ""
+              }`}
+              onPress={() => setFulfillmentType("home_delivery")}
+            >
+              <Text
+                className={`text-sm font-bold ${
+                  fulfillmentType === "home_delivery"
+                    ? "text-brand-green-primary"
+                    : "text-slate-600"
+                }`}
+              >
+                Home delivery
+              </Text>
+            </Pressable>
+            <Pressable
+              accessibilityRole="radio"
+              accessibilityState={{ selected: fulfillmentType === "pickup" }}
+              className={`min-h-11 flex-1 items-center justify-center rounded-lg px-2 ${
+                fulfillmentType === "pickup" ? "bg-white shadow-sm" : ""
+              }`}
+              onPress={() => setFulfillmentType("pickup")}
+            >
+              <Text
+                className={`text-sm font-bold ${
+                  fulfillmentType === "pickup"
+                    ? "text-brand-green-primary"
+                    : "text-slate-600"
+                }`}
+              >
+                Pickup
+              </Text>
+            </Pressable>
           </View>
 
           {fulfillmentType === "home_delivery" ? (
