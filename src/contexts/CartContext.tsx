@@ -1,4 +1,3 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { usePathname } from "expo-router";
 import {
   createContext,
@@ -19,13 +18,16 @@ import {
   removeCartItem,
   updateCartItem,
 } from "../lib/cartApi";
+import {
+  addWishlistFood,
+  fetchWishlist,
+  removeWishlistFood,
+} from "../lib/wishlistApi";
 import type {
   CartItem,
   CustomizedFoodCartInput,
   FoodProduct,
 } from "../types/food";
-
-const WISHLIST_STORAGE_KEY = "restaurantWishlist";
 
 type CartContextValue = {
   items: CartItem[];
@@ -34,6 +36,9 @@ type CartContextValue = {
   isCartLoading: boolean;
   cartError: string;
   wishlist: FoodProduct[];
+  isWishlistLoading: boolean;
+  wishlistError: string;
+  refreshWishlist: () => Promise<void>;
   buyNowItem: CustomizedFoodCartInput | null;
   addItem: (input: CustomizedFoodCartInput) => Promise<void>;
   setBuyNowItem: (input: CustomizedFoodCartInput | null) => void;
@@ -52,14 +57,18 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [buyNowItem, setBuyNowItem] =
     useState<CustomizedFoodCartInput | null>(null);
   const [wishlist, setWishlist] = useState<FoodProduct[]>([]);
+  const [isWishlistLoading, setIsWishlistLoading] = useState(false);
+  const [wishlistError, setWishlistError] = useState("");
   const [isHydrated, setIsHydrated] = useState(false);
   const [isCartLoading, setIsCartLoading] = useState(false);
   const [cartError, setCartError] = useState("");
   const itemsRef = useRef(items);
   const wishlistRef = useRef(wishlist);
+  const wishlistAccountIdRef = useRef("");
+  const wishlistLoadVersion = useRef(0);
+  const wishlistOperationQueue = useRef<Promise<void>>(Promise.resolve());
   const accountIdRef = useRef("");
   const accountLoadPromise = useRef<Promise<void>>(Promise.resolve());
-  const wishlistStorageQueue = useRef<Promise<void>>(Promise.resolve());
 
   const commitItems = useCallback((nextItems: CartItem[]) => {
     itemsRef.current = nextItems;
@@ -103,30 +112,58 @@ export function CartProvider({ children }: { children: ReactNode }) {
     [commitItems],
   );
 
+  const commitWishlist = useCallback((nextWishlist: FoodProduct[]) => {
+    wishlistRef.current = nextWishlist;
+    setWishlist(nextWishlist);
+  }, []);
+
+  const loadWishlist = useCallback(async () => {
+    const account = await getCartAccount();
+    const accountId = account?.id ?? "";
+    if (wishlistAccountIdRef.current !== accountId) {
+      commitWishlist([]);
+    }
+    wishlistAccountIdRef.current = accountId;
+    const requestVersion = ++wishlistLoadVersion.current;
+
+    if (!account) {
+      commitWishlist([]);
+      setWishlistError("");
+      setIsWishlistLoading(false);
+      return;
+    }
+
+    setIsWishlistLoading(true);
+    setWishlistError("");
+    try {
+      const nextWishlist = await fetchWishlist();
+      if (
+        wishlistLoadVersion.current === requestVersion &&
+        wishlistAccountIdRef.current === accountId
+      ) {
+        commitWishlist(nextWishlist);
+      }
+    } catch (error) {
+      console.error("Failed to load the signed-in user's favorites:", error);
+      if (
+        wishlistLoadVersion.current === requestVersion &&
+        wishlistAccountIdRef.current === accountId
+      ) {
+        setWishlistError("We could not load your favorites. Please try again.");
+      }
+      throw error;
+    } finally {
+      if (wishlistLoadVersion.current === requestVersion) {
+        setIsWishlistLoading(false);
+      }
+    }
+  }, [commitWishlist]);
+
   useEffect(() => {
     const loadingCart = loadCart();
     accountLoadPromise.current = loadingCart.catch(() => undefined);
-  }, [loadCart, pathname]);
-
-  useEffect(() => {
-    void AsyncStorage.getItem(WISHLIST_STORAGE_KEY)
-      .then((serializedWishlist) => {
-        if (!serializedWishlist) return;
-        const storedWishlist: unknown = JSON.parse(serializedWishlist);
-        if (!Array.isArray(storedWishlist)) {
-          throw new Error("Saved wishlist data was invalid.");
-        }
-        const validWishlist = storedWishlist.filter(
-          (food): food is FoodProduct =>
-            typeof food === "object" && food !== null,
-        );
-        wishlistRef.current = validWishlist;
-        setWishlist(validWishlist);
-      })
-      .catch((error: unknown) => {
-        console.error("Failed to restore saved wishlist:", error);
-      });
-  }, []);
+    void loadWishlist().catch(() => undefined);
+  }, [loadCart, loadWishlist, pathname]);
 
   const addItem = useCallback(
     async (input: CustomizedFoodCartInput) => {
@@ -187,39 +224,56 @@ export function CartProvider({ children }: { children: ReactNode }) {
     [loadCart, requireCartAccount],
   );
 
-  const toggleWishlist = useCallback(async (food: FoodProduct) => {
-    await accountLoadPromise.current;
-    const foodId = getFoodId(food);
-    const isInWishlist = wishlistRef.current.some(
-      (item) => getFoodId(item) === foodId,
-    );
-    const previousWishlist = wishlistRef.current;
-    const nextWishlist = isInWishlist
-      ? wishlistRef.current.filter((item) => getFoodId(item) !== foodId)
-      : [...wishlistRef.current, food];
-    wishlistRef.current = nextWishlist;
-    setWishlist(nextWishlist);
-
-    const write = wishlistStorageQueue.current
-      .catch(() => undefined)
-      .then(async () => {
-        try {
-          await AsyncStorage.setItem(
-            WISHLIST_STORAGE_KEY,
-            JSON.stringify(nextWishlist),
-          );
-        } catch (error) {
-          console.error("Failed to save wishlist:", error);
-          if (wishlistRef.current === nextWishlist) {
-            wishlistRef.current = previousWishlist;
-            setWishlist(previousWishlist);
+  const toggleWishlist = useCallback(
+    async (food: FoodProduct) => {
+      const operation = wishlistOperationQueue.current
+        .catch(() => undefined)
+        .then(async () => {
+          await accountLoadPromise.current;
+          const account = await getCartAccount();
+          if (!account) {
+            throw new Error("Please log in before changing your favorites.");
           }
-          throw error;
-        }
-      });
-    wishlistStorageQueue.current = write;
-    await write;
-  }, []);
+          if (wishlistAccountIdRef.current !== account.id) {
+            await loadWishlist();
+          }
+
+          const foodId = getFoodId(food);
+          if (!foodId) {
+            throw new Error("The selected food did not include an ID.");
+          }
+
+          const previousWishlist = wishlistRef.current;
+          const isInWishlist = previousWishlist.some(
+            (item) => getFoodId(item) === foodId,
+          );
+          const nextWishlist = isInWishlist
+            ? previousWishlist.filter((item) => getFoodId(item) !== foodId)
+            : [...previousWishlist, food];
+          const requestVersion = ++wishlistLoadVersion.current;
+          setIsWishlistLoading(false);
+          commitWishlist(nextWishlist);
+
+          try {
+            if (isInWishlist) {
+              await removeWishlistFood(foodId);
+            } else {
+              await addWishlistFood(food);
+            }
+            setWishlistError("");
+          } catch (error) {
+            console.error("Failed to update favorites:", error);
+            if (wishlistLoadVersion.current === requestVersion) {
+              commitWishlist(previousWishlist);
+            }
+            throw error;
+          }
+        });
+      wishlistOperationQueue.current = operation;
+      await operation;
+    },
+    [commitWishlist, loadWishlist],
+  );
 
   const itemCount = items.reduce((total, item) => total + item.quantity, 0);
   const value = useMemo(
@@ -230,6 +284,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
       isCartLoading,
       cartError,
       wishlist,
+      isWishlistLoading,
+      wishlistError,
+      refreshWishlist: loadWishlist,
       buyNowItem,
       addItem,
       setBuyNowItem,
@@ -246,6 +303,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
       isCartLoading,
       cartError,
       wishlist,
+      isWishlistLoading,
+      wishlistError,
+      loadWishlist,
       buyNowItem,
       addItem,
       setBuyNowItem,

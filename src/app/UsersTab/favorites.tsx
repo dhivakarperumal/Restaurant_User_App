@@ -2,7 +2,7 @@ import colors from "../../theme/colors.json";
 import { router } from "expo-router";
 import { Heart, UtensilsCrossed } from "lucide-react-native";
 import { useState } from "react";
-import { Pressable, ScrollView, Text, View, useWindowDimensions } from "react-native";
+import { ActivityIndicator, Pressable, ScrollView, Text, View, useWindowDimensions } from "react-native";
 import FoodCustomizationModal from "../../components/common/FoodCustomizationModal";
 import FoodProductCard from "../../components/common/FoodProductCard";
 import { useCart } from "../../contexts/CartContext";
@@ -10,7 +10,15 @@ import { getFoodId } from "../../lib/foods";
 import type { FoodProduct } from "../../types/food";
 
 export default function FavoritesScreen() {
-  const { addItem, items: cartItems, wishlist, toggleWishlist } = useCart();
+  const {
+    addItem,
+    items: cartItems,
+    wishlist,
+    isWishlistLoading,
+    wishlistError,
+    refreshWishlist,
+    toggleWishlist,
+  } = useCart();
   const [selectedFood, setSelectedFood] = useState<FoodProduct | null>(null);
   const [actionError, setActionError] = useState("");
   const { width: screenWidth } = useWindowDimensions();
@@ -47,7 +55,23 @@ export default function FavoritesScreen() {
           </Text>
         </View>
 
-        {wishlist.length > 0 ? (
+        {isWishlistLoading ? (
+          <View className="items-center py-12">
+            <ActivityIndicator color={colors["green-primary"]} />
+            <Text className="mt-2 text-xs text-slate-500">Loading favorites...</Text>
+          </View>
+        ) : wishlistError ? (
+          <View className="items-center rounded-2xl border border-rose-100 bg-white px-6 py-8">
+            <Text className="text-center text-sm text-rose-700">{wishlistError}</Text>
+            <Pressable
+              accessibilityRole="button"
+              className="mt-4 rounded-xl bg-brand-green-primary px-4 py-3 active:opacity-80"
+              onPress={() => void refreshWishlist().catch(() => undefined)}
+            >
+              <Text className="text-sm font-bold text-white">Try again</Text>
+            </Pressable>
+          </View>
+        ) : wishlist.length > 0 ? (
           <View className="gap-3">
             {wishlist.map((food) => {
               const foodId = getFoodId(food);

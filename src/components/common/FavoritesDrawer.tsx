@@ -3,6 +3,7 @@ import { router } from "expo-router";
 import { Heart, UtensilsCrossed, X } from "lucide-react-native";
 import { useState } from "react";
 import {
+  ActivityIndicator,
   Image,
   Modal,
   Pressable,
@@ -103,7 +104,13 @@ export default function FavoritesDrawer({
   visible,
   onClose,
 }: FavoritesDrawerProps) {
-  const { wishlist, toggleWishlist } = useCart();
+  const {
+    wishlist,
+    isWishlistLoading,
+    wishlistError,
+    refreshWishlist,
+    toggleWishlist,
+  } = useCart();
   const insets = useSafeAreaInsets();
   const { width: windowWidth } = useWindowDimensions();
   const [actionError, setActionError] = useState("");
@@ -177,7 +184,27 @@ export default function FavoritesDrawer({
             contentContainerStyle={{ padding: 14, flexGrow: 1 }}
             showsVerticalScrollIndicator={false}
           >
-            {wishlist.length ? (
+            {isWishlistLoading ? (
+              <View className="flex-1 items-center justify-center">
+                <ActivityIndicator color={colors["green-primary"]} />
+                <Text className="mt-2 text-xs text-slate-500">
+                  Loading favorites...
+                </Text>
+              </View>
+            ) : wishlistError ? (
+              <View className="flex-1 items-center justify-center px-5">
+                <Text className="text-center text-xs leading-5 text-rose-700">
+                  {wishlistError}
+                </Text>
+                <Pressable
+                  accessibilityRole="button"
+                  className="mt-3 rounded-xl bg-brand-green-primary px-4 py-2.5 active:opacity-80"
+                  onPress={() => void refreshWishlist().catch(() => undefined)}
+                >
+                  <Text className="text-xs font-bold text-white">Try again</Text>
+                </Pressable>
+              </View>
+            ) : wishlist.length ? (
               wishlist.map((food, index) => {
                 const foodId = getFoodId(food);
                 return (
