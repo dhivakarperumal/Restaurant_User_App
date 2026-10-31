@@ -14,6 +14,7 @@ import {
 } from "lucide-react-native";
 import type { ReactNode } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { StatusBar } from "expo-status-bar";
 import {
     ActivityIndicator,
     Image,
@@ -751,7 +752,8 @@ export default function CheckoutScreen() {
 
   if (completedOrder) {
     return (
-      <SafeAreaView className="flex-1 bg-brand-surface-app" edges={["bottom"]}>
+      <SafeAreaView className="flex-1 bg-brand-surface-app" edges={["top", "bottom"]}>
+        <StatusBar style="dark" />
         <View className="flex-1 items-center justify-center px-6">
           <View className="w-full max-w-lg items-center rounded-3xl border border-brand-neutral-border-warm bg-white p-7">
             <CheckCircle2 color={colors["green-success"]} size={58} />
@@ -790,18 +792,26 @@ export default function CheckoutScreen() {
 
   if (isLoading || !isHydrated || isCartLoading) {
     return (
-      <View className="flex-1 items-center justify-center bg-brand-surface-app">
+      <SafeAreaView
+        className="flex-1 items-center justify-center bg-brand-surface-app"
+        edges={["top", "bottom"]}
+      >
+        <StatusBar style="dark" />
         <ActivityIndicator color={colors["green-primary"]} size="large" />
         <Text className="mt-3 text-sm font-semibold text-slate-600">
           Preparing checkout…
         </Text>
-      </View>
+      </SafeAreaView>
     );
   }
 
   if (!account) {
     return (
-      <View className="flex-1 items-center justify-center bg-brand-surface-app px-6">
+      <SafeAreaView
+        className="flex-1 items-center justify-center bg-brand-surface-app px-6"
+        edges={["top", "bottom"]}
+      >
+        <StatusBar style="dark" />
         <ShoppingBag color={colors["green-primary"]} size={42} />
         <Text className="mt-4 text-center text-2xl font-extrabold text-brand-neutral-text-primary">
           Log in to checkout
@@ -816,13 +826,17 @@ export default function CheckoutScreen() {
         >
           <Text className="font-extrabold text-white">Log in</Text>
         </Pressable>
-      </View>
+      </SafeAreaView>
     );
   }
 
   if (items.length === 0) {
     return (
-      <View className="flex-1 items-center justify-center bg-brand-surface-app px-6">
+      <SafeAreaView
+        className="flex-1 items-center justify-center bg-brand-surface-app px-6"
+        edges={["top", "bottom"]}
+      >
+        <StatusBar style="dark" />
         <ShoppingBag color={colors["green-primary"]} size={42} />
         <Text className="mt-4 text-center text-2xl font-extrabold text-brand-neutral-text-primary">
           Your cart is empty
@@ -837,32 +851,37 @@ export default function CheckoutScreen() {
         >
           <Text className="font-extrabold text-white">Browse food</Text>
         </Pressable>
-      </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <KeyboardAvoidingView
-      className="flex-1 bg-brand-surface-app"
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
+    <SafeAreaView
+      className="flex-1 bg-brand-green-primary"
+      edges={["top", "bottom"]}
     >
-      <ScrollView
-        className="flex-1"
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
+      <StatusBar style="light" />
+      <Pressable
+        accessibilityRole="button"
+        className="min-h-12 flex-row items-center px-5"
+        onPress={() => router.back()}
       >
-        <Pressable
-          accessibilityRole="button"
-          className="mb-5 self-start flex-row items-center py-2"
-          onPress={() => router.back()}
-        >
-          <ArrowLeft color={colors["neutral-slate"]} size={18} />
-          <Text className="ml-2 text-sm font-bold text-slate-600">
-            Back to cart
-          </Text>
-        </Pressable>
+        <ArrowLeft color={colors.white} size={18} />
+        <Text className="ml-2 text-sm font-bold text-white">
+          Back to cart
+        </Text>
+      </Pressable>
 
+      <KeyboardAvoidingView
+        className="flex-1 bg-brand-surface-app"
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+      >
+        <ScrollView
+          className="flex-1"
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
+        >
         <Text className="text-xs font-extrabold uppercase tracking-[3px] text-brand-warning-rust">
           Almost there
         </Text>
@@ -1286,7 +1305,8 @@ export default function CheckoutScreen() {
         <Text className="mt-3 text-center text-xs leading-5 text-slate-500">
           Your order details are securely submitted.
         </Text>
-      </ScrollView>
-    </KeyboardAvoidingView>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }

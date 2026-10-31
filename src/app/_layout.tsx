@@ -1,3 +1,4 @@
+import colors from "../theme/colors.json";
 import { Stack } from "expo-router";
 import { NavigationBar } from "expo-navigation-bar";
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -11,7 +12,12 @@ export default function RootLayout() {
       <CustomAlertProvider>
         <CartProvider>
           <NavigationBar style="dark" />
-          <Stack screenOptions={{ headerShown: false }} />
+          <Stack
+            screenOptions={{
+              headerShown: false,
+              contentStyle: { backgroundColor: colors["surface-app"] },
+            }}
+          />
         </CartProvider>
       </CustomAlertProvider>
     </SafeAreaProvider>
