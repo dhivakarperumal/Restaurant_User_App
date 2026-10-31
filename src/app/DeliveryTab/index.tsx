@@ -40,13 +40,8 @@ type Attendance = {
 };
 
 type DeliveryOrder = {
-  id?: string | number;
-  order_number?: string | number | null;
-  customer_name?: string | null;
-  address_line?: string | null;
-  area_locality?: string | null;
-  city?: string | null;
-  status?: string | null;
+  id: string;
+  [key: string]: unknown;
 };
 
 type DashboardData = {
@@ -144,6 +139,59 @@ function unwrapDashboard(responseData: unknown): DashboardData | null {
     : null;
 }
 
+function asRecord(value: unknown): Record<string, unknown> | null {
+  return typeof value === "object" && value !== null && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : null;
+}
+
+function firstText(record: Record<string, unknown>, keys: string[]): string {
+  for (const key of keys) {
+    const value = record[key];
+    if (typeof value === "string" || typeof value === "number") {
+      const text = String(value).trim();
+      if (text) return text;
+    }
+  }
+  return "";
+}
+
+function normalizeOrders(responseData: unknown): DeliveryOrder[] {
+  const root = asRecord(responseData);
+  const nested = asRecord(root?.data);
+  const ordersValue = Array.isArray(responseData)
+    ? responseData
+    : root?.orders ?? nested?.orders ?? root?.data;
+  if (!Array.isArray(ordersValue)) {
+    throw new Error("The assigned orders response was invalid.");
+  }
+
+  const orders = ordersValue.flatMap((value) => {
+    const order = asRecord(value);
+    if (!order) return [];
+    const id = firstText(order, ["order_id", "id", "order_number"]);
+    return id ? [{ ...order, id }] : [];
+  });
+  return [...new Map(orders.map((order) => [order.id, order])).values()];
+}
+
+function getOrderDate(order: DeliveryOrder): Date | null {
+  const value = firstText(order, ["order_date", "created_at", "createdAt"]);
+  if (!value) return null;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function isToday(date: Date | null): boolean {
+  if (!date) return false;
+  const now = new Date();
+  return (
+    date.getFullYear() === now.getFullYear() &&
+    date.getMonth() === now.getMonth() &&
+    date.getDate() === now.getDate()
+  );
+}
+
 function formatMoney(value: unknown): string {
   if (value == null || value === "") return "—";
   const amount = Number(value);
@@ -180,6 +228,9 @@ function formatDuration(totalSeconds: number): string {
 export default function DeliveryPartnerScreen() {
   const { showAlert } = useCustomAlert();
   const [dashboard, setDashboard] = useState<DashboardData | null>(null);
+  const [orders, setOrders] = useState<DeliveryOrder[]>([]);
+  const [ordersLoading, setOrdersLoading] = useState(true);
+  const [ordersError, setOrdersError] = useState("");
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
@@ -242,7 +293,41 @@ export default function DeliveryPartnerScreen() {
       (attendance?.check_in && !attendance.check_out),
   );
   const summary = dashboard?.summary ?? dashboard?.stats ?? {};
-  const activeOrder = dashboard?.active_order ?? dashboard?.activeOrder ?? null;
+  const todayOrders = orders
+    .filter((order) => isToday(getOrderDate(order)))
+    .sort(
+      (first, second) =>
+        (getOrderDate(second)?.getTime() ?? 0) - (getOrderDate(first)?.getTime() ?? 0),
+    );
+
+  useEffect(() => {
+    let active = true;
+    setOrdersLoading(true);
+    api
+      .get("/delivery-partner/orders")
+      .then((response) => {
+        const result = normalizeOrders(response.data);
+        if (!active) return;
+        setOrders(result);
+        setOrdersError("");
+      })
+      .catch((error: unknown) => {
+        console.error("Failed to load today's assigned delivery orders:", error);
+        if (active) {
+          setOrders([]);
+          setOrdersError(
+            getApiErrorMessage(error, "Today's assigned orders are unavailable."),
+          );
+        }
+      })
+      .finally(() => {
+        if (active) setOrdersLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [refreshVersion]);
 
   useEffect(() => {
     if (!isOnline || !isCheckedIn) return;
@@ -562,61 +647,139 @@ export default function DeliveryPartnerScreen() {
           })}
         </View>
 
-        <View className="mb-5 rounded-2xl border border-[#E2E9E3] bg-white p-4">
+        <View className="mb-5 rounded-[24px] border border-[#E2E9E3] bg-white p-4">
           <View className="flex-row items-center justify-between">
-            <View>
+            <View className="mr-3 flex-1">
               <Text className="text-[10px] font-extrabold uppercase tracking-[1.5px] text-[#39804F]">
-                On the road
+                Assigned deliveries
               </Text>
               <Text className="mt-1 text-lg font-extrabold text-[#17251E]">
-                Active delivery
+                Today&apos;s orders
+              </Text>
+            </View>
+            <View className="mr-2 min-w-9 items-center rounded-full bg-[#EAF2E8] px-3 py-2">
+              <Text className="text-sm font-extrabold text-[#21643A]">
+                {todayOrders.length}
               </Text>
             </View>
             <Pressable
               accessibilityRole="button"
-              className="flex-row items-center rounded-xl bg-[#EAF2E8] px-3 py-2"
+              accessibilityLabel="Open all delivery orders"
+              className="h-10 w-10 items-center justify-center rounded-xl bg-[#F4F7F2]"
               onPress={() => router.push("/DeliveryTab/orders")}
             >
-              <Text className="text-xs font-bold text-[#21643A]">Open orders</Text>
-              <ArrowRight color="#21643A" size={15} style={{ marginLeft: 5 }} />
+              <ArrowRight color="#21643A" size={18} />
             </Pressable>
           </View>
 
-          {activeOrder ? (
-            <View className="mt-4 rounded-xl bg-[#F5F8F5] p-4">
-              <View className="flex-row items-center justify-between">
-                <Text className="text-xs font-semibold text-slate-500">
-                  Order #{activeOrder.order_number || activeOrder.id || "—"}
-                </Text>
-                {activeOrder.status ? (
-                  <Text className="rounded-full bg-emerald-100 px-2.5 py-1 text-[10px] font-bold text-emerald-800">
-                    {activeOrder.status}
-                  </Text>
-                ) : null}
-              </View>
-              <Text className="mt-2 text-base font-extrabold text-[#17251E]">
-                {activeOrder.customer_name || "Customer"}
+          {ordersLoading ? (
+            <View className="mt-4 min-h-28 items-center justify-center rounded-2xl bg-[#F7F9F7]">
+              <ActivityIndicator color="#17663D" />
+              <Text className="mt-2 text-xs font-medium text-slate-500">
+                Loading today&apos;s orders…
               </Text>
-              <View className="mt-2 flex-row items-start">
-                <MapPin color="#39804F" size={16} />
-                <Text className="ml-2 flex-1 text-sm leading-5 text-slate-600">
-                  {[
-                    activeOrder.address_line,
-                    activeOrder.area_locality,
-                    activeOrder.city,
-                  ]
-                    .filter(Boolean)
-                    .join(", ") || "Delivery location pending"}
-                </Text>
-              </View>
             </View>
+          ) : ordersError ? (
+            <View className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 p-4">
+              <Text className="text-sm font-bold text-amber-900">
+                Could not load today&apos;s orders
+              </Text>
+              <Text className="mt-1 text-xs leading-5 text-amber-800">{ordersError}</Text>
+            </View>
+          ) : todayOrders.length ? (
+            todayOrders.map((order) => {
+              const customer = asRecord(order.customer);
+              const customerName =
+                firstText(order, ["customer_name"]) ||
+                firstText(customer ?? {}, ["name", "full_name", "fullName"]) ||
+                "Customer";
+              const location = [
+                firstText(order, ["delivery_address", "dropoff_address", "address_line"]),
+                firstText(order, ["area_locality"]),
+                firstText(order, ["city"]),
+              ]
+                .filter(Boolean)
+                .join(", ");
+              const status = firstText(order, ["order_status", "status"]) || "New";
+              const normalizedStatus = status.toUpperCase().replace(/[\s-]+/g, "_");
+              const statusStyle =
+                normalizedStatus === "DELIVERED" || normalizedStatus === "COMPLETED"
+                  ? { backgroundColor: "#EAF4E4", color: "#17663D" }
+                  : normalizedStatus === "CANCELLED"
+                    ? { backgroundColor: "#FFF0F2", color: "#C51D42" }
+                    : { backgroundColor: "#FFF6D8", color: "#A85B00" };
+              const placedAt = getOrderDate(order);
+              const orderNumber = firstText(order, ["order_number", "order_id", "id"]);
+
+              return (
+                <View
+                  className="mt-3 rounded-2xl border border-[#E6ECE7] bg-[#FAFCFA] p-4"
+                  key={order.id}
+                >
+                  <View className="flex-row items-center">
+                    <View className="mr-3 h-10 w-10 items-center justify-center rounded-xl bg-[#EAF2E8]">
+                      <PackageCheck color="#21643A" size={19} />
+                    </View>
+                    <View className="flex-1">
+                      <Text className="text-xs font-bold text-slate-500">
+                        Order #{orderNumber}
+                      </Text>
+                      <Text className="mt-0.5 text-sm font-extrabold text-[#17251E]">
+                        {customerName}
+                      </Text>
+                    </View>
+                    <View
+                      className="rounded-full px-2.5 py-1.5"
+                      style={{ backgroundColor: statusStyle.backgroundColor }}
+                    >
+                      <Text
+                        className="text-[10px] font-bold"
+                        style={{ color: statusStyle.color }}
+                      >
+                        {status.replace(/_/g, " ")}
+                      </Text>
+                    </View>
+                  </View>
+                  <View className="mt-3 flex-row items-start border-t border-[#E8EEE8] pt-3">
+                    <MapPin color="#39804F" size={16} />
+                    <Text
+                      className="ml-2 flex-1 text-xs leading-5 text-slate-600"
+                      numberOfLines={2}
+                    >
+                      {location || "Delivery location pending"}
+                    </Text>
+                    <View className="ml-2 max-w-[120px] flex-row items-center">
+                      <Clock3 color="#839087" size={13} />
+                      <Text
+                        className="ml-1 text-right text-[10px] font-semibold text-slate-500"
+                        numberOfLines={1}
+                      >
+                        {placedAt
+                          ? placedAt.toLocaleString([], {
+                              day: "numeric",
+                              month: "short",
+                              hour: "numeric",
+                              minute: "2-digit",
+                            })
+                          : "Date unavailable"}
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+              );
+            })
           ) : (
-            <View className="mt-4 flex-row items-center rounded-xl bg-[#F7F9F7] p-4">
-              <PackageCheck color="#5B8063" size={20} />
-              <Text className="ml-3 flex-1 text-sm leading-5 text-slate-600">
+            <View className="mt-4 items-center rounded-2xl bg-[#F7F9F7] px-5 py-7">
+              <View className="h-12 w-12 items-center justify-center rounded-2xl bg-white">
+                <CalendarDays color="#5B8063" size={22} />
+              </View>
+              <Text className="mt-3 text-sm font-extrabold text-[#24372D]">
+                No assigned orders today
+              </Text>
+              <Text className="mt-1 text-center text-xs leading-5 text-slate-500">
                 {isOnline
-                  ? "No active delivery right now. You are online and waiting for new assignments."
-                  : "Go online to start receiving delivery assignments."}
+                  ? "You are online and ready for new delivery assignments."
+                  : "Go online when you are ready to receive delivery assignments."}
               </Text>
             </View>
           )}
