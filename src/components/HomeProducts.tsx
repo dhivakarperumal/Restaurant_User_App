@@ -45,7 +45,8 @@ export default function HomeProducts() {
         .sort(
           (first, second) =>
             Number(Boolean(second.featured)) - Number(Boolean(first.featured)),
-        ),
+         )
+        .slice(0, 10),
     [foods],
   );
 
