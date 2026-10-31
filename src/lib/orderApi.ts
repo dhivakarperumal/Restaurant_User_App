@@ -1,6 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import api from "./api";
-import type { CartItem } from "../types/food";
+import { getFoodId } from "./foods";
+import type { CartItem, CustomizedFoodCartInput } from "../types/food";
 
 export type CheckoutAddress = {
   id?: string | number;
@@ -24,6 +25,12 @@ export type CheckoutPayload = {
   address: CheckoutAddress | null;
   delivery_location?: CheckoutLocation | null;
   payment_method: "cod" | "online";
+  buy_now?: {
+    food_id: string;
+    quantity: number;
+    selected_addons: string[];
+    selected_customizations: Record<string, string[] | string>;
+  };
 };
 
 export type CheckoutLocation = {
@@ -49,6 +56,50 @@ export type CheckoutOrder = {
     currency: string;
   };
 };
+
+export function getBuyNowOrderItem(
+  input: CustomizedFoodCartInput,
+): NonNullable<CheckoutPayload["buy_now"]> {
+  const foodId = getFoodId(input.food);
+  if (!foodId) throw new Error("The selected food did not include an ID.");
+
+  const selectedCustomizations: NonNullable<
+    CheckoutPayload["buy_now"]
+  >["selected_customizations"] = {};
+  const customRequests: string[] = [];
+
+  for (const option of input.selectedCustomizations) {
+    if (
+      option.id.startsWith("requested-customization") ||
+      option.groupName === "Additional customization"
+    ) {
+      customRequests.push(option.name);
+      continue;
+    }
+
+    const groupName = option.groupName || "Customizations";
+    const selected = selectedCustomizations[groupName];
+    selectedCustomizations[groupName] = [
+      ...(Array.isArray(selected) ? selected : selected ? [selected] : []),
+      option.name,
+    ];
+  }
+
+  if (customRequests.length) {
+    selectedCustomizations.__custom_request__ = customRequests.join(", ");
+  }
+
+  return {
+    food_id: foodId,
+    quantity: input.quantity,
+    selected_addons: input.selectedAddons.map((option) =>
+      option.id.startsWith("requested-addon")
+        ? `Custom request: ${option.name}`
+        : option.name,
+    ),
+    selected_customizations: selectedCustomizations,
+  };
+}
 
 type ApiRecord = Record<string, unknown>;
 
@@ -252,6 +303,7 @@ export async function verifyOrderPayment(input: {
   razorpay_order_id: string;
   razorpay_payment_id: string;
   razorpay_signature: string;
+  preserve_cart?: boolean;
 }): Promise<{ success: boolean; message?: string }> {
   const response = await api.post("/orders/verify-payment", input);
   const body = asRecord(response.data);

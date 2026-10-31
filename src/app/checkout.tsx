@@ -1,5 +1,5 @@
 import colors from "../theme/colors.json";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import * as Location from "expo-location";
 import {
     ArrowLeft,
@@ -40,6 +40,7 @@ import {
     fetchDeliveryQuote,
     fetchSavedAddresses,
     getCheckoutIdempotencyKey,
+    getBuyNowOrderItem,
     verifyOrderPayment,
     type CheckoutAddress,
     type CheckoutCustomer,
@@ -305,7 +306,33 @@ function OrderItems({ items }: { items: CartItem[] }) {
 }
 
 export default function CheckoutScreen() {
-  const { items, itemCount, isHydrated, isCartLoading, refreshCart } = useCart();
+  const params = useLocalSearchParams<{ buyNow?: string | string[] }>();
+  const buyNowParam = Array.isArray(params.buyNow)
+    ? params.buyNow[0]
+    : params.buyNow;
+  const isBuyNowMode = buyNowParam === "true";
+  const {
+    items,
+    isHydrated,
+    isCartLoading,
+    refreshCart,
+    buyNowItem,
+    setBuyNowItem,
+  } = useCart();
+  const checkoutItems = useMemo(() => {
+    if (!isBuyNowMode) return items;
+    if (!buyNowItem) return [];
+    const foodId = String(buyNowItem.food.food_id ?? buyNowItem.food.id ?? "");
+    return [{
+      ...buyNowItem,
+      key: `buy-now-${foodId}`,
+      serverId: `buy-now-${foodId}`,
+    }];
+  }, [buyNowItem, isBuyNowMode, items]);
+  const checkoutItemCount = checkoutItems.reduce(
+    (total, item) => total + item.quantity,
+    0,
+  );
   const [account, setAccount] = useState<CartAccount | null>(null);
   const [customer, setCustomer] = useState<CheckoutCustomer>({
     name: "",
@@ -395,8 +422,12 @@ export default function CheckoutScreen() {
   }, []);
 
   const subtotal = useMemo(
-    () => items.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0),
-    [items],
+    () =>
+      checkoutItems.reduce(
+        (sum, item) => sum + item.unitPrice * item.quantity,
+        0,
+      ),
+    [checkoutItems],
   );
   const addressFingerprint = getAddressFingerprint(address);
   const quoteFingerprint = [
@@ -601,6 +632,7 @@ export default function CheckoutScreen() {
     } catch (error) {
       console.error("Could not clear the completed checkout request key:", error);
     }
+    if (isBuyNowMode) setBuyNowItem(null);
     setCompletionNotice(notice);
     setCompletedOrder(orderNumber);
   };
@@ -653,6 +685,7 @@ export default function CheckoutScreen() {
       razorpay_order_id: payment.razorpay_order_id,
       razorpay_payment_id: payment.razorpay_payment_id,
       razorpay_signature: payment.razorpay_signature,
+      preserve_cart: isBuyNowMode,
     });
     if (!verification.success) {
       throw new Error(
@@ -673,8 +706,12 @@ export default function CheckoutScreen() {
       router.replace("/Auth/login");
       return;
     }
-    if (!items.length) {
-      setErrorMessage("Your cart is empty.");
+    if (!checkoutItems.length) {
+      setErrorMessage(
+        isBuyNowMode
+          ? "The selected item is unavailable for checkout."
+          : "Your cart is empty.",
+      );
       return;
     }
     if (!customer.name.trim() || customer.name.trim().length > 150) {
@@ -736,10 +773,13 @@ export default function CheckoutScreen() {
         delivery_location:
           fulfillmentType === "home_delivery" ? deliveryLocation : null,
         payment_method: paymentMethod,
+        ...(isBuyNowMode && buyNowItem
+          ? { buy_now: getBuyNowOrderItem(buyNowItem) }
+          : {}),
       };
       const requestKey = await getCheckoutIdempotencyKey(
         account.id,
-        items,
+        checkoutItems,
         payload,
       );
       const result = await createOrder(payload, requestKey.idempotencyKey);
@@ -859,7 +899,7 @@ export default function CheckoutScreen() {
     );
   }
 
-  if (items.length === 0) {
+  if (checkoutItems.length === 0) {
     return (
       <SafeAreaView
         className="flex-1 items-center justify-center bg-brand-surface-app px-6"
@@ -868,15 +908,20 @@ export default function CheckoutScreen() {
         <StatusBar style="dark" />
         <ShoppingBag color={colors["green-primary"]} size={42} />
         <Text className="mt-4 text-center text-2xl font-extrabold text-brand-neutral-text-primary">
-          Your cart is empty
+          {isBuyNowMode ? "The selected item is unavailable" : "Your cart is empty"}
         </Text>
         <Text className="mt-2 text-center text-sm text-slate-500">
-          Add something delicious before checking out.
+          {isBuyNowMode
+            ? "Go back and select a menu item to buy now."
+            : "Add something delicious before checking out."}
         </Text>
         <Pressable
           accessibilityRole="button"
           className="mt-6 min-h-12 justify-center rounded-xl bg-brand-green-primary px-6"
-          onPress={() => router.replace("/UsersTab/shop")}
+          onPress={() => {
+            setBuyNowItem(null);
+            router.replace("/UsersTab/shop");
+          }}
         >
           <Text className="font-extrabold text-white">Browse food</Text>
         </Pressable>
@@ -893,11 +938,14 @@ export default function CheckoutScreen() {
       <Pressable
         accessibilityRole="button"
         className="min-h-12 flex-row items-center px-5"
-        onPress={() => router.back()}
+        onPress={() => {
+          if (isBuyNowMode) setBuyNowItem(null);
+          router.back();
+        }}
       >
         <ArrowLeft color={colors.white} size={18} />
         <Text className="ml-2 text-sm font-bold text-white">
-          Back to cart
+          {isBuyNowMode ? "Back to menu" : "Back to cart"}
         </Text>
       </Pressable>
 
@@ -1265,11 +1313,11 @@ export default function CheckoutScreen() {
 
         <View className="mt-4 rounded-2xl border border-brand-neutral-border-warm bg-white p-5">
           <SectionHeading
-            detail={`${itemCount} item${itemCount === 1 ? "" : "s"} in your order`}
+            detail={`${checkoutItemCount} item${checkoutItemCount === 1 ? "" : "s"} in your order`}
             icon={<UtensilsCrossed color={colors["gold-copper"]} size={19} />}
             title="Your food"
           />
-          <OrderItems items={items} />
+          <OrderItems items={checkoutItems} />
           <View className="border-t border-slate-100 pt-4">
             <View className="flex-row justify-between">
               <Text className="text-sm font-semibold text-slate-600">Subtotal</Text>

@@ -157,7 +157,13 @@ export default function ShopScreen() {
     action: ShopAction;
   } | null>(null);
   const [actionError, setActionError] = useState("");
-  const { addItem, items: cartItems, wishlist, toggleWishlist } = useCart();
+  const {
+    addItem,
+    items: cartItems,
+    wishlist,
+    toggleWishlist,
+    setBuyNowItem,
+  } = useCart();
   const actionLock = useRef(false);
   const { width: screenWidth } = useWindowDimensions();
   const pageWidth = Math.max(0, screenWidth - 48);
@@ -436,8 +442,13 @@ export default function ShopScreen() {
     setPendingAction({ foodId: getFoodId(food), action });
     setActionError("");
     try {
-      await addItem(getDefaultFoodCartInput(food));
-      if (action === "buy") router.push("/checkout");
+      const input = getDefaultFoodCartInput(food);
+      if (action === "buy") {
+        setBuyNowItem(input);
+        router.push({ pathname: "/checkout", params: { buyNow: "true" } });
+      } else {
+        await addItem(input);
+      }
     } catch (requestError) {
       console.error(
         action === "buy"

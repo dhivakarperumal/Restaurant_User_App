@@ -34,7 +34,9 @@ type CartContextValue = {
   isCartLoading: boolean;
   cartError: string;
   wishlist: FoodProduct[];
+  buyNowItem: CustomizedFoodCartInput | null;
   addItem: (input: CustomizedFoodCartInput) => Promise<void>;
+  setBuyNowItem: (input: CustomizedFoodCartInput | null) => void;
   setQuantity: (key: string, quantity: number) => Promise<void>;
   removeItem: (key: string) => Promise<void>;
   clearCart: () => Promise<void>;
@@ -47,6 +49,8 @@ const CartContext = createContext<CartContextValue | null>(null);
 export function CartProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const [items, setItems] = useState<CartItem[]>([]);
+  const [buyNowItem, setBuyNowItem] =
+    useState<CustomizedFoodCartInput | null>(null);
   const [wishlist, setWishlist] = useState<FoodProduct[]>([]);
   const [isHydrated, setIsHydrated] = useState(false);
   const [isCartLoading, setIsCartLoading] = useState(false);
@@ -226,7 +230,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
       isCartLoading,
       cartError,
       wishlist,
+      buyNowItem,
       addItem,
+      setBuyNowItem,
       setQuantity: updateQuantityForAccount,
       removeItem,
       clearCart,
@@ -240,7 +246,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
       isCartLoading,
       cartError,
       wishlist,
+      buyNowItem,
       addItem,
+      setBuyNowItem,
       updateQuantityForAccount,
       removeItem,
       clearCart,
