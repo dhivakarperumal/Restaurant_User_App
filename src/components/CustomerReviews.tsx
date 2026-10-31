@@ -60,7 +60,8 @@ export default function CustomerReviews() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [carouselWidth, setCarouselWidth] = useState(0);
-  const cardWidth = carouselWidth || Math.max(0, screenWidth - 64);
+  const pageWidth = carouselWidth || Math.max(0, screenWidth - 32);
+  const cardWidth = Math.max(0, pageWidth - 12);
 
   const fetchReviews = useCallback(async () => {
     setLoading(true);
@@ -188,14 +189,16 @@ export default function CustomerReviews() {
           onLayout={(event) => setCarouselWidth(event.nativeEvent.layout.width)}
         >
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            <View
-              style={{ width: cardWidth }}
-              className="h-[270px] rounded-[22px] border border-[#D5A233] bg-[#084A2B] p-5"
-            >
-              <View className="h-4 w-28 rounded bg-[#216443]" />
-              <View className="mt-8 h-4 w-2/3 rounded bg-[#216443]" />
-              <View className="mt-3 h-3 w-full rounded bg-[#216443]" />
-              <View className="mt-2 h-3 w-4/5 rounded bg-[#216443]" />
+            <View style={{ width: pageWidth }} className="items-center">
+              <View
+                style={{ width: cardWidth }}
+                className="h-[270px] rounded-[22px] border border-[#D5A233] bg-[#084A2B] p-5"
+              >
+                <View className="h-4 w-28 rounded bg-[#216443]" />
+                <View className="mt-8 h-4 w-2/3 rounded bg-[#216443]" />
+                <View className="mt-3 h-3 w-full rounded bg-[#216443]" />
+                <View className="mt-2 h-3 w-4/5 rounded bg-[#216443]" />
+              </View>
             </View>
           </ScrollView>
         </View>
@@ -217,78 +220,82 @@ export default function CustomerReviews() {
         >
           <ScrollView
             horizontal
-            pagingEnabled
-            snapToInterval={cardWidth}
+            snapToInterval={pageWidth}
             decelerationRate="fast"
             showsHorizontalScrollIndicator={false}
           >
             {reviews.map((review) => (
               <View
                 key={review.id}
-                style={{ width: cardWidth }}
-                className="min-h-[270px] flex-col rounded-[22px] border border-[#D5A233] bg-[#084A2B] p-5 shadow-sm"
+                style={{ width: pageWidth }}
+                className="items-center"
               >
-                <View className="flex-row items-center justify-between">
-                  <View
-                    accessibilityLabel={`${review.rating.toFixed(1)} out of 5 stars`}
-                    className="flex-row"
-                  >
-                    {Array.from({ length: 5 }, (_, index) => (
-                      <Star
-                        key={index}
-                        color={index < review.rating ? "#E9BE45" : "#B8C8B8"}
-                        fill={index < review.rating ? "#E9BE45" : "transparent"}
-                        size={17}
-                      />
-                    ))}
+                <View
+                  style={{ width: cardWidth }}
+                  className="min-h-[270px] flex-col rounded-[22px] border border-[#D5A233] bg-[#084A2B] p-5 shadow-sm"
+                >
+                  <View className="flex-row items-center justify-between">
+                    <View
+                      accessibilityLabel={`${review.rating.toFixed(1)} out of 5 stars`}
+                      className="flex-row"
+                    >
+                      {Array.from({ length: 5 }, (_, index) => (
+                        <Star
+                          key={index}
+                          color={index < review.rating ? "#E9BE45" : "#B8C8B8"}
+                          fill={index < review.rating ? "#E9BE45" : "transparent"}
+                          size={17}
+                        />
+                      ))}
+                    </View>
+                    <Text className="rounded-full bg-[#E9BE45] px-2.5 py-1 text-xs font-extrabold text-[#084A2B]">
+                      {review.rating.toFixed(1)}
+                    </Text>
                   </View>
-                  <Text className="rounded-full bg-[#E9BE45] px-2.5 py-1 text-xs font-extrabold text-[#084A2B]">
-                    {review.rating.toFixed(1)}
-                  </Text>
-                </View>
-                <View className="mt-6 flex-1">
-                  <Quote color="#E9BE45" fill="#E9BE45" size={21} />
-                  {review.title ? (
+                  <View className="mt-6 flex-1">
+                    <Quote color="#E9BE45" fill="#E9BE45" size={21} />
+                    {review.title ? (
+                      <Text
+                        numberOfLines={1}
+                        className="mt-1 text-sm font-bold text-[#FFF8E7]"
+                      >
+                        {review.title}
+                      </Text>
+                    ) : null}
                     <Text
-                      numberOfLines={1}
-                      className="mt-1 text-sm font-bold text-[#FFF8E7]"
+                      numberOfLines={5}
+                      className="mt-1 text-[13px] leading-5 text-[#F3EEDC]"
                     >
-                      {review.title}
+                      {review.comment}
                     </Text>
-                  ) : null}
-                  <Text
-                    numberOfLines={5}
-                    className="mt-1 text-[13px] leading-5 text-[#F3EEDC]"
-                  >
-                    {review.comment}
-                  </Text>
-                </View>
-                <View className="mt-4 flex-row items-center border-t border-[#D5A233] pt-3">
-                  <View className="h-12 w-12 items-center justify-center overflow-hidden rounded-full border border-[#D5A233] bg-[#FFF8E7]">
-                    {review.photo ? (
-                      <Image
-                        accessibilityLabel={`${review.reviewerName} profile`}
-                        source={{ uri: review.photo }}
-                        className="h-12 w-12"
-                        resizeMode="cover"
-                      />
-                    ) : (
-                      <UserRound color="#084A2B" size={24} strokeWidth={2.25} />
-                    )}
                   </View>
-                  <View className="ml-3 flex-1">
-                    <Text
-                      numberOfLines={1}
-                      className="text-sm font-extrabold text-[#FFF8E7]"
-                    >
-                      {review.reviewerName}
-                    </Text>
-                    <Text
-                      numberOfLines={1}
-                      className="mt-1 text-xs text-[#D5E0D3]"
-                    >
-                      {review.productName}
-                    </Text>
+                  <View className="mt-4 flex-row items-center border-t border-[#D5A233] pt-3">
+                    <View className="h-12 w-12 items-center justify-center overflow-hidden rounded-full border border-[#D5A233] bg-[#FFF8E7]">
+                      {review.photo ? (
+                        <Image
+                          accessibilityLabel={`${review.reviewerName} profile`}
+                          source={{ uri: review.photo }}
+                          className="h-12 w-12"
+                          resizeMode="cover"
+                        />
+                      ) : (
+                        <UserRound color="#084A2B" size={24} strokeWidth={2.25} />
+                      )}
+                    </View>
+                    <View className="ml-3 flex-1">
+                      <Text
+                        numberOfLines={1}
+                        className="text-sm font-extrabold text-[#FFF8E7]"
+                      >
+                        {review.reviewerName}
+                      </Text>
+                      <Text
+                        numberOfLines={1}
+                        className="mt-1 text-xs text-[#D5E0D3]"
+                      >
+                        {review.productName}
+                      </Text>
+                    </View>
                   </View>
                 </View>
               </View>
