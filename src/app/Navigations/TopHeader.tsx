@@ -130,7 +130,7 @@ export default function TopHeader({ title }: TopHeaderProps) {
             <Image
               accessible
               accessibilityLabel="Buy Food restaurant logo"
-              className="mr-2 h-11 w-11 rounded-full border border-[#E9BE45] bg-white"
+              className="mr-2 h-12 w-12 rounded-full border border-[#E9BE45] bg-white"
               resizeMode="contain"
               source={require("../../../assets/images/logo.png")}
             />
