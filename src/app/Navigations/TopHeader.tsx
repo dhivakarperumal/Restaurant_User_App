@@ -32,7 +32,6 @@ import { confirmLogout } from "../../lib/logout";
 
 type TopHeaderProps = {
   title: string;
-  onOrdersPress: () => void;
 };
 
 type AccountDetails = {
@@ -51,10 +50,7 @@ function getTextValue(user: Record<string, unknown>, keys: string[]) {
   return "";
 }
 
-export default function TopHeader({
-  title,
-  onOrdersPress,
-}: TopHeaderProps) {
+export default function TopHeader({ title }: TopHeaderProps) {
   const insets = useSafeAreaInsets();
   const { width: windowWidth } = useWindowDimensions();
   const { wishlist } = useCart();
@@ -174,7 +170,7 @@ export default function TopHeader({
               accessibilityLabel="Open your orders"
               accessibilityRole="button"
               className="mr-1.5 h-10 w-10 items-center justify-center rounded-full border border-brand-neutral-border-cream bg-white active:bg-brand-green-muted-surface"
-              onPress={onOrdersPress}
+              onPress={() => router.push("/UsersTab/orders")}
             >
               <ShoppingBag color={colors["green-secondary"]} size={20} />
               <View className="absolute right-1 top-1 h-2 w-2 rounded-full border border-white bg-brand-gold-bright" />

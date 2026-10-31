@@ -27,6 +27,10 @@ const headerTitles: Record<string, string> = {
   profile: "Profile",
 };
 
+export const unstable_settings = {
+  anchor: "home",
+};
+
 export default function RootLayout() {
   return <RootTabs />;
 }
@@ -56,10 +60,9 @@ function RootTabs() {
     <Tabs
       screenOptions={({ route }) => ({
         headerShown: Boolean(headerTitles[route.name]),
-        header: ({ navigation }) => (
+        header: () => (
           <TopHeader
             title={headerTitles[route.name] ?? route.name}
-            onOrdersPress={() => navigation.navigate("orders")}
           />
         ),
         headerStyle: { backgroundColor: colors["surface-app"] },
@@ -261,20 +264,6 @@ function RootTabs() {
       })}
     >
       <Tabs.Screen name="index" options={{ href: null }} />
-      <Tabs.Screen name="login" options={{ title: "Login", href: null }} />
-      <Tabs.Screen name="register" options={{ title: "Register", href: null }} />
-      <Tabs.Screen
-        name="delivery"
-        options={{ title: "Delivery", href: null }}
-      />
-      <Tabs.Screen
-        name="user/Navigations/Bottombar"
-        options={{ href: null }}
-      />
-      <Tabs.Screen
-        name="user/Navigations/TopHeader"
-        options={{ href: null }}
-      />
       <Tabs.Screen name="home" options={{ title: "Home" }} />
       <Tabs.Screen name="explore" options={{ href: null }} />
       <Tabs.Screen name="shop" options={{ title: "Shop" }} />
@@ -282,7 +271,7 @@ function RootTabs() {
       <Tabs.Screen name="cart" options={{ title: "Cart" }} />
       <Tabs.Screen name="event-orders" options={{ title: "Events" }} />
       <Tabs.Screen name="reservations" options={{ title: "Tables" }} />
-      <Tabs.Screen name="orders" options={{ href: null }} />
+      <Tabs.Screen name="orders" options={{ tabBarButton: () => null, tabBarStyle: { display: "none" } }} />
       <Tabs.Screen name="profile" options={{ title: "Profile" }} />
       <Tabs.Screen name="product/[id]" options={{ title: "Product", href: null }} />
     </Tabs>

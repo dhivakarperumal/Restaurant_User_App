@@ -1,6 +1,6 @@
 import colors from "../../theme/colors.json";
-import { Redirect } from "expo-router";
-import { useEffect, useState } from "react";
+import { Redirect, usePathname } from "expo-router";
+import { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Pressable, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { getStoredRole, getStoredToken } from "../../lib/api";
@@ -9,11 +9,15 @@ import { getDashboardRoute, type DashboardRoute } from "../../lib/auth";
 type Destination = DashboardRoute | "/Auth/login";
 
 export default function Index() {
+  const pathname = usePathname();
+  const pathnameRef = useRef(pathname);
+  pathnameRef.current = pathname;
   const [destination, setDestination] = useState<Destination | null>(null);
   const [hasLoadError, setHasLoadError] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
 
   useEffect(() => {
+    if (pathname !== "/UsersTab") return;
     let isMounted = true;
 
     const restoreSession = async () => {
@@ -22,16 +26,22 @@ export default function Index() {
       try {
         const token = await getStoredToken();
         if (!token) {
-          if (isMounted) setDestination("/Auth/login");
+          if (isMounted && pathnameRef.current === "/UsersTab") {
+            setDestination("/Auth/login");
+          }
           return;
         }
 
         const role = await getStoredRole();
         const route = getDashboardRoute(role) ?? "/Auth/login";
-        if (isMounted) setDestination(route);
+        if (isMounted && pathnameRef.current === "/UsersTab") {
+          setDestination(route);
+        }
       } catch (error) {
         console.error("Failed to restore the saved login session:", error);
-        if (isMounted) setHasLoadError(true);
+        if (isMounted && pathnameRef.current === "/UsersTab") {
+          setHasLoadError(true);
+        }
       }
     };
 
@@ -39,7 +49,9 @@ export default function Index() {
     return () => {
       isMounted = false;
     };
-  }, [retryCount]);
+  }, [pathname, retryCount]);
+
+  if (pathname !== "/UsersTab") return null;
 
   if (destination) {
     return <Redirect href={destination} />;
