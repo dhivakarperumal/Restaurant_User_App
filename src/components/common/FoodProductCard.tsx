@@ -73,10 +73,10 @@ export default function FoodProductCard({
         >
           {image && !imageError ? (
             <Image
-              accessible
-              accessibilityLabel={name}
+              accessible={false}
               className="h-full w-full"
               onError={() => setImageError(true)}
+              pointerEvents="none"
               resizeMode="cover"
               source={{ uri: image }}
             />
@@ -187,10 +187,10 @@ export default function FoodProductCard({
         >
           {image && !imageError ? (
             <Image
-              accessible
-              accessibilityLabel={name}
+              accessible={false}
               className="h-full w-full"
               onError={() => setImageError(true)}
+              pointerEvents="none"
               resizeMode="cover"
               source={{ uri: image }}
             />

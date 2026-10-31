@@ -34,6 +34,7 @@ import api from "../lib/api";
 import { getFoodDiscountPercentage, getFoodId, getMenuFoods } from "../lib/foods";
 import { getDefaultFoodCartInput } from "../lib/cart";
 import { useCart } from "../contexts/CartContext";
+import { useProductNavigation } from "../hooks/useProductNavigation";
 import type { FoodProduct } from "../types/food";
 import FoodProductCard from "./common/FoodProductCard";
 import colors from "../theme/colors.json";
@@ -125,6 +126,7 @@ function matchesCuisine(food: FoodProduct, cuisine: ShopCuisine): boolean {
 }
 
 export default function ShopScreen() {
+  const openProduct = useProductNavigation();
   const params = useLocalSearchParams<{
     category?: string | string[];
     cuisine?: string | string[];
@@ -258,7 +260,7 @@ export default function ShopScreen() {
   };
 
   const selectFood = (food: FoodProduct) => {
-    router.push({ pathname: "/UsersTab/product/[id]", params: { id: getFoodId(food) } });
+    openProduct(food);
   };
 
   const filteredFoods = useMemo(() => {

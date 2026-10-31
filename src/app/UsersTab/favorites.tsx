@@ -6,10 +6,12 @@ import { ActivityIndicator, Pressable, ScrollView, Text, View, useWindowDimensio
 import FoodCustomizationModal from "../../components/common/FoodCustomizationModal";
 import FoodProductCard from "../../components/common/FoodProductCard";
 import { useCart } from "../../contexts/CartContext";
+import { useProductNavigation } from "../../hooks/useProductNavigation";
 import { getFoodId } from "../../lib/foods";
 import type { FoodProduct } from "../../types/food";
 
 export default function FavoritesScreen() {
+  const openProduct = useProductNavigation();
   const {
     addItem,
     items: cartItems,
@@ -85,9 +87,7 @@ export default function FavoritesScreen() {
                   cartQuantity={cartItems
                     .filter((item) => getFoodId(item.food) === foodId)
                     .reduce((total, item) => total + item.quantity, 0)}
-                  onSelect={() =>
-                    router.push({ pathname: "/UsersTab/product/[id]", params: { id: foodId } })
-                  }
+                  onSelect={openProduct}
                   onCustomize={setSelectedFood}
                   onToggleWishlist={(item) => void handleToggleWishlist(item)}
                 />

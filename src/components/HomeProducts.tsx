@@ -7,6 +7,7 @@ import api from "../lib/api";
 import { getActiveFoods, getFoodId } from "../lib/foods";
 import { getDefaultFoodCartInput } from "../lib/cart";
 import { useCart } from "../contexts/CartContext";
+import { useProductNavigation } from "../hooks/useProductNavigation";
 import type { FoodProduct } from "../types/food";
 import FoodProductCard from "./common/FoodProductCard";
 
@@ -37,6 +38,7 @@ function getFoodType(food: FoodProduct): string {
 }
 
 export default function HomeProducts() {
+  const openProduct = useProductNavigation();
   const [foods, setFoods] = useState<FoodProduct[]>([]);
   const [pendingAction, setPendingAction] = useState<{
     foodId: string;
@@ -187,9 +189,7 @@ export default function HomeProducts() {
                     : null
                 }
                 isBusy={pendingAction !== null}
-                onSelect={(item) =>
-                  router.push({ pathname: "/UsersTab/product/[id]", params: { id: getFoodId(item) } })
-                }
+                onSelect={openProduct}
                 onAdd={(item) => void handleProductAction(item, "add")}
                 onBuyNow={(item) => void handleProductAction(item, "buy")}
                 onToggleWishlist={(item) => void handleToggleWishlist(item)}
@@ -294,9 +294,7 @@ export default function HomeProducts() {
                         : null
                     }
                     isBusy={pendingAction !== null}
-                    onSelect={(item) =>
-                      router.push({ pathname: "/UsersTab/product/[id]", params: { id: getFoodId(item) } })
-                    }
+                    onSelect={openProduct}
                     onAdd={(item) => void handleProductAction(item, "add")}
                     onBuyNow={(item) => void handleProductAction(item, "buy")}
                     onToggleWishlist={(item) => void handleToggleWishlist(item)}

@@ -21,6 +21,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useCart } from "../contexts/CartContext";
+import { useProductNavigation } from "../hooks/useProductNavigation";
 import { parseAddonChoices, parseCustomizationGroups } from "../lib/foodOptions";
 import api from "../lib/api";
 import FoodCustomizationModal from "./common/FoodCustomizationModal";
@@ -211,6 +212,7 @@ function ProductDetailsContent({
   food: FoodProduct;
   foods: FoodProduct[];
 }) {
+  const openProduct = useProductNavigation();
   const insets = useSafeAreaInsets();
   const {
     addItem,
@@ -598,9 +600,7 @@ function ProductDetailsContent({
             cardWidth={recommendationCardWidth}
             cartItems={cartItems}
             wishlist={wishlist}
-            onSelect={(item) =>
-              router.push({ pathname: "/UsersTab/product/[id]", params: { id: getFoodId(item) } })
-            }
+            onSelect={openProduct}
             onCustomize={setCustomizingFood}
             onToggleWishlist={(item) => void handleRecommendationWishlist(item)}
           />
@@ -612,9 +612,7 @@ function ProductDetailsContent({
             cardWidth={recommendationCardWidth}
             cartItems={cartItems}
             wishlist={wishlist}
-            onSelect={(item) =>
-              router.push({ pathname: "/UsersTab/product/[id]", params: { id: getFoodId(item) } })
-            }
+            onSelect={openProduct}
             onCustomize={setCustomizingFood}
             onToggleWishlist={(item) => void handleRecommendationWishlist(item)}
           />
