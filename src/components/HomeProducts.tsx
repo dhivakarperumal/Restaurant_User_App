@@ -10,7 +10,22 @@ import FoodCustomizationModal from "./common/FoodCustomizationModal";
 import FoodProductCard from "./common/FoodProductCard";
 
 function getFoodTimestamp(food: FoodProduct): number {
-  const timestamp = Date.parse(String(food.created_at ?? ""));
+  const createdAt = food.created_at;
+  if (typeof createdAt === "number") {
+    return createdAt > 0 && createdAt < 1_000_000_000_000
+      ? createdAt * 1000
+      : createdAt;
+  }
+
+  const value = createdAt?.trim() ?? "";
+  const numericValue = Number(value);
+  if (value && Number.isFinite(numericValue)) {
+    return numericValue > 0 && numericValue < 1_000_000_000_000
+      ? numericValue * 1000
+      : numericValue;
+  }
+
+  const timestamp = Date.parse(value);
   return Number.isNaN(timestamp) ? 0 : timestamp;
 }
 
