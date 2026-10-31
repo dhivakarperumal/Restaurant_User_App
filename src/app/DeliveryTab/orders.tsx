@@ -1,7 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import DateTimePicker, {
+  DateTimePickerAndroid,
+} from "@react-native-community/datetimepicker";
 import {
   ActivityIndicator,
   Modal,
+  Platform,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -30,7 +34,7 @@ import {
 import { useCustomAlert } from "../../contexts/CustomAlertContext";
 import api, { getApiErrorMessage } from "../../lib/api";
 
-type FilterKey = "new" | "all" | "delivery" | "cancelled";
+type FilterKey = "all" | "today" | "delivery" | "cancelled";
 type OrderView = {
   key: FilterKey;
   label: string;
@@ -38,8 +42,8 @@ type OrderView = {
 };
 
 const ORDER_VIEWS: OrderView[] = [
-  { key: "new", label: "New", statuses: ["NEW", "NEW_ORDER", "PENDING", "ORDER_PLACED"] },
   { key: "all", label: "All", statuses: null },
+  { key: "today", label: "Today", statuses: null },
   {
     key: "delivery",
     label: "Delivery",
@@ -180,9 +184,55 @@ function getDateKey(date: Date | null): string {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 }
 
+function parseDateFilter(value: string): Date | null {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+  if (!match) return null;
+  const date = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]), 12);
+  return getDateKey(date) === value ? date : null;
+}
+
+function formatFilterDate(value: string): string {
+  const date = parseDateFilter(value);
+  return date
+    ? date.toLocaleDateString([], { day: "numeric", month: "short", year: "numeric" })
+    : "Choose date";
+}
+
 function formatAmount(value: unknown): string {
   const amount = Number(value);
   return `₹${(Number.isFinite(amount) ? amount : 0).toLocaleString("en-IN")}`;
+}
+
+function getOrderTotal(order: DeliveryOrder): number | null {
+  for (const key of ["total_amount", "grand_total", "order_total", "total_price"]) {
+    const rawValue = order[key];
+    if (rawValue == null || rawValue === "") continue;
+    const amount = Number(rawValue);
+    if (Number.isFinite(amount)) return amount;
+  }
+
+  if (!order.items.length) return null;
+  let total = 0;
+  let hasItemAmount = false;
+  for (const item of order.items) {
+    const itemTotal = firstText(item, ["total_price", "item_total", "total_amount"]);
+    if (itemTotal) {
+      const amount = Number(itemTotal);
+      if (Number.isFinite(amount)) {
+        total += amount;
+        hasItemAmount = true;
+        continue;
+      }
+    }
+
+    const unitPrice = Number(firstText(item, ["price", "unit_price"]));
+    if (Number.isFinite(unitPrice) && unitPrice > 0) {
+      const quantity = Number(firstText(item, ["quantity", "qty"])) || 1;
+      total += unitPrice * quantity;
+      hasItemAmount = true;
+    }
+  }
+  return hasItemAmount ? total : null;
 }
 
 function getStatusColors(status: unknown): { background: string; foreground: string } {
@@ -292,6 +342,8 @@ export default function DeliveryOrdersScreen() {
   const [page, setPage] = useState(1);
   const [selectedOrder, setSelectedOrder] = useState<DeliveryOrder | null>(null);
   const [updatingOrderId, setUpdatingOrderId] = useState<string | null>(null);
+  const [pickerMode, setPickerMode] = useState<"from" | "to" | null>(null);
+  const [pickerDraft, setPickerDraft] = useState(new Date());
 
   useEffect(() => {
     let active = true;
@@ -329,13 +381,17 @@ export default function DeliveryOrdersScreen() {
     setRefreshVersion((current) => current + 1);
   }, [loading, refreshing]);
 
-  const selectedView = ORDER_VIEWS.find((view) => view.key === activeFilter) ?? ORDER_VIEWS[1];
+  const todayKey = getDateKey(new Date());
+  const selectedView = ORDER_VIEWS.find((view) => view.key === activeFilter) ?? ORDER_VIEWS[0];
   const filteredOrders = useMemo(() => {
     const query = search.trim().toLocaleLowerCase();
     return orders.filter((order) => {
       const normalized = normalizeStatus(order.order_status);
-      const matchesView = !selectedView.statuses || selectedView.statuses.includes(normalized);
       const dateKey = getDateKey(getOrderDate(order));
+      const matchesView =
+        selectedView.key === "today"
+          ? dateKey === todayKey
+          : !selectedView.statuses || selectedView.statuses.includes(normalized);
       const matchesDate = (!dateFrom || (dateKey && dateKey >= dateFrom))
         && (!dateTo || (dateKey && dateKey <= dateTo));
       const customer = getCustomer(order);
@@ -350,9 +406,8 @@ export default function DeliveryOrdersScreen() {
         ].some((value) => value.toLocaleLowerCase().includes(query));
       return matchesView && matchesDate && matchesSearch;
     });
-  }, [dateFrom, dateTo, orders, search, selectedView]);
+  }, [dateFrom, dateTo, orders, search, selectedView, todayKey]);
 
-  const todayKey = getDateKey(new Date());
   const todayOrders = useMemo(
     () =>
       orders
@@ -402,6 +457,34 @@ export default function DeliveryOrdersScreen() {
     setDateFrom("");
     setDateTo("");
     setPage(1);
+  };
+
+  const applyPickedDate = (mode: "from" | "to", value: Date) => {
+    const dateKey = getDateKey(value);
+    if (mode === "from") setDateFrom(dateKey);
+    else setDateTo(dateKey);
+    setPage(1);
+  };
+
+  const openDatePicker = (mode: "from" | "to") => {
+    const currentValue = mode === "from" ? dateFrom : dateTo;
+    const value = parseDateFilter(currentValue) ?? new Date();
+    if (Platform.OS === "android") {
+      DateTimePickerAndroid.open({
+        value,
+        mode: "date",
+        onValueChange: (_event, selectedDate) => applyPickedDate(mode, selectedDate),
+      });
+      return;
+    }
+
+    setPickerDraft(value);
+    setPickerMode(mode);
+  };
+
+  const confirmIOSDatePicker = () => {
+    if (pickerMode) applyPickedDate(pickerMode, pickerDraft);
+    setPickerMode(null);
   };
 
   const updateOrderStatus = async (order: DeliveryOrder, nextStatus: string) => {
@@ -505,38 +588,66 @@ export default function DeliveryOrdersScreen() {
     return (
       <Pressable
         accessibilityRole="button"
-        className="mb-3 rounded-2xl border border-[#E7EDE7] bg-white p-4 active:border-[#A8C5AE]"
+        className="mb-4 overflow-hidden rounded-[22px] border border-[#E3EAE3] bg-white p-4 active:border-[#A8C5AE]"
         key={orderIdentifier(order)}
         onPress={() => setSelectedOrder(order)}
       >
-        <View className="flex-row items-start justify-between">
-          <View className="mr-3 flex-1">
-            <Text className="text-xs font-semibold text-slate-500">
+        <View className="flex-row items-center">
+          <View className="mr-3 h-11 w-11 items-center justify-center rounded-2xl bg-[#EAF4EA]">
+            <Package color="#17663D" size={20} />
+          </View>
+          <View className="mr-2 flex-1">
+            <Text className="text-[10px] font-extrabold uppercase tracking-[1.2px] text-[#718078]">
               Order {orderIdentifier(order)}
             </Text>
-            <Text className="mt-1 text-base font-extrabold text-[#17251E]">
+            <Text className="mt-0.5 text-base font-extrabold text-[#17251E]" numberOfLines={1}>
               {customerName}
             </Text>
           </View>
           {renderStatus(order.order_status)}
         </View>
-        <View className="mt-4 border-l-2 border-[#D9E5DB] pl-3">
-          <Text className="text-xs leading-5 text-slate-600" numberOfLines={2}>
-            <Text className="font-bold text-[#24372D]">Pickup · </Text>
-            {pickup || "Pickup location pending"}
-          </Text>
-          <Text className="mt-1 text-xs leading-5 text-slate-600" numberOfLines={2}>
-            <Text className="font-bold text-[#24372D]">Drop-off · </Text>
-            {dropoff || "Delivery location pending"}
-          </Text>
+        <View className="mt-4 rounded-2xl bg-[#F6F8F5] p-3">
+          <View className="flex-row items-start">
+            <View className="mr-2.5 mt-0.5 h-7 w-7 items-center justify-center rounded-lg bg-white">
+              <ShoppingBag color="#65806A" size={15} />
+            </View>
+            <View className="flex-1">
+              <Text className="text-[9px] font-extrabold uppercase tracking-wide text-[#718078]">
+                Pickup
+              </Text>
+              <Text className="mt-0.5 text-xs font-semibold leading-5 text-[#34443A]" numberOfLines={2}>
+                {pickup || "Pickup location pending"}
+              </Text>
+            </View>
+          </View>
+          <View className="ml-[13px] h-3 border-l border-dashed border-[#B8C9B9]" />
+          <View className="flex-row items-start">
+            <View className="mr-2.5 mt-0.5 h-7 w-7 items-center justify-center rounded-lg bg-white">
+              <MapPin color="#17663D" size={15} />
+            </View>
+            <View className="flex-1">
+              <Text className="text-[9px] font-extrabold uppercase tracking-wide text-[#718078]">
+                Drop-off
+              </Text>
+              <Text className="mt-0.5 text-xs font-semibold leading-5 text-[#34443A]" numberOfLines={2}>
+                {dropoff || "Delivery location pending"}
+              </Text>
+            </View>
+          </View>
         </View>
-        <View className="mt-4 flex-row items-center justify-between">
-          <Text className="flex-1 text-xs text-slate-500" numberOfLines={1}>
-            {formatDate(getOrderDate(order))}
-          </Text>
-          <Text className="ml-3 text-sm font-extrabold text-[#17663D]">
-            {formatAmount(order.delivery_charge)} delivery
-          </Text>
+        <View className="mt-3 flex-row items-center justify-between border-t border-[#EDF0EC] pt-3">
+          <View className="mr-2 flex-1 flex-row items-center">
+            <CalendarDays color="#829087" size={14} />
+            <Text className="ml-1.5 flex-1 text-[10px] font-medium text-slate-500" numberOfLines={1}>
+              {formatDate(getOrderDate(order))}
+            </Text>
+          </View>
+          <View className="flex-row items-center rounded-full bg-[#EAF4EA] px-3 py-1.5">
+            <Text className="text-xs font-extrabold text-[#17663D]">
+              {formatAmount(order.delivery_charge)}
+            </Text>
+            <Text className="ml-1 text-[9px] font-semibold text-[#52745A]">delivery</Text>
+          </View>
         </View>
         {normalizeStatus(order.order_status) === "REACHED_CUSTOMER" ? (
           <Pressable
@@ -671,7 +782,9 @@ export default function DeliveryOrdersScreen() {
               ? orders.filter((order) =>
                   view.statuses?.includes(normalizeStatus(order.order_status)),
                 ).length
-              : orders.length;
+              : view.key === "today"
+                ? todayOrders.length
+                : orders.length;
             return (
               <Pressable
                 accessibilityRole="button"
@@ -708,30 +821,60 @@ export default function DeliveryOrdersScreen() {
             <CalendarDays color="#39754A" size={15} />
             <Text className="ml-2 text-xs font-bold text-[#39483F]">Filter by date</Text>
           </View>
-          <View className="flex-row">
-            <TextInput
-              accessibilityLabel="Date from"
-              className="mr-2 min-h-10 flex-1 rounded-lg bg-[#F5F7F3] px-3 text-xs text-[#17251E]"
-              onChangeText={(value) => {
-                setDateFrom(value);
-                setPage(1);
-              }}
-              placeholder="From · YYYY-MM-DD"
-              placeholderTextColor="#98A199"
-              value={dateFrom}
-            />
-            <TextInput
-              accessibilityLabel="Date to"
-              className="min-h-10 flex-1 rounded-lg bg-[#F5F7F3] px-3 text-xs text-[#17251E]"
-              onChangeText={(value) => {
-                setDateTo(value);
-                setPage(1);
-              }}
-              placeholder="To · YYYY-MM-DD"
-              placeholderTextColor="#98A199"
-              value={dateTo}
-            />
-          </View>
+          {Platform.OS === "web" ? (
+            <View className="flex-row">
+              <TextInput
+                accessibilityLabel="Date from"
+                className="mr-2 min-h-10 flex-1 rounded-lg bg-[#F5F7F3] px-3 text-xs text-[#17251E]"
+                onChangeText={(value) => {
+                  setDateFrom(value);
+                  setPage(1);
+                }}
+                placeholder="From · YYYY-MM-DD"
+                placeholderTextColor="#98A199"
+                value={dateFrom}
+              />
+              <TextInput
+                accessibilityLabel="Date to"
+                className="min-h-10 flex-1 rounded-lg bg-[#F5F7F3] px-3 text-xs text-[#17251E]"
+                onChangeText={(value) => {
+                  setDateTo(value);
+                  setPage(1);
+                }}
+                placeholder="To · YYYY-MM-DD"
+                placeholderTextColor="#98A199"
+                value={dateTo}
+              />
+            </View>
+          ) : (
+            <View className="flex-row">
+              {(["from", "to"] as const).map((mode) => {
+                const value = mode === "from" ? dateFrom : dateTo;
+                const label = mode === "from" ? "From date" : "To date";
+                return (
+                  <Pressable
+                    accessibilityLabel={`${label}: ${value ? formatFilterDate(value) : "not selected"}`}
+                    accessibilityRole="button"
+                    className={`min-h-11 flex-1 flex-row items-center rounded-lg bg-[#F5F7F3] px-3 ${
+                      mode === "from" ? "mr-2" : ""
+                    }`}
+                    key={mode}
+                    onPress={() => openDatePicker(mode)}
+                  >
+                    <CalendarDays color="#39754A" size={16} />
+                    <View className="ml-2">
+                      <Text className="text-[9px] font-semibold text-slate-500">
+                        {label}
+                      </Text>
+                      <Text className="mt-0.5 text-xs font-bold text-[#17251E]">
+                        {formatFilterDate(value)}
+                      </Text>
+                    </View>
+                  </Pressable>
+                );
+              })}
+            </View>
+          )}
           {(dateFrom || dateTo || search) ? (
             <Pressable
               accessibilityRole="button"
@@ -1071,6 +1214,46 @@ export default function DeliveryOrdersScreen() {
           ) : null}
         </View>
       </Modal>
+      {Platform.OS === "ios" && pickerMode ? (
+        <Modal
+          animationType="slide"
+          onRequestClose={() => setPickerMode(null)}
+          transparent
+          visible
+        >
+          <View className="flex-1 justify-end bg-black/45">
+            <View className="rounded-t-3xl bg-[#FFFCF6] px-4 pb-8 pt-4">
+              <View className="mb-2 flex-row items-center justify-between">
+                <Pressable
+                  accessibilityRole="button"
+                  className="min-h-11 justify-center px-2"
+                  onPress={() => setPickerMode(null)}
+                >
+                  <Text className="text-sm font-semibold text-[#728071]">Cancel</Text>
+                </Pressable>
+                <Text className="text-base font-extrabold text-[#183B2A]">
+                  {pickerMode === "from" ? "Select start date" : "Select end date"}
+                </Text>
+                <Pressable
+                  accessibilityRole="button"
+                  className="min-h-11 justify-center px-2"
+                  onPress={confirmIOSDatePicker}
+                >
+                  <Text className="text-sm font-extrabold text-[#1A6A3B]">Done</Text>
+                </Pressable>
+              </View>
+              <DateTimePicker
+                accentColor="#1A6A3B"
+                display="spinner"
+                mode="date"
+                onValueChange={(_event, value) => setPickerDraft(value)}
+                themeVariant="light"
+                value={pickerDraft}
+              />
+            </View>
+          </View>
+        </Modal>
+      ) : null}
     </View>
   );
 }
