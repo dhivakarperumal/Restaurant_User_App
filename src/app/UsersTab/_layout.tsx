@@ -273,7 +273,7 @@ function RootTabs() {
       <Tabs.Screen name="reservations" options={{ title: "Tables" }} />
       <Tabs.Screen name="orders" options={{ tabBarButton: () => null, tabBarStyle: { display: "none" } }} />
       <Tabs.Screen name="profile" options={{ title: "Profile" }} />
-      <Tabs.Screen name="product/[id]" options={{ title: "Product", href: null }} />
+      <Tabs.Screen name="product/[id]" options={{ title: "Product", tabBarButton: () => null, tabBarStyle: { display: "none" } }} />
     </Tabs>
   );
 }
