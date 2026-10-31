@@ -47,11 +47,11 @@ function RootTabs() {
   const insets = useSafeAreaInsets();
   const { itemCount } = useCart();
   const tabIconContainerStyle = {
-    width: 50,
-    height: 50,
+    width: 42,
+    height: 42,
     alignItems: "center" as const,
     justifyContent: "center" as const,
-    borderRadius: 25,
+    borderRadius: 21,
   };
   const activeTabIconStyle = {
     backgroundColor: "#FFF8E7",
@@ -110,7 +110,7 @@ function RootTabs() {
               : "flex",
           backgroundColor: "transparent",
           borderTopWidth: 0,
-          height: Platform.OS === "android" ? 72 + insets.bottom : 82 + insets.bottom,
+          height: Platform.OS === "android" ? 86 + insets.bottom : 96 + insets.bottom,
           paddingBottom: Math.max(insets.bottom, 8),
           paddingTop: 4,
           elevation: 0,
@@ -118,10 +118,11 @@ function RootTabs() {
         tabBarLabelStyle: {
           fontSize: 10,
           fontWeight: "600",
+          lineHeight: 12,
           marginTop: 1,
         },
         tabBarIconStyle: {
-          marginTop: 2,
+          marginTop: 0,
         },
         tabBarBadgeStyle: {
           backgroundColor: "#E86D16",
@@ -135,7 +136,7 @@ function RootTabs() {
           route.name === "cart" && itemCount > 0 ? String(itemCount) : undefined,
         tabBarIcon: ({ color, size, focused }) => {
           const commonProps = {
-            color,
+            color: focused ? "#155A32" : color,
             size,
             strokeWidth: focused ? 2.5 : 2,
           };
@@ -247,9 +248,10 @@ function RootTabs() {
           return (
             <Text
               style={{
-                color,
+                color: focused ? "#FFF8E7" : color,
                 fontSize: 10,
                 fontWeight: focused ? "700" : "600",
+                lineHeight: 12,
                 marginTop: 1,
               }}
             >
