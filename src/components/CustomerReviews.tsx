@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Quote, Star, UsersRound } from "lucide-react-native";
+import { Quote, Star, UserRound, UsersRound } from "lucide-react-native";
 import { Image, Pressable, ScrollView, Text, View, useWindowDimensions } from "react-native";
 import api, { API_BASE_URL } from "../lib/api";
 
@@ -59,7 +59,8 @@ export default function CustomerReviews() {
   const [reviews, setReviews] = useState<CustomerReview[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const cardWidth = Math.max(0, screenWidth - 32);
+  const [carouselWidth, setCarouselWidth] = useState(0);
+  const cardWidth = carouselWidth || Math.max(0, screenWidth - 64);
 
   const fetchReviews = useCallback(async () => {
     setLoading(true);
@@ -182,57 +183,50 @@ export default function CustomerReviews() {
       </View>
 
       {loading ? (
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          className="mt-5"
-          contentContainerStyle={{ paddingRight: 16 }}
+        <View
+          className="mt-5 w-full"
+          onLayout={(event) => setCarouselWidth(event.nativeEvent.layout.width)}
         >
-          <View
-            style={{ width: cardWidth }}
-            className="h-[270px] rounded-[22px] border border-[#D8C69D] bg-[#F5EFE5] p-5"
-          >
-            <View className="h-4 w-28 rounded bg-[#E4D9C3]" />
-            <View className="mt-8 h-4 w-2/3 rounded bg-[#E4D9C3]" />
-            <View className="mt-3 h-3 w-full rounded bg-[#E4D9C3]" />
-            <View className="mt-2 h-3 w-4/5 rounded bg-[#E4D9C3]" />
-          </View>
-        </ScrollView>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            <View
+              style={{ width: cardWidth }}
+              className="h-[270px] rounded-[22px] border border-[#D5A233] bg-[#084A2B] p-5"
+            >
+              <View className="h-4 w-28 rounded bg-[#216443]" />
+              <View className="mt-8 h-4 w-2/3 rounded bg-[#216443]" />
+              <View className="mt-3 h-3 w-full rounded bg-[#216443]" />
+              <View className="mt-2 h-3 w-4/5 rounded bg-[#216443]" />
+            </View>
+          </ScrollView>
+        </View>
       ) : error ? (
-        <View className="mt-5 items-center rounded-2xl border border-[#F2D4CA] bg-white p-5">
-          <Text className="text-center text-sm text-[#8C3B27]">{error}</Text>
+        <View className="mt-5 items-center rounded-2xl border border-[#D5A233] bg-[#084A2B] p-5">
+          <Text className="text-center text-sm text-[#FFF8E7]">{error}</Text>
           <Pressable
             accessibilityRole="button"
-            className="mt-3 rounded-xl bg-[#06402D] px-4 py-2"
+            className="mt-3 rounded-xl bg-[#D5A233] px-4 py-2"
             onPress={() => void fetchReviews()}
           >
-            <Text className="text-xs font-bold text-white">Try again</Text>
+            <Text className="text-xs font-bold text-[#084A2B]">Try again</Text>
           </Pressable>
         </View>
       ) : (
-        <ScrollView
-          horizontal
-          pagingEnabled
-          snapToInterval={cardWidth + 12}
-          decelerationRate="fast"
-          showsHorizontalScrollIndicator={false}
-          className="mt-5"
-          contentContainerStyle={{ gap: 12, paddingRight: 16 }}
+        <View
+          className="mt-5 w-full"
+          onLayout={(event) => setCarouselWidth(event.nativeEvent.layout.width)}
         >
-          {reviews.map((review) => {
-            const initials = review.reviewerName
-              .trim()
-              .split(/\s+/)
-              .slice(0, 2)
-              .map((part) => part.charAt(0))
-              .join("")
-              .toUpperCase();
-
-            return (
+          <ScrollView
+            horizontal
+            pagingEnabled
+            snapToInterval={cardWidth}
+            decelerationRate="fast"
+            showsHorizontalScrollIndicator={false}
+          >
+            {reviews.map((review) => (
               <View
                 key={review.id}
                 style={{ width: cardWidth }}
-                className="min-h-[270px] flex-col rounded-[22px] border border-[#D8C69D] bg-[#F5EFE5] p-5 shadow-sm"
+                className="min-h-[270px] flex-col rounded-[22px] border border-[#D5A233] bg-[#084A2B] p-5 shadow-sm"
               >
                 <View className="flex-row items-center justify-between">
                   <View
@@ -242,32 +236,35 @@ export default function CustomerReviews() {
                     {Array.from({ length: 5 }, (_, index) => (
                       <Star
                         key={index}
-                        color={index < review.rating ? "#DFA11D" : "#DEDED2"}
-                        fill={index < review.rating ? "#DFA11D" : "transparent"}
+                        color={index < review.rating ? "#E9BE45" : "#B8C8B8"}
+                        fill={index < review.rating ? "#E9BE45" : "transparent"}
                         size={17}
                       />
                     ))}
                   </View>
-                  <Text className="rounded-full bg-[#E9DAB9] px-2.5 py-1 text-xs font-extrabold text-[#153C2B]">
+                  <Text className="rounded-full bg-[#E9BE45] px-2.5 py-1 text-xs font-extrabold text-[#084A2B]">
                     {review.rating.toFixed(1)}
                   </Text>
                 </View>
                 <View className="mt-6 flex-1">
-                  <Quote color="#B7C69E" fill="#B7C69E" size={21} />
+                  <Quote color="#E9BE45" fill="#E9BE45" size={21} />
                   {review.title ? (
-                    <Text numberOfLines={1} className="mt-1 text-sm font-bold text-[#25342B]">
+                    <Text
+                      numberOfLines={1}
+                      className="mt-1 text-sm font-bold text-[#FFF8E7]"
+                    >
                       {review.title}
                     </Text>
                   ) : null}
                   <Text
                     numberOfLines={5}
-                    className="mt-1 text-[13px] leading-5 text-[#283C32]"
+                    className="mt-1 text-[13px] leading-5 text-[#F3EEDC]"
                   >
                     {review.comment}
                   </Text>
                 </View>
-                <View className="mt-4 flex-row items-center border-t border-[#D8C69D] pt-3">
-                  <View className="h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-[#EAF3E5]">
+                <View className="mt-4 flex-row items-center border-t border-[#D5A233] pt-3">
+                  <View className="h-12 w-12 items-center justify-center overflow-hidden rounded-full border border-[#D5A233] bg-[#FFF8E7]">
                     {review.photo ? (
                       <Image
                         accessibilityLabel={`${review.reviewerName} profile`}
@@ -276,27 +273,28 @@ export default function CustomerReviews() {
                         resizeMode="cover"
                       />
                     ) : (
-                      <Text className="text-sm font-extrabold uppercase text-[#075B2B]">
-                        {initials || "C"}
-                      </Text>
+                      <UserRound color="#084A2B" size={24} strokeWidth={2.25} />
                     )}
                   </View>
                   <View className="ml-3 flex-1">
                     <Text
                       numberOfLines={1}
-                      className="text-sm font-extrabold text-[#153C2B]"
+                      className="text-sm font-extrabold text-[#FFF8E7]"
                     >
                       {review.reviewerName}
                     </Text>
-                    <Text numberOfLines={1} className="mt-1 text-xs text-[#68736E]">
+                    <Text
+                      numberOfLines={1}
+                      className="mt-1 text-xs text-[#D5E0D3]"
+                    >
                       {review.productName}
                     </Text>
                   </View>
                 </View>
               </View>
-            );
-          })}
-        </ScrollView>
+            ))}
+          </ScrollView>
+        </View>
       )}
     </View>
   );
