@@ -170,7 +170,7 @@ export default function TopHeader({ title }: TopHeaderProps) {
               accessibilityLabel="Open your orders"
               accessibilityRole="button"
               className="mr-1.5 h-10 w-10 items-center justify-center rounded-full border border-brand-neutral-border-cream bg-white active:bg-brand-green-muted-surface"
-              onPress={() => router.push("/UsersTab/orders")}
+              onPress={() => router.navigate("/UsersTab/orders")}
             >
               <ShoppingBag color={colors["green-secondary"]} size={20} />
               <View className="absolute right-1 top-1 h-2 w-2 rounded-full border border-white bg-brand-gold-bright" />
