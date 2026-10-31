@@ -77,8 +77,7 @@ export default function HomeProducts() {
     () =>
       foods
         .filter((food) => getFoodTimestamp(food) > 0)
-        .sort((first, second) => getFoodTimestamp(second) - getFoodTimestamp(first))
-        .slice(0, 10),
+        .sort((first, second) => getFoodTimestamp(second) - getFoodTimestamp(first)),
     [foods],
   );
   const vegetarianFoods = useMemo(
