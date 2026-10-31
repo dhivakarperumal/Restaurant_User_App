@@ -8,7 +8,12 @@ import {
   UtensilsCrossed,
 } from "lucide-react-native";
 import { Image, Pressable, Text, View } from "react-native";
-import { getFoodImage, getFoodName, getFoodPrice } from "../../lib/foods";
+import {
+  getFoodDiscountPercentage,
+  getFoodImage,
+  getFoodName,
+  getFoodPrice,
+} from "../../lib/foods";
 import type { FoodProduct } from "../../types/food";
 import colors from "../../theme/colors.json";
 
@@ -18,6 +23,7 @@ type FoodProductCardProps = {
   isInWishlist: boolean;
   cartQuantity?: number;
   pendingAction?: "add" | "buy" | null;
+  isBusy?: boolean;
   viewMode?: "grid" | "list";
   onSelect: (food: FoodProduct) => void;
   onAdd?: (food: FoodProduct) => void;
@@ -32,6 +38,7 @@ export default function FoodProductCard({
   isInWishlist,
   cartQuantity = 0,
   pendingAction = null,
+  isBusy,
   viewMode = "grid",
   onSelect,
   onAdd,
@@ -44,12 +51,12 @@ export default function FoodProductCard({
   const name = getFoodName(food);
   const price = getFoodPrice(food);
   const mrp = Number(food.mrp ?? 0);
-  const discount = Number(food.discount ?? 0);
+  const discount = getFoodDiscountPercentage(food);
   const isVeg = String(food.food_type || "").toLowerCase() === "veg";
   const isAvailable =
     food.is_available !== false &&
     String(food.status || "Active").toLowerCase() === "active";
-  const isPending = pendingAction !== null;
+  const isPending = isBusy ?? pendingAction !== null;
   const addToCart = () => (onAdd ?? onCustomize)?.(food);
 
   if (viewMode === "list") {
@@ -168,14 +175,14 @@ export default function FoodProductCard({
 
   return (
     <View
-      className="overflow-hidden rounded-2xl border border-brand-neutral-border-warm bg-white shadow-sm"
+      className="overflow-hidden rounded-3xl border border-brand-neutral-border-warm bg-white shadow-sm"
       style={{ width }}
     >
       <View className="relative" style={{ height: width }}>
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={`View ${name}`}
-          className="h-full items-center justify-center overflow-hidden bg-brand-surface-cream"
+          className="h-full items-center justify-center overflow-hidden bg-slate-100"
           onPress={() => onSelect(food)}
         >
           {image && !imageError ? (
@@ -201,15 +208,32 @@ export default function FoodProductCard({
             </View>
           ) : null}
         </Pressable>
-        <View pointerEvents="none" className="absolute left-2 top-2 h-5 w-5 items-center justify-center rounded-md border-2 border-white bg-white">
-          <View className={`h-2.5 w-2.5 rounded-full ${isVeg ? "bg-emerald-600" : "bg-rose-600"}`} />
-        </View>
-        {food.is_spicy === true && (
-          <View pointerEvents="none" className="absolute bottom-2 left-2 flex-row items-center rounded-md bg-brand-gold-bright px-1.5 py-1">
-            <Flame color={colors.green} size={11} />
-            <Text className="ml-0.5 text-[9px] font-bold text-brand-green">Spicy</Text>
+        <View pointerEvents="none" className="absolute left-2 top-2 flex-row items-center gap-1.5">
+          <View className="h-5 w-5 items-center justify-center rounded-md border-2 border-white bg-white">
+            <View className={`h-2.5 w-2.5 rounded-full ${isVeg ? "bg-emerald-600" : "bg-rose-600"}`} />
           </View>
-        )}
+          {food.is_spicy === true ? (
+            <View className="flex-row items-center rounded-md bg-amber-500/90 px-1.5 py-1">
+              <Flame color={colors.white} size={11} />
+              <Text className="ml-0.5 text-[9px] font-bold text-white">Spicy</Text>
+            </View>
+          ) : null}
+        </View>
+        {discount > 0 && mrp > price ? (
+          <View pointerEvents="none" className="absolute bottom-2 left-2 rounded-lg bg-brand-gold-bright px-2 py-1">
+            <Text className="text-[9px] font-black uppercase tracking-wider text-slate-950">
+              {Math.round(discount)}% off
+            </Text>
+          </View>
+        ) : null}
+        {Number(food.preparation_time) > 0 ? (
+          <View pointerEvents="none" className="absolute bottom-2 right-2 flex-row items-center rounded-lg bg-black/65 px-2 py-1">
+            <Clock3 color={colors["gold"]} size={10} />
+            <Text className="ml-1 text-[9px] font-semibold text-white">
+              {food.preparation_time}m
+            </Text>
+          </View>
+        ) : null}
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={isInWishlist ? `Remove ${name} from favorites` : `Add ${name} to favorites`}

@@ -481,7 +481,6 @@ export default function ShopScreen() {
   };
 
   return (
-    <>
     <ScrollView
       className="flex-1 bg-brand-surface-app"
       showsVerticalScrollIndicator={false}
@@ -843,6 +842,7 @@ export default function ShopScreen() {
                 pendingAction={
                   pendingAction?.foodId === foodId ? pendingAction.action : null
                 }
+                isBusy={pendingAction !== null}
                 onSelect={selectFood}
                 onAdd={(item) => void handleProductAction(item, "add")}
                 onBuyNow={(item) => void handleProductAction(item, "buy")}
@@ -903,7 +903,6 @@ export default function ShopScreen() {
       ) : null}
 
     </ScrollView>
-    </>
   );
 }
 
