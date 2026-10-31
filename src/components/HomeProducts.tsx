@@ -9,6 +9,15 @@ import type { FoodProduct } from "../types/food";
 import FoodCustomizationModal from "./common/FoodCustomizationModal";
 import FoodProductCard from "./common/FoodProductCard";
 
+function getFoodTimestamp(food: FoodProduct): number {
+  const timestamp = Date.parse(String(food.created_at ?? ""));
+  return Number.isNaN(timestamp) ? 0 : timestamp;
+}
+
+function getFoodType(food: FoodProduct): string {
+  return String(food.food_type ?? "").toLowerCase().replace(/[\s_-]/g, "");
+}
+
 export default function HomeProducts() {
   const [foods, setFoods] = useState<FoodProduct[]>([]);
   const [selectedFood, setSelectedFood] = useState<FoodProduct | null>(null);
@@ -49,6 +58,30 @@ export default function HomeProducts() {
         .slice(0, 10),
     [foods],
   );
+  const newArrivals = useMemo(
+    () =>
+      foods
+        .filter((food) => getFoodTimestamp(food) > 0)
+        .sort((first, second) => getFoodTimestamp(second) - getFoodTimestamp(first))
+        .slice(0, 10),
+    [foods],
+  );
+  const vegetarianFoods = useMemo(
+    () =>
+      foods.filter((food) => {
+        const type = getFoodType(food);
+        return type === "veg" || type === "vegetarian";
+      }),
+    [foods],
+  );
+  const nonVegetarianFoods = useMemo(
+    () =>
+      foods.filter((food) => {
+        const type = getFoodType(food);
+        return type === "nonveg" || type === "nonvegetarian";
+      }),
+    [foods],
+  );
 
   const handleToggleWishlist = async (food: FoodProduct) => {
     setActionError("");
@@ -59,6 +92,73 @@ export default function HomeProducts() {
       setActionError("We could not save your favorites. Please try again.");
     }
   };
+
+  const renderFoodCards = (sectionFoods: FoodProduct[]) => (
+    <ScrollView
+      horizontal
+      pagingEnabled
+      showsHorizontalScrollIndicator={false}
+      contentContainerStyle={{ paddingBottom: 6 }}
+    >
+      {Array.from(
+        { length: Math.ceil(sectionFoods.length / 2) },
+        (_, pageIndex) => (
+          <View
+            key={pageIndex}
+            className="flex-row"
+            style={{ width: pageWidth, gap: 12 }}
+          >
+            {sectionFoods.slice(pageIndex * 2, pageIndex * 2 + 2).map((food) => (
+              <FoodProductCard
+                key={getFoodId(food)}
+                food={food}
+                width={cardWidth}
+                isInWishlist={wishlist.some((item) => getFoodId(item) === getFoodId(food))}
+                cartQuantity={cartItems
+                  .filter((item) => getFoodId(item.food) === getFoodId(food))
+                  .reduce((total, item) => total + item.quantity, 0)}
+                onSelect={(item) =>
+                  router.push({ pathname: "/UsersTab/product/[id]", params: { id: getFoodId(item) } })
+                }
+                onCustomize={setSelectedFood}
+                onToggleWishlist={(item) => void handleToggleWishlist(item)}
+              />
+            ))}
+          </View>
+        ),
+      )}
+    </ScrollView>
+  );
+
+  const renderFilteredSection = (
+    eyebrow: string,
+    title: string,
+    subtitle: string,
+    sectionFoods: FoodProduct[],
+    emptyMessage: string,
+  ) => (
+    <View className="mt-8">
+      <View className="mb-4">
+        <Text className="text-center text-[11px] font-extrabold uppercase tracking-[2px] text-[#E86D16]">
+          {eyebrow}
+        </Text>
+        <Text className="mt-1 text-center text-2xl font-black text-[#17251E]">
+          {title}
+        </Text>
+        <Text className="mt-1 text-center text-xs text-slate-500">{subtitle}</Text>
+      </View>
+      {sectionFoods.length ? (
+        renderFoodCards(sectionFoods)
+      ) : (
+        <View className="items-center rounded-2xl border border-dashed border-slate-300 bg-white px-5 py-8">
+          <UtensilsCrossed color="#94A3B8" size={30} />
+          <Text className="mt-3 text-center text-sm font-semibold text-slate-600">
+            {emptyMessage}
+          </Text>
+        </View>
+      )}
+    </View>
+  );
 
   return (
     <View className="mt-8">
@@ -153,6 +253,32 @@ export default function HomeProducts() {
         <Text className="text-sm font-bold text-[#1A6A3B]">View the full menu</Text>
         <ArrowRight color="#1A6A3B" size={16} className="ml-2" />
       </Pressable>
+
+      {!loading && !error ? (
+        <>
+          {renderFilteredSection(
+            "Just added",
+            "New Arrivals",
+            "Discover the latest additions to our menu.",
+            newArrivals,
+            "New menu items will appear here.",
+          )}
+          {renderFilteredSection(
+            "Plant-powered picks",
+            "Vegetarian",
+            "Fresh vegetarian favorites from our menu.",
+            vegetarianFoods,
+            "No vegetarian items are available right now.",
+          )}
+          {renderFilteredSection(
+            "Made for meat lovers",
+            "Non-Vegetarian",
+            "Explore our non-vegetarian menu favorites.",
+            nonVegetarianFoods,
+            "No non-vegetarian items are available right now.",
+          )}
+        </>
+      ) : null}
 
       <FoodCustomizationModal
         food={selectedFood}
