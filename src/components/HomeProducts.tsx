@@ -1,14 +1,16 @@
 import colors from "../theme/colors.json";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { router } from "expo-router";
 import { ArrowRight, UtensilsCrossed } from "lucide-react-native";
 import { Pressable, ScrollView, Text, View, useWindowDimensions } from "react-native";
 import api from "../lib/api";
 import { getActiveFoods, getFoodId } from "../lib/foods";
+import { getDefaultFoodCartInput } from "../lib/cart";
 import { useCart } from "../contexts/CartContext";
 import type { FoodProduct } from "../types/food";
-import FoodCustomizationModal from "./common/FoodCustomizationModal";
 import FoodProductCard from "./common/FoodProductCard";
+
+type HomeProductAction = "add" | "buy";
 
 function getFoodTimestamp(food: FoodProduct): number {
   const createdAt = food.created_at;
@@ -36,11 +38,15 @@ function getFoodType(food: FoodProduct): string {
 
 export default function HomeProducts() {
   const [foods, setFoods] = useState<FoodProduct[]>([]);
-  const [selectedFood, setSelectedFood] = useState<FoodProduct | null>(null);
+  const [pendingAction, setPendingAction] = useState<{
+    foodId: string;
+    action: HomeProductAction;
+  } | null>(null);
   const [actionError, setActionError] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const { addItem, items: cartItems, wishlist, toggleWishlist } = useCart();
+  const actionLock = useRef(false);
   const { width: screenWidth } = useWindowDimensions();
   const pageWidth = Math.max(0, screenWidth - 48);
   const cardWidth = (pageWidth - 12) / 2;
@@ -108,6 +114,40 @@ export default function HomeProducts() {
     }
   };
 
+  const handleProductAction = async (
+    food: FoodProduct,
+    action: HomeProductAction,
+  ) => {
+    if (actionLock.current) return;
+    actionLock.current = true;
+    setPendingAction({ foodId: getFoodId(food), action });
+    setActionError("");
+    try {
+      await addItem(getDefaultFoodCartInput(food));
+      if (action === "buy") router.push("/checkout");
+    } catch (requestError) {
+      console.error(
+        action === "buy"
+          ? "Failed to start checkout from home:"
+          : "Failed to add a home product to the cart:",
+        requestError,
+      );
+      setActionError(
+        action === "buy"
+          ? "We could not start checkout. Please try again."
+          : "We could not add this item to your cart. Please try again.",
+      );
+    } finally {
+      actionLock.current = false;
+      setPendingAction(null);
+    }
+  };
+
+  const getCartQuantity = (foodId: string) =>
+    cartItems
+      .filter((item) => getFoodId(item.food) === foodId)
+      .reduce((total, item) => total + item.quantity, 0);
+
   const renderFoodCards = (sectionFoods: FoodProduct[]) => (
     <ScrollView
       horizontal
@@ -129,13 +169,18 @@ export default function HomeProducts() {
                 food={food}
                 width={cardWidth}
                 isInWishlist={wishlist.some((item) => getFoodId(item) === getFoodId(food))}
-                cartQuantity={cartItems
-                  .filter((item) => getFoodId(item.food) === getFoodId(food))
-                  .reduce((total, item) => total + item.quantity, 0)}
+                cartQuantity={getCartQuantity(getFoodId(food))}
+                pendingAction={
+                  pendingAction?.foodId === getFoodId(food)
+                    ? pendingAction.action
+                    : null
+                }
+                isBusy={pendingAction !== null}
                 onSelect={(item) =>
                   router.push({ pathname: "/UsersTab/product/[id]", params: { id: getFoodId(item) } })
                 }
-                onCustomize={setSelectedFood}
+                onAdd={(item) => void handleProductAction(item, "add")}
+                onBuyNow={(item) => void handleProductAction(item, "buy")}
                 onToggleWishlist={(item) => void handleToggleWishlist(item)}
               />
             ))}
@@ -194,8 +239,8 @@ export default function HomeProducts() {
           {[0, 1].map((item) => (
             <View
               key={item}
-              className="h-[300px] rounded-2xl bg-slate-200"
-              style={{ width: cardWidth }}
+              className="rounded-2xl bg-slate-200"
+              style={{ width: cardWidth, height: cardWidth + 150 }}
             />
           ))}
         </View>
@@ -231,13 +276,18 @@ export default function HomeProducts() {
                     food={food}
                     width={cardWidth}
                     isInWishlist={wishlist.some((item) => getFoodId(item) === getFoodId(food))}
-                    cartQuantity={cartItems
-                      .filter((item) => getFoodId(item.food) === getFoodId(food))
-                      .reduce((total, item) => total + item.quantity, 0)}
+                    cartQuantity={getCartQuantity(getFoodId(food))}
+                    pendingAction={
+                      pendingAction?.foodId === getFoodId(food)
+                        ? pendingAction.action
+                        : null
+                    }
+                    isBusy={pendingAction !== null}
                     onSelect={(item) =>
                       router.push({ pathname: "/UsersTab/product/[id]", params: { id: getFoodId(item) } })
                     }
-                    onCustomize={setSelectedFood}
+                    onAdd={(item) => void handleProductAction(item, "add")}
+                    onBuyNow={(item) => void handleProductAction(item, "buy")}
                     onToggleWishlist={(item) => void handleToggleWishlist(item)}
                   />
                 ))}
@@ -295,11 +345,6 @@ export default function HomeProducts() {
         </>
       ) : null}
 
-      <FoodCustomizationModal
-        food={selectedFood}
-        onClose={() => setSelectedFood(null)}
-        onAdd={addItem}
-      />
     </View>
   );
 }

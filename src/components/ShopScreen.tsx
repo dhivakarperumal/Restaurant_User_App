@@ -31,15 +31,10 @@ import {
   useWindowDimensions,
 } from "react-native";
 import api from "../lib/api";
-import {
-  getFoodDiscountPercentage,
-  getFoodId,
-  getFoodPrice,
-  getMenuFoods,
-} from "../lib/foods";
-import { parseCustomizationGroups } from "../lib/foodOptions";
+import { getFoodDiscountPercentage, getFoodId, getMenuFoods } from "../lib/foods";
+import { getDefaultFoodCartInput } from "../lib/cart";
 import { useCart } from "../contexts/CartContext";
-import type { CustomizedFoodCartInput, FoodProduct } from "../types/food";
+import type { FoodProduct } from "../types/food";
 import FoodProductCard from "./common/FoodProductCard";
 import colors from "../theme/colors.json";
 
@@ -57,25 +52,6 @@ type FoodTypeFilter = "all" | "Veg" | "Non-Veg";
 type SortOption = "recommended" | "price-low" | "price-high" | "rating" | "prep-time";
 type ViewMode = "grid" | "list";
 type ShopAction = "add" | "buy";
-
-function getDefaultCartInput(food: FoodProduct): CustomizedFoodCartInput {
-  const selectedCustomizations = parseCustomizationGroups(food.customizations)
-    .filter((group) => group.required)
-    .flatMap((group) => {
-      const option = group.options[0];
-      return option ? [{ ...option, groupName: group.name }] : [];
-    });
-
-  return {
-    food,
-    quantity: 1,
-    unitPrice:
-      getFoodPrice(food) +
-      selectedCustomizations.reduce((total, option) => total + option.price, 0),
-    selectedAddons: [],
-    selectedCustomizations,
-  };
-}
 
 const PAGE_SIZE = 12;
 const OFFER_RANGES = [
@@ -460,7 +436,7 @@ export default function ShopScreen() {
     setPendingAction({ foodId: getFoodId(food), action });
     setActionError("");
     try {
-      await addItem(getDefaultCartInput(food));
+      await addItem(getDefaultFoodCartInput(food));
       if (action === "buy") router.push("/checkout");
     } catch (requestError) {
       console.error(
