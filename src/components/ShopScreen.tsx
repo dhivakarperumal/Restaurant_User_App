@@ -1,4 +1,11 @@
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import { router, useLocalSearchParams } from "expo-router";
 import {
   Check,
@@ -27,11 +34,12 @@ import api from "../lib/api";
 import {
   getFoodDiscountPercentage,
   getFoodId,
+  getFoodPrice,
   getMenuFoods,
 } from "../lib/foods";
+import { parseCustomizationGroups } from "../lib/foodOptions";
 import { useCart } from "../contexts/CartContext";
-import type { FoodProduct } from "../types/food";
-import FoodCustomizationModal from "./common/FoodCustomizationModal";
+import type { CustomizedFoodCartInput, FoodProduct } from "../types/food";
 import FoodProductCard from "./common/FoodProductCard";
 import colors from "../theme/colors.json";
 
@@ -49,6 +57,25 @@ type FoodTypeFilter = "all" | "Veg" | "Non-Veg";
 type SortOption = "recommended" | "price-low" | "price-high" | "rating" | "prep-time";
 type ViewMode = "grid" | "list";
 type ShopAction = "add" | "buy";
+
+function getDefaultCartInput(food: FoodProduct): CustomizedFoodCartInput {
+  const selectedCustomizations = parseCustomizationGroups(food.customizations)
+    .filter((group) => group.required)
+    .flatMap((group) => {
+      const option = group.options[0];
+      return option ? [{ ...option, groupName: group.name }] : [];
+    });
+
+  return {
+    food,
+    quantity: 1,
+    unitPrice:
+      getFoodPrice(food) +
+      selectedCustomizations.reduce((total, option) => total + option.price, 0),
+    selectedAddons: [],
+    selectedCustomizations,
+  };
+}
 
 const PAGE_SIZE = 12;
 const OFFER_RANGES = [
@@ -149,13 +176,17 @@ export default function ShopScreen() {
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
   const [currentPage, setCurrentPage] = useState(1);
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const [selectedFood, setSelectedFood] = useState<FoodProduct | null>(null);
-  const [selectedAction, setSelectedAction] = useState<ShopAction>("add");
+  const [pendingAction, setPendingAction] = useState<{
+    foodId: string;
+    action: ShopAction;
+  } | null>(null);
   const [actionError, setActionError] = useState("");
   const { addItem, items: cartItems, wishlist, toggleWishlist } = useCart();
+  const actionLock = useRef(false);
   const { width: screenWidth } = useWindowDimensions();
   const pageWidth = Math.max(0, screenWidth - 48);
-  const cardWidth = (pageWidth - 12) / 2;
+  const columnCount = screenWidth >= 1200 ? 4 : screenWidth >= 768 ? 3 : 2;
+  const cardWidth = (pageWidth - (columnCount - 1) * 12) / columnCount;
   const productsPerPage = PAGE_SIZE;
 
   useEffect(() => {
@@ -423,9 +454,30 @@ export default function ShopScreen() {
     }
   };
 
-  const openCustomizer = (food: FoodProduct, action: ShopAction) => {
-    setSelectedAction(action);
-    setSelectedFood(food);
+  const handleProductAction = async (food: FoodProduct, action: ShopAction) => {
+    if (actionLock.current) return;
+    actionLock.current = true;
+    setPendingAction({ foodId: getFoodId(food), action });
+    setActionError("");
+    try {
+      await addItem(getDefaultCartInput(food));
+      if (action === "buy") router.push("/checkout");
+    } catch (requestError) {
+      console.error(
+        action === "buy"
+          ? "Failed to start checkout from the shop:"
+          : "Failed to add a shop product to the cart:",
+        requestError,
+      );
+      setActionError(
+        action === "buy"
+          ? "We could not start checkout. Please try again."
+          : "We could not add this item to your cart. Please try again.",
+      );
+    } finally {
+      actionLock.current = false;
+      setPendingAction(null);
+    }
   };
 
   return (
@@ -757,8 +809,11 @@ export default function ShopScreen() {
           {[0, 1, 2, 3].map((item) => (
             <View
               key={item}
-              className="h-[310px] rounded-2xl bg-slate-200"
-              style={{ width: cardWidth }}
+              className="rounded-2xl bg-slate-200"
+              style={{
+                width: viewMode === "grid" ? cardWidth : pageWidth,
+                height: viewMode === "grid" ? cardWidth + 150 : 120,
+              }}
             />
           ))}
         </View>
@@ -785,9 +840,12 @@ export default function ShopScreen() {
                 viewMode={viewMode}
                 isInWishlist={wishlist.some((item) => getFoodId(item) === foodId)}
                 cartQuantity={cartQuantity(foodId)}
+                pendingAction={
+                  pendingAction?.foodId === foodId ? pendingAction.action : null
+                }
                 onSelect={selectFood}
-                onCustomize={(item) => openCustomizer(item, "add")}
-                onBuyNow={(item) => openCustomizer(item, "buy")}
+                onAdd={(item) => void handleProductAction(item, "add")}
+                onBuyNow={(item) => void handleProductAction(item, "buy")}
                 onToggleWishlist={(item) => void handleToggleWishlist(item)}
               />
             );
@@ -845,15 +903,6 @@ export default function ShopScreen() {
       ) : null}
 
     </ScrollView>
-    <FoodCustomizationModal
-      key={`${selectedFood ? getFoodId(selectedFood) : "no-food-selected"}-${selectedAction}`}
-      food={selectedFood}
-      action={selectedAction}
-      onClose={() => setSelectedFood(null)}
-      onAdd={addItem}
-      onBuyNow={addItem}
-      onBuyNowSuccess={() => router.push("/checkout")}
-    />
     </>
   );
 }

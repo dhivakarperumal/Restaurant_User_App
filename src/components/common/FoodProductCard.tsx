@@ -6,7 +6,6 @@ import {
   Plus,
   Star,
   UtensilsCrossed,
-  Zap,
 } from "lucide-react-native";
 import { Image, Pressable, Text, View } from "react-native";
 import { getFoodImage, getFoodName, getFoodPrice } from "../../lib/foods";
@@ -18,9 +17,11 @@ type FoodProductCardProps = {
   width: number;
   isInWishlist: boolean;
   cartQuantity?: number;
+  pendingAction?: "add" | "buy" | null;
   viewMode?: "grid" | "list";
   onSelect: (food: FoodProduct) => void;
-  onCustomize: (food: FoodProduct) => void;
+  onAdd?: (food: FoodProduct) => void;
+  onCustomize?: (food: FoodProduct) => void;
   onBuyNow?: (food: FoodProduct) => void;
   onToggleWishlist: (food: FoodProduct) => void;
 };
@@ -30,8 +31,10 @@ export default function FoodProductCard({
   width,
   isInWishlist,
   cartQuantity = 0,
+  pendingAction = null,
   viewMode = "grid",
   onSelect,
+  onAdd,
   onCustomize,
   onBuyNow,
   onToggleWishlist,
@@ -46,6 +49,8 @@ export default function FoodProductCard({
   const isAvailable =
     food.is_available !== false &&
     String(food.status || "Active").toLowerCase() === "active";
+  const isPending = pendingAction !== null;
+  const addToCart = () => (onAdd ?? onCustomize)?.(food);
 
   if (viewMode === "list") {
     return (
@@ -123,17 +128,19 @@ export default function FoodProductCard({
               </Pressable>
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel={`Customize ${name}`}
-                accessibilityState={{ disabled: !isAvailable }}
+                accessibilityLabel={`Add ${name} to cart`}
+                accessibilityState={{ disabled: !isAvailable || isPending }}
                 className={`h-8 flex-row items-center rounded-lg px-2 ${isAvailable ? "bg-brand-green-primary" : "bg-slate-300"}`}
-                disabled={!isAvailable}
-                onPress={() => onCustomize(food)}
+                disabled={!isAvailable || isPending}
+                onPress={addToCart}
               >
                 {isAvailable ? <Plus color={colors["white"]} size={15} /> : null}
                 <Text className="ml-1 text-[10px] font-bold text-white">
-                  {isAvailable
+                  {pendingAction === "add"
+                    ? "Adding..."
+                    : isAvailable
                     ? cartQuantity > 0
-                      ? `Add ${cartQuantity}`
+                      ? `Add (${cartQuantity})`
                       : "Add"
                     : "Unavailable"}
                 </Text>
@@ -142,14 +149,13 @@ export default function FoodProductCard({
                 <Pressable
                   accessibilityRole="button"
                   accessibilityLabel={`Buy ${name} now`}
-                  accessibilityState={{ disabled: !isAvailable }}
+                  accessibilityState={{ disabled: !isAvailable || isPending }}
                   className={`ml-1 h-8 flex-row items-center rounded-lg px-2 ${isAvailable ? "bg-brand-gold-bright" : "bg-slate-300"}`}
-                  disabled={!isAvailable}
+                  disabled={!isAvailable || isPending}
                   onPress={() => onBuyNow(food)}
                 >
-                  {isAvailable ? <Zap color={colors.green} size={13} /> : null}
                   <Text className="ml-1 text-[10px] font-bold text-brand-green">
-                    Buy
+                    {pendingAction === "buy" ? "Buying..." : "Buy Now"}
                   </Text>
                 </Pressable>
               ) : null}
@@ -165,7 +171,7 @@ export default function FoodProductCard({
       className="overflow-hidden rounded-2xl border border-brand-neutral-border-warm bg-white shadow-sm"
       style={{ width }}
     >
-      <View className="relative h-[132px]">
+      <View className="relative" style={{ height: width }}>
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={`View ${name}`}
@@ -220,18 +226,25 @@ export default function FoodProductCard({
       </View>
 
       <View className="flex-1 p-2.5">
-        <View className="flex-row items-center justify-between">
-          <Text className="flex-1 text-[10px] font-semibold text-slate-500" numberOfLines={1}>
-            {food.category_name || food.cuisine_name || "Specialty"}
-          </Text>
-          {Number(food.rating) > 0 && (
-            <View className="ml-1 flex-row items-center">
-              <Star color={colors.gold} fill={colors.gold} size={11} />
-              <Text className="ml-0.5 text-[10px] font-bold text-brand-gold-dark">
-                {Number(food.rating).toFixed(1)}
-              </Text>
-            </View>
-          )}
+        <View className="mb-1 flex-row items-center justify-between gap-2">
+          <View className="min-w-0 flex-1 flex-row items-center gap-1">
+            <Text className="min-w-0 flex-1 text-[10px] font-semibold text-slate-500" numberOfLines={1}>
+              {food.category_name || "Specialty"}
+            </Text>
+            {Number(food.rating) > 0 && (
+              <View className="flex-row items-center">
+                <Star color={colors.gold} fill={colors.gold} size={11} />
+                <Text className="ml-0.5 text-[10px] font-bold text-brand-gold-dark">
+                  {Number(food.rating).toFixed(1)}
+                </Text>
+              </View>
+            )}
+          </View>
+          {food.cuisine_name ? (
+            <Text className="max-w-[45%] rounded-full border border-emerald-100 bg-emerald-50 px-2 py-0.5 text-[9px] font-bold text-emerald-800" numberOfLines={1}>
+              {food.cuisine_name}
+            </Text>
+          ) : null}
         </View>
         <Pressable
           accessibilityRole="button"
@@ -243,61 +256,55 @@ export default function FoodProductCard({
             {name}
           </Text>
         </Pressable>
-        <Text className="mt-1 min-h-8 text-[10px] leading-4 text-slate-500" numberOfLines={2}>
-          {food.description || `${food.portion_size || "Standard"} portion, prepared fresh.`}
-        </Text>
-
-        <View className="mt-auto pt-2">
+        <View className="mt-3 border-t border-slate-100 pt-3">
           <View className="flex-row items-center justify-between">
-            <View>
-            <Text className="text-sm font-black text-brand-green-primary">
-              ₹{price.toFixed(0)}
-            </Text>
-            {discount > 0 && mrp > price && (
-              <Text className="text-[9px] text-slate-400 line-through">
-                ₹{mrp.toFixed(0)}
+            <View className="min-w-0 flex-1">
+              <Text className="text-sm font-black text-brand-green-primary">
+                ₹{price.toFixed(2)}
               </Text>
-            )}
-            {Number(food.preparation_time) > 0 && (
-              <View className="mt-0.5 flex-row items-center">
-                <Clock3 color={colors["neutral-slate"]} size={10} />
-                <Text className="ml-1 text-[9px] text-slate-500">
-                  {food.preparation_time} min
+              {discount > 0 && mrp > price && (
+                <Text className="text-[9px] text-slate-400 line-through">
+                  ₹{mrp.toFixed(2)}
                 </Text>
-              </View>
-            )}
+              )}
+              {food.portion_size ? (
+                <Text className="text-[9px] font-medium text-slate-400" numberOfLines={1}>
+                  {food.portion_size}
+                </Text>
+              ) : null}
             </View>
-            {cartQuantity > 0 ? (
-              <Text className="text-[9px] font-semibold text-slate-500">
-                {cartQuantity} in cart
-              </Text>
-            ) : null}
           </View>
-          <View className="mt-2 flex-row gap-1.5">
+          <View className="mt-2 flex-row gap-2">
             <Pressable
               accessibilityRole="button"
               accessibilityLabel={`Add ${name} to cart${cartQuantity > 0 ? `, ${cartQuantity} already in cart` : ""}`}
-              accessibilityState={{ disabled: !isAvailable }}
-              className={`h-9 flex-1 flex-row items-center justify-center rounded-lg px-1 active:opacity-75 ${isAvailable ? "bg-brand-green-primary" : "bg-slate-300"}`}
-              disabled={!isAvailable}
-              onPress={() => onCustomize(food)}
+              accessibilityState={{ disabled: !isAvailable || isPending }}
+              className={`h-9 min-w-0 flex-1 flex-row items-center justify-center rounded-lg px-1 active:opacity-75 ${isAvailable ? "bg-brand-green-primary" : "bg-slate-300"}`}
+              disabled={!isAvailable || isPending}
+              onPress={addToCart}
             >
               {isAvailable ? <Plus color={colors["white"]} size={14} /> : null}
-              <Text className="ml-0.5 text-[10px] font-bold text-white">
-                {isAvailable ? "Add" : "Unavailable"}
+              <Text className="ml-1 text-[10px] font-bold text-white" numberOfLines={1}>
+                {pendingAction === "add"
+                  ? "Adding..."
+                  : isAvailable
+                    ? cartQuantity > 0
+                      ? `Add (${cartQuantity})`
+                      : "Add"
+                    : "Unavailable"}
               </Text>
             </Pressable>
             {onBuyNow ? (
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel={`Buy ${name} now`}
-                accessibilityState={{ disabled: !isAvailable }}
-                className={`h-9 flex-1 flex-row items-center justify-center rounded-lg px-1 active:opacity-75 ${isAvailable ? "bg-brand-gold-bright" : "bg-slate-300"}`}
-                disabled={!isAvailable}
+                accessibilityState={{ disabled: !isAvailable || isPending }}
+                className={`h-9 min-w-0 flex-1 flex-row items-center justify-center rounded-lg border px-1 active:opacity-75 ${isAvailable ? "border-brand-green-primary bg-white" : "border-slate-200 bg-slate-100"}`}
+                disabled={!isAvailable || isPending}
                 onPress={() => onBuyNow(food)}
               >
-                <Text className="text-[10px] font-bold text-brand-green">
-                  Buy now
+                <Text className="text-[10px] font-bold text-brand-green" numberOfLines={1}>
+                  {pendingAction === "buy" ? "Buying..." : "Buy Now"}
                 </Text>
               </Pressable>
             ) : null}
