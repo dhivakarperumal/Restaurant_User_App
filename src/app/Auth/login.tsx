@@ -13,9 +13,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import {
-  getApiErrorMessage,
-} from "../../lib/api";
+import { getApiErrorMessage } from "../../lib/api";
 import { getDashboardRoute } from "../../lib/auth";
 import { useAuth } from "../../contexts/AuthContext";
 

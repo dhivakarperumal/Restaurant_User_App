@@ -138,9 +138,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = useCallback(
     async (identifier: string, password: string) => {
-      authOperation.current += 1;
+      const operation = ++authOperation.current;
       setIsLoading(false);
       const result = await loginWithIdentifier(identifier, password);
+      if (operation !== authOperation.current) {
+        throw new Error("This login attempt was cancelled.");
+      }
       const profile =
         typeof result.user === "object" && result.user !== null
           ? (result.user as Record<string, unknown>)
@@ -166,11 +169,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       authOperation.current += 1;
       try {
-        await clearAuthSession(activeSession.role, activeSession.token);
+        const cleared = await clearAuthSession(activeSession.role, activeSession.token);
+        const currentSession = sessionRef.current;
+        if (
+          !cleared ||
+          currentSession?.role !== activeSession.role ||
+          currentSession.token !== activeSession.token
+        ) {
+          return;
+        }
         sessionRef.current = null;
         setSession(null);
+        setIsLoading(false);
       } catch (error: unknown) {
         console.error("Failed to clear an expired authentication session:", error);
+        sessionRef.current = null;
+        setSession(null);
+        setIsLoading(false);
       }
     });
     void restoreSession();

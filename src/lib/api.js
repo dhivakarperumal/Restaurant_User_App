@@ -31,6 +31,21 @@ const SESSION_KEYS = {
 let cachedToken = null;
 let cachedRole = null;
 let authExpiredHandler = null;
+let sessionStorageQueue = Promise.resolve();
+
+/**
+ * @template T
+ * @param {() => Promise<T>} operation
+ * @returns {Promise<T>}
+ */
+const runSessionStorageTransaction = (operation) => {
+  const pending = sessionStorageQueue.then(operation, operation);
+  sessionStorageQueue = pending.then(
+    () => undefined,
+    () => undefined,
+  );
+  return pending;
+};
 
 const normalizeRole = (role) => {
   if (typeof role !== "string") return null;
@@ -87,25 +102,29 @@ const parseStoredProfile = (value) => {
    TOKEN MANAGEMENT
 ========================= */
 
-export const saveAuthSession = async (role, token, profile) => {
-  const normalizedRole = normalizeRole(role);
-  const normalizedToken = typeof token === "string" ? token.trim() : "";
-  if (!normalizedRole || !normalizedToken) {
-    throw new Error("A valid account role and authentication token are required.");
-  }
+export const saveAuthSession = (role, token, profile) =>
+  runSessionStorageTransaction(async () => {
+    const normalizedRole = normalizeRole(role);
+    const normalizedToken = typeof token === "string" ? token.trim() : "";
+    if (!normalizedRole || !normalizedToken) {
+      throw new Error("A valid account role and authentication token are required.");
+    }
 
-  const keys = SESSION_KEYS[normalizedRole];
-  await writeStoredValue(keys.token, normalizedToken);
-  await writeStoredValue(keys.role, normalizedRole);
-  if (profile && typeof profile === "object") {
-    await writeStoredValue(keys.profile, JSON.stringify({ ...profile, role: normalizedRole }));
-  }
-  await writeStoredValue(ACTIVE_ROLE_KEY, normalizedRole);
+    const keys = SESSION_KEYS[normalizedRole];
+    await writeStoredValue(keys.token, normalizedToken);
+    await writeStoredValue(keys.role, normalizedRole);
+    if (profile && typeof profile === "object") {
+      await writeStoredValue(
+        keys.profile,
+        JSON.stringify({ ...profile, role: normalizedRole }),
+      );
+    }
+    await writeStoredValue(ACTIVE_ROLE_KEY, normalizedRole);
 
-  cachedRole = normalizedRole;
-  cachedToken = normalizedToken;
-  return { role: normalizedRole, token: normalizedToken };
-};
+    cachedRole = normalizedRole;
+    cachedToken = normalizedToken;
+    return { role: normalizedRole, token: normalizedToken };
+  });
 
 export const getStoredAuthSession = async () => {
   let activeRoleValue = await readStoredValue(ACTIVE_ROLE_KEY);
@@ -118,29 +137,34 @@ export const getStoredAuthSession = async () => {
   }
 
   if (!role && !activeRoleValue) {
-    const legacyProfileValue = await readStoredValue("userProfile");
-    const legacyProfile = parseStoredProfile(legacyProfileValue);
-    const legacyRole = normalizeRole(
-      (await readStoredValue("userRole")) ?? legacyProfile?.role,
-    );
-    const legacyToken = await readStoredValue("userToken");
+    await runSessionStorageTransaction(async () => {
+      if (await readStoredValue(ACTIVE_ROLE_KEY)) return;
 
-    if (legacyRole && legacyToken) {
-      const keys = SESSION_KEYS[legacyRole];
-      await writeStoredValue(keys.token, legacyToken);
-      await writeStoredValue(keys.role, legacyRole);
-      if (legacyProfile) {
-        await writeStoredValue(
-          keys.profile,
-          JSON.stringify({ ...legacyProfile, role: legacyRole }),
-        );
+      const legacyProfileValue = await readStoredValue("userProfile");
+      const legacyProfile = parseStoredProfile(legacyProfileValue);
+      const legacyRole = normalizeRole(
+        (await readStoredValue("userRole")) ?? legacyProfile?.role,
+      );
+      const legacyToken = await readStoredValue("userToken");
+
+      if (legacyRole && legacyToken) {
+        const keys = SESSION_KEYS[legacyRole];
+        await writeStoredValue(keys.token, legacyToken);
+        await writeStoredValue(keys.role, legacyRole);
+        if (legacyProfile) {
+          await writeStoredValue(
+            keys.profile,
+            JSON.stringify({ ...legacyProfile, role: legacyRole }),
+          );
+        }
+        await writeStoredValue(ACTIVE_ROLE_KEY, legacyRole);
+        if (legacyRole === "delivery_partner") {
+          await removeStoredValues(["userToken", "userRole", "userProfile"]);
+        }
       }
-      await writeStoredValue(ACTIVE_ROLE_KEY, legacyRole);
-      if (legacyRole === "delivery_partner") {
-        await removeStoredValues(["userToken", "userRole", "userProfile"]);
-      }
-      role = legacyRole;
-    }
+    });
+    activeRoleValue = await readStoredValue(ACTIVE_ROLE_KEY);
+    role = normalizeRole(activeRoleValue);
   }
 
   if (!role) {
@@ -187,24 +211,27 @@ export const setAuthToken = async (token, role) => {
   await saveAuthSession(activeRole ?? "user", token);
 };
 
-export const clearAuthSession = async (role, expectedToken) => {
-  const normalizedRole = normalizeRole(role);
-  if (!normalizedRole) return;
+/** @returns {Promise<boolean>} */
+export const clearAuthSession = (role, expectedToken) =>
+  runSessionStorageTransaction(async () => {
+    const normalizedRole = normalizeRole(role);
+    if (!normalizedRole) return false;
 
-  const keys = SESSION_KEYS[normalizedRole];
-  if (
-    expectedToken &&
-    (await readStoredValue(keys.token)) !== expectedToken
-  ) {
-    return;
-  }
-  await removeStoredValues([keys.token, keys.role, keys.profile]);
-  const activeRole = normalizeRole(await readStoredValue(ACTIVE_ROLE_KEY));
-  if (activeRole === normalizedRole) {
-    await writeStoredValue(ACTIVE_ROLE_KEY, "none");
-    clearTokenCache();
-  }
-};
+    const keys = SESSION_KEYS[normalizedRole];
+    if (
+      expectedToken &&
+      (await readStoredValue(keys.token)) !== expectedToken
+    ) {
+      return false;
+    }
+    await removeStoredValues([keys.token, keys.role, keys.profile]);
+    const activeRole = normalizeRole(await readStoredValue(ACTIVE_ROLE_KEY));
+    if (activeRole === normalizedRole) {
+      await writeStoredValue(ACTIVE_ROLE_KEY, "none");
+      clearTokenCache();
+    }
+    return true;
+  });
 
 export const setAuthExpiredHandler = (handler) => {
   authExpiredHandler = handler;
