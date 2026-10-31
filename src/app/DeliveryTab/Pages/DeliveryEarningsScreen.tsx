@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
+  Modal,
+  Platform,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -8,6 +10,9 @@ import {
   TextInput,
   View,
 } from "react-native";
+import DateTimePicker, {
+  DateTimePickerAndroid,
+} from "@react-native-community/datetimepicker";
 import {
   CalendarDays,
   CheckCheck,
@@ -18,6 +23,7 @@ import {
 import api, { getApiErrorMessage } from "../../../lib/api";
 
 const DATE_RANGES = [
+  { value: "all", label: "All" },
   { value: "today", label: "Today" },
   { value: "yesterday", label: "Yesterday" },
   { value: "this-week", label: "This week" },
@@ -78,6 +84,28 @@ function formatDate(value: unknown): string {
       });
 }
 
+function getDateKey(date: Date): string {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+}
+
+function parseDateValue(value: string): Date | null {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+  if (!match) return null;
+  const date = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]), 12);
+  return getDateKey(date) === value ? date : null;
+}
+
+function formatSelectedDate(value: string): string {
+  const date = parseDateValue(value);
+  return date
+    ? date.toLocaleDateString("en-IN", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      })
+    : "Choose date";
+}
+
 function rowsFrom(value: unknown): EarningsRecord[] {
   if (Array.isArray(value)) return value.flatMap((row) => {
     const record = asRecord(row);
@@ -119,7 +147,7 @@ function EarningsMetricCard({
   const { Icon } = metric;
   return (
     <View
-      className="mr-3 min-h-[140px] w-[158px] justify-between overflow-hidden rounded-[22px] p-4"
+      className="mb-3 w-[48%] min-h-[140px] justify-between overflow-hidden rounded-[22px] p-4"
       style={{ backgroundColor: metric.color }}
     >
       <View className="flex-row items-start justify-between">
@@ -153,6 +181,8 @@ export default function DeliveryEarningsScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [refreshVersion, setRefreshVersion] = useState(0);
   const [errorMessage, setErrorMessage] = useState("");
+  const [pickerMode, setPickerMode] = useState<"from" | "to" | null>(null);
+  const [pickerDraft, setPickerDraft] = useState(new Date());
 
   useEffect(() => {
     let active = true;
@@ -249,16 +279,49 @@ export default function DeliveryEarningsScreen() {
     ],
     [summary],
   );
+  const parsedFrom = parseDateValue(from);
+  const parsedTo = parseDateValue(to);
+  const canApplyDateRange = Boolean(
+    parsedFrom && parsedTo && parsedFrom.getTime() <= parsedTo.getTime(),
+  );
+
+  const applyPickedDate = (mode: "from" | "to", value: Date) => {
+    const dateKey = getDateKey(value);
+    if (mode === "from") setFrom(dateKey);
+    else setTo(dateKey);
+  };
+
+  const openDatePicker = (mode: "from" | "to") => {
+    const currentValue = mode === "from" ? from : to;
+    const value = parseDateValue(currentValue) ?? new Date();
+    if (Platform.OS === "android") {
+      DateTimePickerAndroid.open({
+        value,
+        mode: "date",
+        onValueChange: (_event, selectedDate) => applyPickedDate(mode, selectedDate),
+      });
+      return;
+    }
+
+    setPickerDraft(value);
+    setPickerMode(mode);
+  };
+
+  const confirmIOSDatePicker = () => {
+    if (pickerMode) applyPickedDate(pickerMode, pickerDraft);
+    setPickerMode(null);
+  };
 
   return (
-    <ScrollView
-      className="flex-1 bg-[#F7F8F3]"
-      contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 24 }}
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor="#17663D" />
-      }
-      showsVerticalScrollIndicator={false}
-    >
+    <View className="flex-1">
+      <ScrollView
+        className="flex-1 bg-[#F7F8F3]"
+        contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 24 }}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor="#17663D" />
+        }
+        showsVerticalScrollIndicator={false}
+      >
       <View className="mb-5 flex-row items-center justify-between">
         <View className="mr-3 flex-1">
           <Text className="text-[10px] font-extrabold uppercase tracking-[1.6px] text-[#39754A]">
@@ -282,6 +345,33 @@ export default function DeliveryEarningsScreen() {
             <RefreshCw color="#53645A" size={18} />
           )}
         </Pressable>
+      </View>
+      {errorMessage ? (
+        <View className="mb-4 rounded-2xl border border-amber-200 bg-amber-50 p-4">
+          <Text className="text-sm font-extrabold text-amber-900">Earnings unavailable</Text>
+          <Text className="mt-1 text-sm leading-5 text-amber-800">{errorMessage}</Text>
+          <Text className="mt-2 text-xs leading-5 text-amber-800">
+            Earnings are loaded only from your delivery-partner account.
+          </Text>
+          <Pressable
+            accessibilityRole="button"
+            className="mt-3 min-h-10 flex-row items-center self-start rounded-xl bg-[#17663D] px-4"
+            onPress={refresh}
+          >
+            <RefreshCw color="#FFFFFF" size={15} />
+            <Text className="ml-2 text-xs font-bold text-white">Try again</Text>
+          </Pressable>
+        </View>
+      ) : null}
+
+      <View className="mb-2 flex-row flex-wrap justify-between">
+        {metrics.map((metric) => (
+          <EarningsMetricCard
+            key={metric.label}
+            metric={metric}
+            loading={loading && !errorMessage}
+          />
+        ))}
       </View>
 
       <View className="mb-4">
@@ -317,74 +407,76 @@ export default function DeliveryEarningsScreen() {
         </ScrollView>
         {range === "custom" ? (
           <View className="mt-2">
-            <View className="flex-row">
-              <TextInput
-                accessibilityLabel="Earnings from date"
-                className="mr-2 min-h-11 flex-1 rounded-xl border border-[#E1E8E1] bg-white px-3 text-xs text-[#17251E]"
-                onChangeText={setFrom}
-                placeholder="From · YYYY-MM-DD"
-                placeholderTextColor="#98A199"
-                value={from}
-              />
-              <TextInput
-                accessibilityLabel="Earnings to date"
-                className="min-h-11 flex-1 rounded-xl border border-[#E1E8E1] bg-white px-3 text-xs text-[#17251E]"
-                onChangeText={setTo}
-                placeholder="To · YYYY-MM-DD"
-                placeholderTextColor="#98A199"
-                value={to}
-              />
-            </View>
+            {Platform.OS === "web" ? (
+              <View className="flex-row">
+                <TextInput
+                  accessibilityLabel="Earnings from date"
+                  className="mr-2 min-h-11 flex-1 rounded-xl border border-[#E1E8E1] bg-white px-3 text-xs text-[#17251E]"
+                  onChangeText={setFrom}
+                  placeholder="From · YYYY-MM-DD"
+                  placeholderTextColor="#98A199"
+                  value={from}
+                />
+                <TextInput
+                  accessibilityLabel="Earnings to date"
+                  className="min-h-11 flex-1 rounded-xl border border-[#E1E8E1] bg-white px-3 text-xs text-[#17251E]"
+                  onChangeText={setTo}
+                  placeholder="To · YYYY-MM-DD"
+                  placeholderTextColor="#98A199"
+                  value={to}
+                />
+              </View>
+            ) : (
+              <View className="flex-row">
+                {(["from", "to"] as const).map((mode) => {
+                  const value = mode === "from" ? from : to;
+                  const label = mode === "from" ? "From date" : "To date";
+                  return (
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel={`Choose ${label.toLowerCase()}`}
+                      className={`min-h-12 flex-1 flex-row items-center rounded-xl border border-[#E1E8E1] bg-white px-3 ${
+                        mode === "from" ? "mr-2" : ""
+                      }`}
+                      key={mode}
+                      onPress={() => openDatePicker(mode)}
+                    >
+                      <CalendarDays color="#39754A" size={16} />
+                      <View className="ml-2">
+                        <Text className="text-[9px] font-bold uppercase text-slate-400">
+                          {label}
+                        </Text>
+                        <Text className="mt-0.5 text-xs font-semibold text-[#17251E]">
+                          {formatSelectedDate(value)}
+                        </Text>
+                      </View>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            )}
             <Pressable
               accessibilityRole="button"
               className="mt-2 min-h-10 items-center justify-center rounded-xl bg-[#17663D]"
-              disabled={!from || !to}
+              disabled={!canApplyDateRange}
               onPress={() => {
                 setLoading(true);
                 setErrorMessage("");
                 setAppliedFrom(from);
                 setAppliedTo(to);
               }}
-              style={{ opacity: from && to ? 1 : 0.55 }}
+              style={{ opacity: canApplyDateRange ? 1 : 0.55 }}
             >
               <Text className="text-xs font-extrabold text-white">Apply date range</Text>
             </Pressable>
+            {from && to && !canApplyDateRange ? (
+              <Text className="mt-1.5 text-[10px] font-semibold text-rose-600">
+                Choose valid dates and make sure the start date is not after the end date.
+              </Text>
+            ) : null}
           </View>
         ) : null}
       </View>
-
-      {errorMessage ? (
-        <View className="mb-4 rounded-2xl border border-amber-200 bg-amber-50 p-4">
-          <Text className="text-sm font-extrabold text-amber-900">Earnings unavailable</Text>
-          <Text className="mt-1 text-sm leading-5 text-amber-800">{errorMessage}</Text>
-          <Text className="mt-2 text-xs leading-5 text-amber-800">
-            Earnings are loaded only from your delivery-partner account.
-          </Text>
-          <Pressable
-            accessibilityRole="button"
-            className="mt-3 min-h-10 flex-row items-center self-start rounded-xl bg-[#17663D] px-4"
-            onPress={refresh}
-          >
-            <RefreshCw color="#FFFFFF" size={15} />
-            <Text className="ml-2 text-xs font-bold text-white">Try again</Text>
-          </Pressable>
-        </View>
-      ) : null}
-
-      <ScrollView
-        className="mb-5"
-        contentContainerStyle={{ paddingRight: 4 }}
-        horizontal
-        showsHorizontalScrollIndicator={false}
-      >
-        {metrics.map((metric) => (
-          <EarningsMetricCard
-            key={metric.label}
-            metric={metric}
-            loading={loading && !errorMessage}
-          />
-        ))}
-      </ScrollView>
 
       <View className="overflow-hidden rounded-2xl border border-[#E1E8E1] bg-white">
         <View className="border-b border-[#EEF0EC] px-4 py-4">
@@ -456,6 +548,47 @@ export default function DeliveryEarningsScreen() {
           ))
         )}
       </View>
-    </ScrollView>
+      </ScrollView>
+      {Platform.OS === "ios" && pickerMode ? (
+        <Modal
+          animationType="slide"
+          onRequestClose={() => setPickerMode(null)}
+          transparent
+          visible
+        >
+          <View className="flex-1 justify-end bg-black/45">
+            <View className="rounded-t-3xl bg-[#FFFCF6] px-4 pb-8 pt-4">
+              <View className="mb-2 flex-row items-center justify-between">
+                <Pressable
+                  accessibilityRole="button"
+                  className="min-h-11 justify-center px-2"
+                  onPress={() => setPickerMode(null)}
+                >
+                  <Text className="text-sm font-semibold text-[#728071]">Cancel</Text>
+                </Pressable>
+                <Text className="text-base font-extrabold text-[#183B2A]">
+                  {pickerMode === "from" ? "Select start date" : "Select end date"}
+                </Text>
+                <Pressable
+                  accessibilityRole="button"
+                  className="min-h-11 justify-center px-2"
+                  onPress={confirmIOSDatePicker}
+                >
+                  <Text className="text-sm font-extrabold text-[#1A6A3B]">Done</Text>
+                </Pressable>
+              </View>
+              <DateTimePicker
+                accentColor="#1A6A3B"
+                display="spinner"
+                mode="date"
+                onValueChange={(_event, value) => setPickerDraft(value)}
+                themeVariant="light"
+                value={pickerDraft}
+              />
+            </View>
+          </View>
+        </Modal>
+      ) : null}
+    </View>
   );
 }
