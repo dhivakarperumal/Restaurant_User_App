@@ -117,20 +117,20 @@ export default function TopHeader({ title }: TopHeaderProps) {
         <BlurView
           blurTarget={blurTarget}
           blurMethod="dimezisBlurViewSdk31Plus"
-          intensity={18}
+          intensity={12}
           tint="light"
           style={StyleSheet.absoluteFill}
         />
         <View
           accessibilityLabel={`${title} page header`}
           accessibilityRole="header"
-          className="min-h-[52px] flex-row items-center justify-between px-1"
+          className="min-h-[56px] flex-row items-center justify-between px-1"
         >
           <View className="mr-2 flex-1 flex-row items-center">
             <Image
               accessible
               accessibilityLabel="Buy Food restaurant logo"
-              className="mr-2 h-10 w-10 rounded-full border border-[#E9BE45] bg-white"
+              className="mr-2 h-11 w-11 rounded-full border border-[#E9BE45] bg-white"
               resizeMode="contain"
               source={require("../../../assets/images/logo.png")}
             />
@@ -151,26 +151,26 @@ export default function TopHeader({ title }: TopHeaderProps) {
             <Pressable
               accessibilityLabel="Open your favorites"
               accessibilityRole="button"
-              className="mr-1.5 h-9 w-9 items-center justify-center rounded-full border border-[#E9DDC7] bg-white active:bg-[#FFF1F2]"
+              className="mr-1.5 h-10 w-10 items-center justify-center rounded-full border border-[#E9DDC7] bg-white active:bg-[#FFF1F2]"
               onPress={() => router.push("/UsersTab/favorites")}
             >
-              <Heart color="#D83C55" size={18} />
+              <Heart color="#D83C55" size={20} />
               <View className="absolute right-1 top-1 h-2 w-2 rounded-full border border-white bg-[#D83C55]" />
             </Pressable>
             <Pressable
               accessibilityLabel="Open your orders"
               accessibilityRole="button"
-              className="mr-1.5 h-9 w-9 items-center justify-center rounded-full border border-[#E9DDC7] bg-white active:bg-[#EAF2E8]"
+              className="mr-1.5 h-10 w-10 items-center justify-center rounded-full border border-[#E9DDC7] bg-white active:bg-[#EAF2E8]"
               onPress={() => router.push("/UsersTab/orders")}
             >
-              <ShoppingBag color="#17663D" size={18} />
+              <ShoppingBag color="#17663D" size={20} />
               <View className="absolute right-1 top-1 h-2 w-2 rounded-full border border-white bg-[#E9BE45]" />
             </Pressable>
             <Pressable
               accessibilityLabel="Open profile menu"
               accessibilityRole="button"
               accessibilityState={{ expanded: isMenuVisible }}
-              className="h-10 w-10 items-center justify-center rounded-full border border-[#E9BE45] bg-[#EAF2E8] active:bg-[#DCEBDD]"
+              className="h-11 w-11 items-center justify-center rounded-full border border-[#E9BE45] bg-[#EAF2E8] active:bg-[#DCEBDD]"
               disabled={isLoggingOut}
               onPress={() => setIsMenuVisible(true)}
             >
@@ -181,7 +181,7 @@ export default function TopHeader({ title }: TopHeaderProps) {
                   <Text className="text-sm font-extrabold text-[#17663D]">
                     {account.initial || "U"}
                   </Text>
-                  <ChevronDown color="#17663D" size={12} />
+                  <ChevronDown color="#17663D" size={14} />
                 </View>
               )}
             </Pressable>
