@@ -512,9 +512,16 @@ export default function CheckoutScreen() {
         );
       }
       if (!(await Location.hasServicesEnabledAsync())) {
-        throw new Error(
-          "Location services are turned off. Enable them or enter your address manually.",
-        );
+        if (Platform.OS === "android") {
+          await Location.enableNetworkProviderAsync();
+        }
+        if (!(await Location.hasServicesEnabledAsync())) {
+          throw new Error(
+            Platform.OS === "android"
+              ? "Location is still turned off. Enable it in the system prompt or enter your address manually."
+              : "Location services are turned off. Turn them on in your device settings or enter your address manually.",
+          );
+        }
       }
 
       const position = await Location.getCurrentPositionAsync({
