@@ -261,7 +261,7 @@ function SummaryCard({
 }) {
   return (
     <View
-      className="mr-3 min-h-[118px] w-[148px] justify-between rounded-2xl p-4"
+      className="mb-3 min-h-[118px] w-[48.5%] justify-between rounded-2xl p-4"
       style={{ backgroundColor: background }}
     >
       <View className="flex-row items-center justify-between">
@@ -351,6 +351,19 @@ export default function DeliveryOrdersScreen() {
       return matchesView && matchesDate && matchesSearch;
     });
   }, [dateFrom, dateTo, orders, search, selectedView]);
+
+  const todayKey = getDateKey(new Date());
+  const todayOrders = useMemo(
+    () =>
+      orders
+        .filter((order) => getDateKey(getOrderDate(order)) === todayKey)
+        .sort(
+          (first, second) =>
+            (getOrderDate(second)?.getTime() ?? 0) -
+            (getOrderDate(first)?.getTime() ?? 0),
+        ),
+    [orders, todayKey],
+  );
 
   const counts = useMemo(() => {
     const statusCount = (statuses: readonly string[]) =>
@@ -583,41 +596,11 @@ export default function DeliveryOrdersScreen() {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        <View className="mb-5 flex-row items-center justify-between">
-          <View className="mr-3 flex-1">
-            <Text className="text-[10px] font-extrabold uppercase tracking-[1.6px] text-[#39754A]">
-              Deliveries
-            </Text>
-            <Text className="mt-1 text-2xl font-black text-[#17251E]">Your orders</Text>
-            <Text className="mt-1 text-xs leading-5 text-slate-500">
-              Only deliveries assigned to your account appear here.
-            </Text>
-          </View>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Refresh delivery orders"
-            className="h-11 w-11 items-center justify-center rounded-xl border border-[#E1E8E1] bg-white"
-            disabled={loading || refreshing}
-            onPress={refreshOrders}
-          >
-            {loading || refreshing ? (
-              <ActivityIndicator color="#17663D" size="small" />
-            ) : (
-              <RefreshCw color="#53645A" size={18} />
-            )}
-          </Pressable>
-        </View>
-
-        <ScrollView
-          className="mb-5"
-          contentContainerStyle={{ paddingRight: 4 }}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-        >
+        <View className="mb-2 flex-row flex-wrap justify-between">
           <SummaryCard
-            label="New orders"
-            count={counts.newOrders}
-            caption="Awaiting action"
+            label="Total Orders"
+            count={orders.length}
+            caption="All assigned orders"
             background="#C72D91"
             Icon={Clock3}
             loading={loading}
@@ -646,7 +629,7 @@ export default function DeliveryOrdersScreen() {
             Icon={XCircle}
             loading={loading}
           />
-        </ScrollView>
+        </View>
 
         <View className="mb-3 flex-row items-center rounded-xl border border-[#E1E8E1] bg-white px-3">
           <Search color="#87938A" size={18} />

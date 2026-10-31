@@ -14,7 +14,6 @@ import {
   Bike,
   CalendarDays,
   CalendarCheck2,
-  CheckCircle2,
   Clock3,
   IndianRupee,
   MapPin,
@@ -22,9 +21,8 @@ import {
   Power,
   RefreshCw,
   Timer,
-  WalletCards,
+  UserRound,
   X,
-  XCircle,
   Zap,
 } from "lucide-react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -66,17 +64,9 @@ type MetricDefinition = {
   caption: string;
   Icon: typeof PackageCheck;
   colors: [string, string];
-  isMoney?: boolean;
 };
 
 const metrics: MetricDefinition[] = [
-  {
-    key: "todayDeliveries",
-    label: "Today's deliveries",
-    caption: "Today",
-    Icon: PackageCheck,
-    colors: ["#0D9B7B", "#20C997"],
-  },
   {
     key: "newOrders",
     label: "New orders",
@@ -85,48 +75,11 @@ const metrics: MetricDefinition[] = [
     colors: ["#D83291", "#EC53B0"],
   },
   {
-    key: "assignedOrders",
-    label: "Assigned",
-    caption: "Assigned to you",
-    Icon: Bike,
-    colors: ["#5C53CF", "#8066E9"],
-  },
-  {
-    key: "pickupPending",
-    label: "Pickup pending",
-    caption: "Pickup stage",
-    Icon: MapPin,
-    colors: ["#E68B00", "#F8B929"],
-  },
-  {
-    key: "deliveredOrders",
-    label: "Delivered",
-    caption: "Completed",
-    Icon: CheckCircle2,
-    colors: ["#16854E", "#2FB86C"],
-  },
-  {
-    key: "cancelledOrders",
-    label: "Cancelled",
-    caption: "Closed",
-    Icon: XCircle,
-    colors: ["#C93755", "#E76473"],
-  },
-  {
-    key: "todayEarnings",
-    label: "Today's earnings",
-    caption: "Today",
-    Icon: IndianRupee,
-    colors: ["#63A82D", "#92C94B"],
-    isMoney: true,
-  },
-  {
-    key: "totalEarnings",
-    label: "Total earnings",
-    caption: "Lifetime",
-    Icon: WalletCards,
-    colors: ["#14553A", "#267653"],
-    isMoney: true,
+    key: "todayOrders",
+    label: "Today's orders",
+    caption: "Assigned today",
+    Icon: PackageCheck,
+    colors: ["#0D9B7B", "#20C997"],
   },
 ];
 
@@ -190,13 +143,6 @@ function isToday(date: Date | null): boolean {
     date.getMonth() === now.getMonth() &&
     date.getDate() === now.getDate()
   );
-}
-
-function formatMoney(value: unknown): string {
-  if (value == null || value === "") return "—";
-  const amount = Number(value);
-  if (!Number.isFinite(amount)) return "—";
-  return `₹${amount.toLocaleString("en-IN", { maximumFractionDigits: 2 })}`;
 }
 
 function formatTime(value?: string | null): string {
@@ -299,6 +245,13 @@ export default function DeliveryPartnerScreen() {
       (first, second) =>
         (getOrderDate(second)?.getTime() ?? 0) - (getOrderDate(first)?.getTime() ?? 0),
     );
+  const newOrderCount = orders.filter((order) =>
+    ["NEW", "NEW_ORDER", "PENDING", "ORDER_PLACED"].includes(
+      firstText(order, ["order_status", "status"])
+        .toUpperCase()
+        .replace(/[\s-]+/g, "_"),
+    ),
+  ).length;
 
   useEffect(() => {
     let active = true;
@@ -546,7 +499,7 @@ export default function DeliveryPartnerScreen() {
             </View>
           ) : null}
 
-          <View className="mt-4 flex-row flex-wrap gap-2">
+          <View className="mt-4 flex-row flex-wrap justify-between gap-y-2">
             {isOnline ? (
               <>
                 <ActionButton
@@ -594,6 +547,62 @@ export default function DeliveryPartnerScreen() {
           </View>
         </View>
 
+        <View className="mt-5">
+          <Text className="mb-3 text-base font-extrabold text-[#17251E]">
+            Quick actions
+          </Text>
+          <View className="flex-row flex-wrap justify-between">
+            {([
+              {
+                label: "Orders",
+                description: "View assigned orders",
+                Icon: PackageCheck,
+                route: "/DeliveryTab/orders",
+              },
+              {
+                label: "Earnings",
+                description: "Check your income",
+                Icon: IndianRupee,
+                route: "/DeliveryTab/earnings",
+              },
+              {
+                label: "Attendance",
+                description: "View your shifts",
+                Icon: CalendarCheck2,
+                route: "/DeliveryTab/attendance",
+              },
+              {
+                label: "Profile",
+                description: "Manage your account",
+                Icon: UserRound,
+                route: "/DeliveryTab/profile",
+              },
+            ] as const).map(({ label, description, Icon, route }) => (
+              <Pressable
+                accessibilityRole="button"
+                className="mb-3 min-h-[92px] w-[48.5%] flex-row items-center rounded-2xl border border-[#E2E9E3] bg-white p-3 active:bg-[#F4F8F3]"
+                key={label}
+                onPress={() => router.push(route)}
+              >
+                <View className="mr-3 h-10 w-10 items-center justify-center rounded-xl bg-[#EAF2E8]">
+                  <Icon color="#21643A" size={19} />
+                </View>
+                <View className="min-w-0 flex-1">
+                  <Text className="text-sm font-extrabold text-[#17251E]">
+                    {label}
+                  </Text>
+                  <Text
+                    className="mt-1 text-[10px] leading-4 text-slate-500"
+                    numberOfLines={2}
+                  >
+                    {description}
+                  </Text>
+                </View>
+              </Pressable>
+            ))}
+          </View>
+        </View>
+
         {errorMessage ? (
           <View className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 p-4">
             <Text className="text-sm font-bold text-amber-900">Dashboard data notice</Text>
@@ -609,8 +618,13 @@ export default function DeliveryPartnerScreen() {
         ) : null}
 
         <View className="mt-5 flex-row flex-wrap justify-between">
-          {metrics.map(({ key, label, caption, Icon, colors, isMoney }) => {
-            const value = summary[key];
+          {metrics.map(({ key, label, caption, Icon, colors }) => {
+            const value =
+              key === "todayOrders"
+                ? todayOrders.length
+                : key === "newOrders"
+                  ? newOrderCount
+                  : summary[key];
             return (
               <View
                 key={key}
@@ -628,7 +642,7 @@ export default function DeliveryPartnerScreen() {
                     <Icon color="#FFFFFF" size={17} strokeWidth={2.3} />
                   </View>
                 </View>
-                {loading ? (
+                {ordersLoading ? (
                   <View className="mt-3 h-8 w-16 rounded-lg bg-white/25" />
                 ) : (
                   <Text
@@ -636,7 +650,7 @@ export default function DeliveryPartnerScreen() {
                     numberOfLines={1}
                     adjustsFontSizeToFit
                   >
-                    {isMoney ? formatMoney(value) : String(value ?? 0)}
+                    {String(value ?? 0)}
                   </Text>
                 )}
                 <View className="mt-auto self-start rounded-full border border-white/25 bg-white/15 px-2.5 py-1">
@@ -952,7 +966,7 @@ function ActionButton({
     <Pressable
       accessibilityRole="button"
       accessibilityState={{ disabled }}
-      className={`min-h-10 flex-row items-center justify-center rounded-xl px-3 ${variantClass} ${
+      className={`min-h-11 w-[48.5%] flex-row items-center justify-center rounded-xl px-3 ${variantClass} ${
         disabled ? "opacity-60" : "active:opacity-80"
       }`}
       disabled={disabled}
