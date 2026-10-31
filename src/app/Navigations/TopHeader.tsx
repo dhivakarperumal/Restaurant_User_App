@@ -24,6 +24,7 @@ import {
   useWindowDimensions,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useCart } from "../../contexts/CartContext";
 import { useCustomAlert } from "../../contexts/CustomAlertContext";
 import FavoritesDrawer from "../../components/common/FavoritesDrawer";
 import { getStoredUser } from "../../lib/api";
@@ -52,6 +53,7 @@ function getTextValue(user: Record<string, unknown>, keys: string[]) {
 export default function TopHeader({ title }: TopHeaderProps) {
   const insets = useSafeAreaInsets();
   const { width: windowWidth } = useWindowDimensions();
+  const { wishlist } = useCart();
   const { showAlert } = useCustomAlert();
   const blurTarget = useRef<ComponentRef<typeof View> | null>(null);
   const [isMenuVisible, setIsMenuVisible] = useState(false);
@@ -149,13 +151,20 @@ export default function TopHeader({ title }: TopHeaderProps) {
 
           <View className="flex-row items-center">
             <Pressable
-              accessibilityLabel="Open your favorites"
+              accessibilityLabel={`Open your favorites, ${wishlist.length} saved ${wishlist.length === 1 ? "item" : "items"}`}
               accessibilityRole="button"
+              accessibilityValue={{ text: String(wishlist.length) }}
               className="mr-1.5 h-10 w-10 items-center justify-center rounded-full border border-brand-neutral-border-cream bg-white active:bg-brand-rose-soft"
               onPress={() => setIsFavoritesVisible(true)}
             >
               <Heart color={colors["heart"]} size={20} />
-              <View className="absolute right-1 top-1 h-2 w-2 rounded-full border border-white bg-brand-heart" />
+              {wishlist.length > 0 ? (
+                <View className="absolute -right-1 -top-1 min-h-[17px] min-w-[17px] items-center justify-center rounded-full border border-white bg-brand-heart px-1">
+                  <Text className="text-[9px] font-extrabold leading-3 text-white">
+                    {wishlist.length > 99 ? "99+" : wishlist.length}
+                  </Text>
+                </View>
+              ) : null}
             </Pressable>
             <Pressable
               accessibilityLabel="Open your orders"
