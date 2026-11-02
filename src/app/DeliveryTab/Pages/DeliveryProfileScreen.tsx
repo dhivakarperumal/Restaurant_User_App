@@ -463,9 +463,9 @@ export default function DeliveryProfileScreen() {
               Your account
             </Text>
             <Text className="mt-1 text-2xl font-black text-[#17251E]">Profile</Text>
-            <Text className="mt-1 text-xs leading-5 text-slate-500">
+            {/* <Text className="mt-1 text-xs leading-5 text-slate-500">
               Personal and vehicle information for your delivery account.
-            </Text>
+            </Text> */}
           </View>
           <Pressable
             accessibilityRole="button"

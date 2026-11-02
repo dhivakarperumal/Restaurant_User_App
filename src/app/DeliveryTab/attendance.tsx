@@ -533,9 +533,9 @@ export default function DeliveryAttendanceScreen() {
           <Text className="mt-2 text-xl font-black text-[#17251E]">
             Attendance & Shift Log
           </Text>
-          <Text className="mt-1 text-xs leading-5 text-slate-500">
+          {/* <Text className="mt-1 text-xs leading-5 text-slate-500">
             Track your duty, working hours, and shift history.
-          </Text>
+          </Text> */}
         </View>
         <View className="flex-row">
           <Pressable
