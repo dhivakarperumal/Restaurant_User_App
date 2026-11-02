@@ -425,107 +425,111 @@ function ProductDetailsContent({
                     {activeImage + 1} / {images.length}
                   </Text>
                 </View>
-              <ScrollView
-                horizontal
-                contentContainerStyle={{ gap: 10, paddingHorizontal: 1, paddingBottom: 2 }}
-                showsHorizontalScrollIndicator={false}
-              >
-                {images.map((image, index) => (
-                  <Pressable
-                    key={`${image}-${index}`}
-                    accessibilityRole="button"
-                    accessibilityLabel={`Show product image ${index + 1}`}
-                    accessibilityState={{ selected: activeImage === index }}
-                    className="h-[68px] w-[68px] overflow-hidden rounded-xl border-2 bg-brand-surface-cream"
-                    style={{
-                      borderColor:
-                        activeImage === index
-                          ? colors["gold-bright"]
-                          : colors["neutral-border-warm"],
-                    }}
-                    onPress={() => setActiveImage(index)}
-                  >
-                    <Image className="h-full w-full" resizeMode="cover" source={{ uri: image }} />
-                  </Pressable>
-                ))}
-              </ScrollView>
+                <ScrollView
+                  horizontal
+                  contentContainerStyle={{
+                    gap: 10,
+                    paddingHorizontal: 1,
+                    paddingBottom: 2,
+                  }}
+                  showsHorizontalScrollIndicator={false}
+                >
+                  {images.map((image, index) => (
+                    <Pressable
+                      key={`${image}-${index}`}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Show product image ${index + 1}`}
+                      accessibilityState={{ selected: activeImage === index }}
+                      className="h-[68px] w-[68px] overflow-hidden rounded-xl border-2 bg-brand-surface-cream"
+                      style={{
+                        borderColor:
+                          activeImage === index
+                            ? colors["gold-bright"]
+                            : colors["neutral-border-warm"],
+                      }}
+                      onPress={() => setActiveImage(index)}
+                    >
+                      <Image
+                        className="h-full w-full"
+                        resizeMode="cover"
+                        source={{ uri: image }}
+                      />
+                    </Pressable>
+                  ))}
+                </ScrollView>
               </View>
             ) : null}
           </View>
 
           <View className="px-4 pb-6 pt-2">
             <View className="rounded-2xl border border-brand-neutral-border-warm bg-white p-4 shadow-sm">
-            <View className="mb-3 flex-row flex-wrap items-center gap-2">
-              {food.food_type ? (
-                <View className={`flex-row items-center rounded-full px-2.5 py-1.5 ${isVeg ? "bg-emerald-50" : "bg-rose-50"}`}>
-                  <View className={`mr-1.5 h-2.5 w-2.5 items-center justify-center rounded-sm border ${isVeg ? "border-emerald-700" : "border-rose-700"}`}>
-                    <View className={`h-1 w-1 rounded-full ${isVeg ? "bg-emerald-700" : "bg-rose-700"}`} />
+              <View className="mb-3 flex-row flex-wrap items-center gap-2">
+                {food.food_type ? (
+                  <View className={`flex-row items-center rounded-full px-2.5 py-1.5 ${isVeg ? "bg-emerald-50" : "bg-rose-50"}`}>
+                    <View className={`mr-1.5 h-2.5 w-2.5 items-center justify-center rounded-sm border ${isVeg ? "border-emerald-700" : "border-rose-700"}`}>
+                      <View className={`h-1 w-1 rounded-full ${isVeg ? "bg-emerald-700" : "bg-rose-700"}`} />
+                    </View>
+                    <Text className={`text-xs font-bold ${isVeg ? "text-emerald-800" : "text-rose-800"}`}>
+                      {isVeg ? "Vegetarian" : "Non-vegetarian"}
+                    </Text>
                   </View>
-                  <Text className={`text-xs font-bold ${isVeg ? "text-emerald-800" : "text-rose-800"}`}>
-                    {isVeg ? "Vegetarian" : "Non-vegetarian"}
-                  </Text>
-                </View>
-              ) : null}
-              {food.is_spicy === true ? (
-                <View className="rounded-full bg-brand-gold-pale px-2.5 py-1.5">
-                  <Text className="text-xs font-bold text-brand-green">Spicy</Text>
-                </View>
-              ) : null}
-              {food.featured === true ? (
-                <View className="rounded-full bg-brand-gold-pale px-2.5 py-1.5">
-                  <Text className="text-xs font-bold text-brand-green">Chef&apos;s pick</Text>
-                </View>
-              ) : null}
-            </View>
-
-            <Text className="text-2xl font-black leading-8 text-brand-neutral-text-primary">
-            {getFoodName(food)}
-            </Text>
-            <View className="mt-2 flex-row items-baseline">
-            <Text className="text-xl font-black text-brand-green-primary">
-              ₹{getFoodPrice(food).toFixed(2)}
-            </Text>
-            {Number(food.mrp) > getFoodPrice(food) ? (
-              <>
-                <Text className="ml-2 text-sm text-slate-400 line-through">
-                  ₹{Number(food.mrp).toFixed(2)}
-                </Text>
-                {discount > 0 ? (
-                  <Text className="ml-2 text-xs font-bold text-brand-gold-dark">
-                    Save {Math.round(discount)}%
-                  </Text>
                 ) : null}
-              </>
-            ) : null}
-            </View>
-            {food.description ? (
-            <Text className="mt-2 text-sm leading-6 text-slate-600">{food.description}</Text>
-            ) : (
-            <Text className="mt-2 text-sm leading-6 text-slate-600">
-              Freshly prepared to order.
-            </Text>
-            )}
+                {food.is_spicy === true ? (
+                  <View className="rounded-full bg-brand-gold-pale px-2.5 py-1.5">
+                    <Text className="text-xs font-bold text-brand-green">Spicy</Text>
+                  </View>
+                ) : null}
+                {food.featured === true ? (
+                  <View className="rounded-full bg-brand-gold-pale px-2.5 py-1.5">
+                    <Text className="text-xs font-bold text-brand-green">Chef&apos;s pick</Text>
+                  </View>
+                ) : null}
+              </View>
+
+              <Text className="text-2xl font-black leading-8 text-brand-neutral-text-primary">
+                {getFoodName(food)}
+              </Text>
+              <View className="mt-2 flex-row items-baseline">
+                <Text className="text-xl font-black text-brand-green-primary">
+                  ₹{getFoodPrice(food).toFixed(2)}
+                </Text>
+                {Number(food.mrp) > getFoodPrice(food) ? (
+                  <>
+                    <Text className="ml-2 text-sm text-slate-400 line-through">
+                      ₹{Number(food.mrp).toFixed(2)}
+                    </Text>
+                    {discount > 0 ? (
+                      <Text className="ml-2 text-xs font-bold text-brand-gold-dark">
+                        Save {Math.round(discount)}%
+                      </Text>
+                    ) : null}
+                  </>
+                ) : null}
+              </View>
+              <Text className="mt-2 text-sm leading-6 text-slate-600">
+                {food.description || "Freshly prepared to order."}
+              </Text>
             </View>
 
             {productDetails.length > 0 ? (
-            <View className="mt-4 rounded-2xl border border-brand-green-border bg-brand-green-surface p-4">
-              <Text className="mb-3 text-base font-extrabold text-brand-neutral-text-primary">
-                Food details
-              </Text>
-              <View className="flex-row flex-wrap">
-                {productDetails.map((detail) => (
-                  <View
-                    key={detail.label}
-                    className="mb-3 w-1/2 pr-2"
-                  >
-                    <Text className="text-xs text-slate-500">{detail.label}</Text>
-                    <Text className="mt-1 text-sm font-semibold text-slate-800">
-                      {detail.value}
-                    </Text>
-                  </View>
-                ))}
+              <View className="mt-4 rounded-2xl border border-brand-green-border bg-brand-green-surface p-4">
+                <Text className="mb-3 text-base font-extrabold text-brand-neutral-text-primary">
+                  Food details
+                </Text>
+                <View className="flex-row flex-wrap">
+                  {productDetails.map((detail) => (
+                    <View
+                      key={detail.label}
+                      className="mb-3 w-1/2 pr-2"
+                    >
+                      <Text className="text-xs text-slate-500">{detail.label}</Text>
+                      <Text className="mt-1 text-sm font-semibold text-slate-800">
+                        {detail.value}
+                      </Text>
+                    </View>
+                  ))}
+                </View>
               </View>
-            </View>
             ) : null}
 
             {addons.map((option) => {
