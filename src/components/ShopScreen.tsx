@@ -49,10 +49,19 @@ type ShopCuisine = {
   name: string;
 };
 
+type ShopMenuData = {
+  foods: FoodProduct[];
+  categories: ShopCategory[];
+  cuisines: ShopCuisine[];
+};
+
 type FoodTypeFilter = "all" | "Veg" | "Non-Veg";
 type SortOption = "recommended" | "price-low" | "price-high" | "rating" | "prep-time";
 type ViewMode = "grid" | "list";
 type ShopAction = "add" | "buy";
+
+let cachedShopMenuData: ShopMenuData | null = null;
+let shopMenuRequest: Promise<ShopMenuData> | null = null;
 
 const PAGE_SIZE = 12;
 const OFFER_RANGES = [
@@ -112,6 +121,65 @@ function getActiveFilters(payload: unknown, keys: string[], idKeys: string[], na
     });
 }
 
+function loadShopMenuData(): Promise<ShopMenuData> {
+  if (cachedShopMenuData) return Promise.resolve(cachedShopMenuData);
+  if (shopMenuRequest) return shopMenuRequest;
+
+  shopMenuRequest = (async () => {
+    const [foodsResult, categoriesResult, cuisinesResult] = await Promise.allSettled([
+      api.get("/foods"),
+      api.get("/categories"),
+      api.get("/cuisines"),
+    ]);
+
+    if (foodsResult.status === "rejected") {
+      console.error("Failed to load shop menu:", foodsResult.reason);
+      throw foodsResult.reason;
+    }
+
+    let foods: FoodProduct[];
+    try {
+      foods = getMenuFoods(foodsResult.value.data?.data ?? foodsResult.value.data);
+    } catch (menuError) {
+      console.error("Failed to parse shop menu:", menuError);
+      throw menuError;
+    }
+
+    let categories: ShopCategory[] = [];
+    if (categoriesResult.status === "fulfilled") {
+      categories = getActiveFilters(
+        categoriesResult.value.data?.data ?? categoriesResult.value.data,
+        ["categories", "items", "results"],
+        ["category_id", "categoryId", "id"],
+        ["category_name", "categoryName", "name"],
+      );
+    } else {
+      console.error("Failed to load shop categories:", categoriesResult.reason);
+    }
+
+    let cuisines: ShopCuisine[] = [];
+    if (cuisinesResult.status === "fulfilled") {
+      cuisines = getActiveFilters(
+        cuisinesResult.value.data?.data ?? cuisinesResult.value.data,
+        ["cuisines", "items", "results"],
+        ["cuisine_id", "cuisineId", "id"],
+        ["cuisine_name", "cuisineName", "name"],
+      );
+    } else {
+      console.error("Failed to load shop cuisines:", cuisinesResult.reason);
+    }
+
+    const data = { foods, categories, cuisines };
+    cachedShopMenuData = data;
+    return data;
+  })();
+
+  void shopMenuRequest.catch(() => {
+    shopMenuRequest = null;
+  });
+  return shopMenuRequest;
+}
+
 function matchesOfferRange(discount: number, range: string): boolean {
   if (range === "30+") return discount > 30;
   const [minimum, maximum] = range.split("-").map(Number);
@@ -132,10 +200,16 @@ export default function ShopScreen() {
     cuisine?: string | string[];
     search?: string | string[];
   }>();
-  const [foods, setFoods] = useState<FoodProduct[]>([]);
-  const [categories, setCategories] = useState<ShopCategory[]>([]);
-  const [cuisines, setCuisines] = useState<ShopCuisine[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [foods, setFoods] = useState<FoodProduct[]>(
+    () => cachedShopMenuData?.foods ?? [],
+  );
+  const [categories, setCategories] = useState<ShopCategory[]>(
+    () => cachedShopMenuData?.categories ?? [],
+  );
+  const [cuisines, setCuisines] = useState<ShopCuisine[]>(
+    () => cachedShopMenuData?.cuisines ?? [],
+  );
+  const [loading, setLoading] = useState(() => cachedShopMenuData === null);
   const [error, setError] = useState("");
   const [searchQuery, setSearchQuery] = useState(() => firstParam(params.search));
   const [selectedCategory, setSelectedCategory] = useState(
@@ -183,58 +257,18 @@ export default function ShopScreen() {
   }, [params.category, params.cuisine, params.search]);
 
   const fetchMenuData = useCallback(async () => {
-    setLoading(true);
+    if (!cachedShopMenuData) setLoading(true);
     setError("");
-    const [foodsResult, categoriesResult, cuisinesResult] = await Promise.allSettled([
-      api.get("/foods"),
-      api.get("/categories"),
-      api.get("/cuisines"),
-    ]);
-
-    if (foodsResult.status === "rejected") {
-      console.error("Failed to load shop menu:", foodsResult.reason);
-      setError("We could not load the menu right now.");
-      setLoading(false);
-      return;
-    }
-
     try {
-      setFoods(getMenuFoods(foodsResult.value.data?.data ?? foodsResult.value.data));
-    } catch (menuError) {
-      console.error("Failed to parse shop menu:", menuError);
+      const data = await loadShopMenuData();
+      setFoods(data.foods);
+      setCategories(data.categories);
+      setCuisines(data.cuisines);
+    } catch {
       setError("We could not load the menu right now.");
+    } finally {
       setLoading(false);
-      return;
     }
-
-    if (categoriesResult.status === "fulfilled") {
-      setCategories(
-        getActiveFilters(
-          categoriesResult.value.data?.data ?? categoriesResult.value.data,
-          ["categories", "items", "results"],
-          ["category_id", "categoryId", "id"],
-          ["category_name", "categoryName", "name"],
-        ),
-      );
-    } else {
-      console.error("Failed to load shop categories:", categoriesResult.reason);
-      setCategories([]);
-    }
-
-    if (cuisinesResult.status === "fulfilled") {
-      setCuisines(
-        getActiveFilters(
-          cuisinesResult.value.data?.data ?? cuisinesResult.value.data,
-          ["cuisines", "items", "results"],
-          ["cuisine_id", "cuisineId", "id"],
-          ["cuisine_name", "cuisineName", "name"],
-        ),
-      );
-    } else {
-      console.error("Failed to load shop cuisines:", cuisinesResult.reason);
-      setCuisines([]);
-    }
-    setLoading(false);
   }, []);
 
   useEffect(() => {
