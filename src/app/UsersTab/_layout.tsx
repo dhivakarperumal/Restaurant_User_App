@@ -36,7 +36,6 @@ export const unstable_settings = {
 export default function RootLayout() {
   return (
     <CustomAlertProvider>
-      <NavigationBar style="dark" />
       <CartProvider>
         <RequireAuth role="user">
           <RootTabs />
