@@ -130,7 +130,7 @@ export default function LoginScreen() {
             flexGrow: 1,
             justifyContent: keyboardVisible ? "flex-start" : "center",
             paddingHorizontal: 24,
-            paddingTop: keyboardVisible ? 0 : 28,
+            paddingTop: keyboardVisible ? 150 : 28,
             paddingBottom: keyboardVisible ? 48 : 28,
           }}
           keyboardShouldPersistTaps="handled"
