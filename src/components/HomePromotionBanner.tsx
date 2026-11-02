@@ -131,27 +131,27 @@ export default function HomePromotionBanner({
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={`${content.action}: ${content.title}`}
-      className="mt-7 overflow-hidden rounded-3xl border border-brand-gold-muted bg-brand-gold-light p-5"
+      className="mt-7 overflow-hidden rounded-3xl border border-brand-gold-bright bg-brand-green-forest p-5"
       onPress={() => router.push(content.href)}
       style={({ pressed }) => ({ opacity: pressed ? 0.9 : 1 })}
     >
       <View className="flex-row items-center">
         <View className="min-w-0 flex-1 pr-3">
-          <Text className="text-[9px] font-extrabold tracking-[1.3px] text-brand-green-primary">
+          <Text className="text-[9px] font-extrabold tracking-[1.3px] text-brand-gold-sand">
             {content.label}
           </Text>
-          <Text className="mt-2 text-xl font-black leading-6 text-brand-green-forest">
+          <Text className="mt-2 text-xl font-black leading-6 text-brand-gold-white">
             {content.title}
           </Text>
-          <Text className="mt-1.5 text-xs leading-5 text-brand-neutral-text-secondary">
+          <Text className="mt-1.5 text-xs leading-5 text-brand-gold-light">
             {content.description}
           </Text>
         </View>
-        <View className="h-[68px] w-[68px] items-center justify-center rounded-full border-[5px] border-white/70 bg-brand-green-primary">
+        <View className="h-[68px] w-[68px] items-center justify-center rounded-full border-[5px] border-brand-gold-sand bg-brand-green-primary">
           <Icon color={colors["gold-bright"]} size={27} />
         </View>
       </View>
-      <View className="mt-4 flex-row items-center self-start rounded-xl bg-white px-4 py-2.5">
+      <View className="mt-4 flex-row items-center self-start rounded-xl bg-brand-gold-bright px-4 py-2.5">
         <Text className="text-xs font-extrabold text-brand-green-primary">
           {content.action}
         </Text>
