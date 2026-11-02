@@ -271,9 +271,24 @@ function RootTabs() {
       <Tabs.Screen name="cart" options={{ title: "Cart" }} />
       <Tabs.Screen name="event-orders" options={{ title: "Events" }} />
       <Tabs.Screen name="reservations" options={{ title: "Tables" }} />
-      <Tabs.Screen name="orders" options={{ href: null, tabBarStyle: { display: "none" } }} />
+      <Tabs.Screen
+        name="orders"
+        options={{
+          tabBarButton: () => null,
+          tabBarItemStyle: { display: "none" },
+          tabBarStyle: { display: "none" },
+        }}
+      />
       <Tabs.Screen name="profile" options={{ title: "Profile" }} />
-      <Tabs.Screen name="product/[id]" options={{ title: "Product", href: null, tabBarStyle: { display: "none" } }} />
+      <Tabs.Screen
+        name="product/[id]"
+        options={{
+          title: "Product",
+          tabBarButton: () => null,
+          tabBarItemStyle: { display: "none" },
+          tabBarStyle: { display: "none" },
+        }}
+      />
     </Tabs>
   );
 }
