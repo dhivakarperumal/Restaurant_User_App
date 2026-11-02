@@ -19,12 +19,24 @@ import { useAuth } from "../../contexts/AuthContext";
 
 export default function LoginScreen() {
   const { login } = useAuth();
+  const formScroll = useRef<ComponentRef<typeof ScrollView>>(null);
+  const identifierInput = useRef<ComponentRef<typeof TextInput>>(null);
   const passwordInput = useRef<ComponentRef<typeof TextInput>>(null);
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const scrollInputIntoView = (input: ComponentRef<typeof TextInput> | null) => {
+    if (input) {
+      formScroll.current?.scrollResponderScrollNativeHandleToKeyboard(
+        input,
+        24,
+        true,
+      );
+    }
+  };
+
   const handleLogin = async () => {
     const trimmedIdentifier = identifier.trim();
 
@@ -90,9 +102,11 @@ export default function LoginScreen() {
       </View>
       <KeyboardAvoidingView
         className="flex-1"
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
         <ScrollView
+          ref={formScroll}
+          className="flex-1"
           contentContainerStyle={{ flexGrow: 1, justifyContent: "center", paddingHorizontal: 24, paddingVertical: 28 }}
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode={Platform.OS === "ios" ? "interactive" : "on-drag"}
@@ -132,11 +146,13 @@ export default function LoginScreen() {
                   className="ml-3 min-h-[62px] flex-1 py-3 text-base text-slate-900"
                   keyboardType="email-address"
                   onChangeText={setIdentifier}
+                  onFocus={() => scrollInputIntoView(identifierInput.current)}
                   onSubmitEditing={() => passwordInput.current?.focus()}
                   placeholder="Email or phone number"
                   placeholderTextColor="#858A83"
                   returnKeyType="next"
                   blurOnSubmit={false}
+                  ref={identifierInput}
                   textContentType="username"
                   value={identifier}
                 />
@@ -150,6 +166,7 @@ export default function LoginScreen() {
                   autoComplete="password"
                   className="ml-3 min-h-[62px] flex-1 py-3 text-base text-slate-900"
                   ref={passwordInput}
+                  onFocus={() => scrollInputIntoView(passwordInput.current)}
                   onChangeText={setPassword}
                   onSubmitEditing={handleLogin}
                   placeholder="Enter your password"

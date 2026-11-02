@@ -33,6 +33,8 @@ const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function RegisterScreen() {
   const { startSession } = useAuth();
+  const formScroll = useRef<ComponentRef<typeof ScrollView>>(null);
+  const nameInput = useRef<ComponentRef<typeof TextInput>>(null);
   const emailInput = useRef<ComponentRef<typeof TextInput>>(null);
   const phoneInput = useRef<ComponentRef<typeof TextInput>>(null);
   const passwordInput = useRef<ComponentRef<typeof TextInput>>(null);
@@ -48,6 +50,16 @@ export default function RegisterScreen() {
   const [isConfirmPasswordVisible, setIsConfirmPasswordVisible] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isRegistered, setIsRegistered] = useState(false);
+
+  const scrollInputIntoView = (input: ComponentRef<typeof TextInput> | null) => {
+    if (input) {
+      formScroll.current?.scrollResponderScrollNativeHandleToKeyboard(
+        input,
+        24,
+        true,
+      );
+    }
+  };
 
   const updateField = (field: RegistrationField, value: string) => {
     const setters = {
@@ -188,9 +200,11 @@ export default function RegisterScreen() {
       </View>
       <KeyboardAvoidingView
         className="flex-1"
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
         <ScrollView
+          ref={formScroll}
+          className="flex-1"
           contentContainerStyle={{
             flexGrow: 1,
             justifyContent: "center",
@@ -235,11 +249,13 @@ export default function RegisterScreen() {
                   autoComplete="name"
                   className="ml-3 min-h-[62px] flex-1 py-3 text-base text-slate-900"
                   onChangeText={(value) => updateField("name", value)}
+                  onFocus={() => scrollInputIntoView(nameInput.current)}
                   onSubmitEditing={() => emailInput.current?.focus()}
                   placeholder="Enter your full name"
                   placeholderTextColor="#92978F"
                   returnKeyType="next"
                   blurOnSubmit={false}
+                  ref={nameInput}
                   textContentType="name"
                   value={name}
                 />
@@ -257,6 +273,7 @@ export default function RegisterScreen() {
                   className="ml-3 min-h-[62px] flex-1 py-3 text-base text-slate-900"
                   keyboardType="email-address"
                   onChangeText={(value) => updateField("email", value)}
+                  onFocus={() => scrollInputIntoView(emailInput.current)}
                   onSubmitEditing={() => phoneInput.current?.focus()}
                   placeholder="you@example.com"
                   placeholderTextColor="#92978F"
@@ -278,6 +295,7 @@ export default function RegisterScreen() {
                   className="ml-3 min-h-[62px] flex-1 py-3 text-base text-slate-900"
                   keyboardType="phone-pad"
                   onChangeText={(value) => updateField("phone", value)}
+                  onFocus={() => scrollInputIntoView(phoneInput.current)}
                   onSubmitEditing={() => passwordInput.current?.focus()}
                   placeholder="Enter your phone number"
                   placeholderTextColor="#92978F"
@@ -299,6 +317,7 @@ export default function RegisterScreen() {
                   autoComplete="new-password"
                   className="ml-3 min-h-[62px] flex-1 py-3 text-base text-slate-900"
                   onChangeText={(value) => updateField("password", value)}
+                  onFocus={() => scrollInputIntoView(passwordInput.current)}
                   onSubmitEditing={() => confirmPasswordInput.current?.focus()}
                   placeholder="At least 6 characters"
                   placeholderTextColor="#92978F"
@@ -334,6 +353,7 @@ export default function RegisterScreen() {
                   autoComplete="new-password"
                   className="ml-3 min-h-[62px] flex-1 py-3 text-base text-slate-900"
                   onChangeText={(value) => updateField("confirmPassword", value)}
+                  onFocus={() => scrollInputIntoView(confirmPasswordInput.current)}
                   onSubmitEditing={handleRegister}
                   placeholder="Re-enter your password"
                   placeholderTextColor="#92978F"
