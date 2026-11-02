@@ -272,6 +272,7 @@ function ProductDetailsContent({
   );
   const recommendationPageWidth = screenWidth;
   const recommendationCardWidth = (recommendationPageWidth - 52) / 2;
+  const galleryImageHeight = Math.min(Math.max(screenWidth * 0.74, 240), 340);
 
   const toggleAddon = (option: FoodOption) => {
     setSelectedAddons((current) =>
@@ -364,10 +365,10 @@ function ProductDetailsContent({
 
   return (
     <KeyboardAvoidingView
-      className="flex-1 bg-white"
+      className="flex-1 bg-brand-surface-app"
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
-      <View className="flex-1 bg-white">
+      <View className="flex-1 bg-brand-surface-app">
         <ScrollView
           className="flex-1"
           contentContainerStyle={{ paddingBottom: 24 }}
@@ -375,41 +376,58 @@ function ProductDetailsContent({
           keyboardDismissMode={Platform.OS === "ios" ? "interactive" : "on-drag"}
           showsVerticalScrollIndicator={false}
         >
-          <View className="relative bg-brand-surface-cream" style={{ height: 300 }}>
-            {imageUri ? (
-              <Image
-                accessible
-                accessibilityLabel={getFoodName(food)}
-                className="h-full w-full"
-                resizeMode="cover"
-                source={{ uri: imageUri }}
-              />
-            ) : (
-              <View className="h-full items-center justify-center">
-                <UtensilsCrossed color={colors.gold} size={48} />
-              </View>
-            )}
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Go back"
-              className="absolute left-4 h-11 w-11 items-center justify-center rounded-full bg-black/50"
-              style={{ top: Math.max(insets.top, 12) }}
-              onPress={() => router.back()}
+          <View
+            className="bg-brand-surface-app px-4 pb-3"
+            style={{ paddingTop: Math.max(insets.top, 12) }}
+          >
+            <View
+              className="relative overflow-hidden rounded-3xl border-2 border-brand-gold-white bg-brand-surface-cream shadow-sm"
+              style={{ height: galleryImageHeight }}
             >
-              <ArrowLeft color={colors["white"]} size={22} />
-            </Pressable>
+              {imageUri ? (
+                <Image
+                  accessible
+                  accessibilityLabel={getFoodName(food)}
+                  className="h-full w-full"
+                  resizeMode="cover"
+                  source={{ uri: imageUri }}
+                />
+              ) : (
+                <View className="h-full items-center justify-center">
+                  <UtensilsCrossed color={colors.gold} size={48} />
+                </View>
+              )}
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Go back"
+                className="absolute left-3 top-3 h-11 w-11 items-center justify-center rounded-full border border-white/70 bg-brand-green-forest/85"
+                onPress={() => router.back()}
+              >
+                <ArrowLeft color={colors["white"]} size={22} />
+              </Pressable>
 
-            {discount > 0 ? (
-              <View className="absolute right-4 rounded-full bg-brand-gold-bright px-3 py-1.5" style={{ top: Math.max(insets.top + 4, 16) }}>
-                <Text className="text-xs font-extrabold text-brand-green">{Math.round(discount)}% OFF</Text>
-              </View>
-            ) : null}
+              {discount > 0 ? (
+                <View className="absolute right-3 top-3 rounded-full border border-brand-gold-white bg-brand-gold-bright px-3 py-1.5">
+                  <Text className="text-xs font-extrabold text-brand-green">
+                    {Math.round(discount)}% OFF
+                  </Text>
+                </View>
+              ) : null}
+            </View>
 
             {images.length > 1 ? (
+              <View className="mt-3">
+                <View className="mb-2 flex-row items-center justify-between px-1">
+                  <Text className="text-xs font-bold text-brand-neutral-text-primary">
+                    Photos
+                  </Text>
+                  <Text className="text-xs font-semibold text-brand-neutral-text-warm">
+                    {activeImage + 1} / {images.length}
+                  </Text>
+                </View>
               <ScrollView
                 horizontal
-                className="absolute bottom-3 left-3"
-                contentContainerStyle={{ gap: 8 }}
+                contentContainerStyle={{ gap: 10, paddingHorizontal: 1, paddingBottom: 2 }}
                 showsHorizontalScrollIndicator={false}
               >
                 {images.map((image, index) => (
@@ -417,17 +435,26 @@ function ProductDetailsContent({
                     key={`${image}-${index}`}
                     accessibilityRole="button"
                     accessibilityLabel={`Show product image ${index + 1}`}
-                    className={`h-14 w-14 overflow-hidden rounded-lg border-2 ${activeImage === index ? "border-white" : "border-white/50"}`}
+                    accessibilityState={{ selected: activeImage === index }}
+                    className="h-[68px] w-[68px] overflow-hidden rounded-xl border-2 bg-brand-surface-cream"
+                    style={{
+                      borderColor:
+                        activeImage === index
+                          ? colors["gold-bright"]
+                          : colors["neutral-border-warm"],
+                    }}
                     onPress={() => setActiveImage(index)}
                   >
                     <Image className="h-full w-full" resizeMode="cover" source={{ uri: image }} />
                   </Pressable>
                 ))}
               </ScrollView>
+              </View>
             ) : null}
           </View>
 
-          <View className="px-5 pb-6 pt-4">
+          <View className="px-4 pb-6 pt-2">
+            <View className="rounded-2xl border border-brand-neutral-border-warm bg-white p-4 shadow-sm">
             <View className="mb-3 flex-row flex-wrap items-center gap-2">
               {food.food_type ? (
                 <View className={`flex-row items-center rounded-full px-2.5 py-1.5 ${isVeg ? "bg-emerald-50" : "bg-rose-50"}`}>
@@ -478,9 +505,10 @@ function ProductDetailsContent({
               Freshly prepared to order.
             </Text>
             )}
+            </View>
 
             {productDetails.length > 0 ? (
-            <View className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+            <View className="mt-4 rounded-2xl border border-brand-green-border bg-brand-green-surface p-4">
               <Text className="mb-3 text-base font-extrabold text-brand-neutral-text-primary">
                 Food details
               </Text>
@@ -619,10 +647,10 @@ function ProductDetailsContent({
         </ScrollView>
 
         <View
-          className="flex-row items-center gap-3 border-t border-slate-100 bg-white px-5 pt-3"
+          className="flex-row items-center gap-3 border-t border-brand-gold-white bg-brand-surface-modal px-5 pt-3"
           style={{ paddingBottom: Math.max(insets.bottom, 12) }}
         >
-          <View className="h-12 flex-row items-center rounded-xl border border-slate-200">
+          <View className="h-12 flex-row items-center rounded-xl border border-brand-neutral-border-warm bg-white">
             <Pressable
               accessibilityRole="button"
               accessibilityLabel="Decrease quantity"
