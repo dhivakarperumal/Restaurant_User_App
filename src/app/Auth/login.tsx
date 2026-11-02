@@ -130,7 +130,7 @@ export default function LoginScreen() {
             flexGrow: 1,
             justifyContent: keyboardVisible ? "flex-start" : "center",
             paddingHorizontal: 24,
-            paddingTop: keyboardVisible ? 12 : 28,
+            paddingTop: keyboardVisible ? 0 : 28,
             paddingBottom: keyboardVisible ? 48 : 28,
           }}
           keyboardShouldPersistTaps="handled"
@@ -138,27 +138,29 @@ export default function LoginScreen() {
           showsVerticalScrollIndicator={keyboardVisible}
         >
           <View className="w-full self-center" style={{ maxWidth: 480 }}>
-            <View className="mb-6 items-center">
-              <Image
-                accessible
-                accessibilityLabel="Buy Food restaurant logo"
-                className="h-[76px] w-[76px] rounded-full"
-                resizeMode="contain"
-                source={require("../../../assets/images/logo.png")}
-              />
-              <Text className="mt-1 text-[25px] font-black tracking-tight text-[#145333]">
-                Buy Food
-              </Text>
-              <Text className="mt-1 text-[10px] font-bold uppercase tracking-[4px] text-[#397653]">
-                Good food · Good mood
-              </Text>
-              <Text className="mt-5 text-center text-[34px] font-black leading-[40px] text-[#102D20]">
-                Welcome Back
-              </Text>
-              <Text className="mt-1 max-w-[320px] text-center text-base leading-6 text-[#62655F]">
-                Sign in to enjoy your favourite food, anytime, anywhere.
-              </Text>
-            </View>
+            {!keyboardVisible ? (
+              <View className="mb-6 items-center">
+                <Image
+                  accessible
+                  accessibilityLabel="Buy Food restaurant logo"
+                  className="h-[76px] w-[76px] rounded-full"
+                  resizeMode="contain"
+                  source={require("../../../assets/images/logo.png")}
+                />
+                <Text className="mt-1 text-[25px] font-black tracking-tight text-[#145333]">
+                  Buy Food
+                </Text>
+                <Text className="mt-1 text-[10px] font-bold uppercase tracking-[4px] text-[#397653]">
+                  Good food · Good mood
+                </Text>
+                <Text className="mt-5 text-center text-[34px] font-black leading-[40px] text-[#102D20]">
+                  Welcome Back
+                </Text>
+                <Text className="mt-1 max-w-[320px] text-center text-base leading-6 text-[#62655F]">
+                  Sign in to enjoy your favourite food, anytime, anywhere.
+                </Text>
+              </View>
+            ) : null}
 
             <View className="rounded-[30px] border border-white/80 bg-white/95 p-5 shadow-xl shadow-[#173B27]/10">
               <View className="mb-3 flex-row items-center rounded-2xl bg-[#F0F4E9] px-4">

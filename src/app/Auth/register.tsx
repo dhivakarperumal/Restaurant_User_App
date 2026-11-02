@@ -227,7 +227,7 @@ export default function RegisterScreen() {
             flexGrow: 1,
             justifyContent: keyboardVisible ? "flex-start" : "center",
             paddingHorizontal: 24,
-            paddingTop: keyboardVisible ? 12 : 24,
+            paddingTop: keyboardVisible ? 0 : 24,
             paddingBottom: keyboardVisible ? 48 : 24,
           }}
           keyboardShouldPersistTaps="handled"
@@ -235,27 +235,29 @@ export default function RegisterScreen() {
           showsVerticalScrollIndicator={keyboardVisible}
         >
           <View className="w-full self-center" style={{ maxWidth: 480 }}>
-            <View className="mb-5 items-center">
-              <Image
-                accessible
-                accessibilityLabel="Buy Food restaurant logo"
-                className="h-[68px] w-[68px] rounded-full"
-                resizeMode="contain"
-                source={require("../../../assets/images/logo.png")}
-              />
-              <Text className="mt-1 text-[24px] font-black tracking-tight text-[#145333]">
-                Buy Food
-              </Text>
-              <Text className="mt-1 text-[10px] font-bold uppercase tracking-[4px] text-[#397653]">
-                Good food · Good mood
-              </Text>
-              <Text className="mt-4 text-center text-[32px] font-black leading-[36px] text-[#102D20]">
-                Create Your Account
-              </Text>
-              <Text className="mt-1 max-w-[330px] text-center text-base leading-6 text-[#62655F]">
-                Join us and explore delicious food, special offers and more!
-              </Text>
-            </View>
+            {!keyboardVisible ? (
+              <View className="mb-5 items-center">
+                <Image
+                  accessible
+                  accessibilityLabel="Buy Food restaurant logo"
+                  className="h-[68px] w-[68px] rounded-full"
+                  resizeMode="contain"
+                  source={require("../../../assets/images/logo.png")}
+                />
+                <Text className="mt-1 text-[24px] font-black tracking-tight text-[#145333]">
+                  Buy Food
+                </Text>
+                <Text className="mt-1 text-[10px] font-bold uppercase tracking-[4px] text-[#397653]">
+                  Good food · Good mood
+                </Text>
+                <Text className="mt-4 text-center text-[32px] font-black leading-[36px] text-[#102D20]">
+                  Create Your Account
+                </Text>
+                <Text className="mt-1 max-w-[330px] text-center text-base leading-6 text-[#62655F]">
+                  Join us and explore delicious food, special offers and more!
+                </Text>
+              </View>
+            ) : null}
 
             <View className="rounded-[30px] border border-white/80 bg-white/95 p-4 shadow-xl shadow-[#173B27]/10">
               <FormField
