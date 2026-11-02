@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { router, useLocalSearchParams } from "expo-router";
 import {
   ArrowLeft,
@@ -22,6 +22,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useCart } from "../contexts/CartContext";
 import { useProductNavigation } from "../hooks/useProductNavigation";
+import { getDefaultFoodCartInput } from "../lib/cart";
 import { parseAddonChoices, parseCustomizationGroups } from "../lib/foodOptions";
 import api from "../lib/api";
 import FoodCustomizationModal from "./common/FoodCustomizationModal";
@@ -66,8 +67,11 @@ function RecommendationSection({
   cardWidth,
   cartItems,
   wishlist,
+  pendingAction,
   onSelect,
   onCustomize,
+  onAdd,
+  onBuyNow,
   onToggleWishlist,
 }: {
   title: string;
@@ -77,8 +81,11 @@ function RecommendationSection({
   cardWidth: number;
   cartItems: ReturnType<typeof useCart>["items"];
   wishlist: FoodProduct[];
+  pendingAction: { foodId: string; action: "add" | "buy" } | null;
   onSelect: (food: FoodProduct) => void;
   onCustomize: (food: FoodProduct) => void;
+  onAdd: (food: FoodProduct) => void;
+  onBuyNow: (food: FoodProduct) => void;
   onToggleWishlist: (food: FoodProduct) => void;
 }) {
   if (foods.length === 0) return null;
@@ -112,8 +119,16 @@ function RecommendationSection({
                   cartQuantity={cartItems
                     .filter((cartItem) => getFoodId(cartItem.food) === itemId)
                     .reduce((total, cartItem) => total + cartItem.quantity, 0)}
+                  pendingAction={
+                    pendingAction?.foodId === itemId
+                      ? pendingAction.action
+                      : null
+                  }
+                  isBusy={pendingAction !== null}
                   onSelect={onSelect}
                   onCustomize={onCustomize}
+                  onAdd={onAdd}
+                  onBuyNow={onBuyNow}
                   onToggleWishlist={onToggleWishlist}
                 />
               );
@@ -219,9 +234,13 @@ function ProductDetailsContent({
     items: cartItems,
     wishlist,
     toggleWishlist,
+    setBuyNowItem,
   } = useCart();
   const [customizingFood, setCustomizingFood] = useState<FoodProduct | null>(null);
   const [recommendationError, setRecommendationError] = useState("");
+  const [pendingRecommendationAction, setPendingRecommendationAction] =
+    useState<{ foodId: string; action: "add" | "buy" } | null>(null);
+  const recommendationActionLock = useRef(false);
   const { width: screenWidth } = useWindowDimensions();
   const addons = useMemo(() => parseAddonChoices(food.addons), [food]);
   const customizationGroups = useMemo(
@@ -339,6 +358,42 @@ function ProductDetailsContent({
     } catch (error) {
       console.error("Failed to update product recommendation wishlist:", error);
       setRecommendationError("We could not update your favorites. Please try again.");
+    }
+  };
+
+  const handleRecommendationAction = async (
+    item: FoodProduct,
+    action: "add" | "buy",
+  ) => {
+    if (recommendationActionLock.current) return;
+    recommendationActionLock.current = true;
+    setPendingRecommendationAction({ foodId: getFoodId(item), action });
+    setRecommendationError("");
+
+    try {
+      const input = getDefaultFoodCartInput(item);
+      if (action === "buy") {
+        setBuyNowItem(input);
+        router.push({ pathname: "/checkout", params: { buyNow: "true" } });
+      } else {
+        await addItem(input);
+      }
+    } catch (error) {
+      console.error(
+        action === "buy"
+          ? "Failed to start checkout from product recommendations:"
+          : "Failed to add a recommended product to the cart:",
+        error,
+      );
+      if (action === "buy") setBuyNowItem(null);
+      setRecommendationError(
+        action === "buy"
+          ? "We could not start checkout. Please try again."
+          : "We could not add this item to your cart. Please try again.",
+      );
+    } finally {
+      recommendationActionLock.current = false;
+      setPendingRecommendationAction(null);
     }
   };
 
@@ -632,8 +687,11 @@ function ProductDetailsContent({
             cardWidth={recommendationCardWidth}
             cartItems={cartItems}
             wishlist={wishlist}
+            pendingAction={pendingRecommendationAction}
             onSelect={openProduct}
             onCustomize={setCustomizingFood}
+            onAdd={(item) => void handleRecommendationAction(item, "add")}
+            onBuyNow={(item) => void handleRecommendationAction(item, "buy")}
             onToggleWishlist={(item) => void handleRecommendationWishlist(item)}
           />
           <RecommendationSection
@@ -644,8 +702,11 @@ function ProductDetailsContent({
             cardWidth={recommendationCardWidth}
             cartItems={cartItems}
             wishlist={wishlist}
+            pendingAction={pendingRecommendationAction}
             onSelect={openProduct}
             onCustomize={setCustomizingFood}
+            onAdd={(item) => void handleRecommendationAction(item, "add")}
+            onBuyNow={(item) => void handleRecommendationAction(item, "buy")}
             onToggleWishlist={(item) => void handleRecommendationWishlist(item)}
           />
         </ScrollView>
