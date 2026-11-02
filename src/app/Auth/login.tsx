@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState, type ComponentRef } from "react";
 import { router } from "expo-router";
 import { ArrowRight, Eye, EyeOff, LockKeyhole, UserRound } from "lucide-react-native";
 import {
@@ -19,6 +19,7 @@ import { useAuth } from "../../contexts/AuthContext";
 
 export default function LoginScreen() {
   const { login } = useAuth();
+  const passwordInput = useRef<ComponentRef<typeof TextInput>>(null);
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
@@ -89,11 +90,12 @@ export default function LoginScreen() {
       </View>
       <KeyboardAvoidingView
         className="flex-1"
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
         <ScrollView
           contentContainerStyle={{ flexGrow: 1, justifyContent: "center", paddingHorizontal: 24, paddingVertical: 28 }}
           keyboardShouldPersistTaps="handled"
+          keyboardDismissMode={Platform.OS === "ios" ? "interactive" : "on-drag"}
           showsVerticalScrollIndicator={false}
         >
           <View className="w-full self-center" style={{ maxWidth: 480 }}>
@@ -130,10 +132,11 @@ export default function LoginScreen() {
                   className="ml-3 min-h-[62px] flex-1 py-3 text-base text-slate-900"
                   keyboardType="email-address"
                   onChangeText={setIdentifier}
-                  onSubmitEditing={handleLogin}
+                  onSubmitEditing={() => passwordInput.current?.focus()}
                   placeholder="Email or phone number"
                   placeholderTextColor="#858A83"
                   returnKeyType="next"
+                  blurOnSubmit={false}
                   textContentType="username"
                   value={identifier}
                 />
@@ -146,6 +149,7 @@ export default function LoginScreen() {
                   autoCapitalize="none"
                   autoComplete="password"
                   className="ml-3 min-h-[62px] flex-1 py-3 text-base text-slate-900"
+                  ref={passwordInput}
                   onChangeText={setPassword}
                   onSubmitEditing={handleLogin}
                   placeholder="Enter your password"

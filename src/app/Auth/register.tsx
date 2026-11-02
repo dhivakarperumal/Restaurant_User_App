@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState, type ComponentRef } from "react";
 import { router } from "expo-router";
 import {
   ArrowRight,
@@ -33,6 +33,10 @@ const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function RegisterScreen() {
   const { startSession } = useAuth();
+  const emailInput = useRef<ComponentRef<typeof TextInput>>(null);
+  const phoneInput = useRef<ComponentRef<typeof TextInput>>(null);
+  const passwordInput = useRef<ComponentRef<typeof TextInput>>(null);
+  const confirmPasswordInput = useRef<ComponentRef<typeof TextInput>>(null);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -184,7 +188,7 @@ export default function RegisterScreen() {
       </View>
       <KeyboardAvoidingView
         className="flex-1"
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
         <ScrollView
           contentContainerStyle={{
@@ -194,6 +198,7 @@ export default function RegisterScreen() {
             paddingVertical: 24,
           }}
           keyboardShouldPersistTaps="handled"
+          keyboardDismissMode={Platform.OS === "ios" ? "interactive" : "on-drag"}
           showsVerticalScrollIndicator={false}
         >
           <View className="w-full self-center" style={{ maxWidth: 480 }}>
@@ -230,9 +235,11 @@ export default function RegisterScreen() {
                   autoComplete="name"
                   className="ml-3 min-h-[62px] flex-1 py-3 text-base text-slate-900"
                   onChangeText={(value) => updateField("name", value)}
+                  onSubmitEditing={() => emailInput.current?.focus()}
                   placeholder="Enter your full name"
                   placeholderTextColor="#92978F"
                   returnKeyType="next"
+                  blurOnSubmit={false}
                   textContentType="name"
                   value={name}
                 />
@@ -250,9 +257,12 @@ export default function RegisterScreen() {
                   className="ml-3 min-h-[62px] flex-1 py-3 text-base text-slate-900"
                   keyboardType="email-address"
                   onChangeText={(value) => updateField("email", value)}
+                  onSubmitEditing={() => phoneInput.current?.focus()}
                   placeholder="you@example.com"
                   placeholderTextColor="#92978F"
                   returnKeyType="next"
+                  blurOnSubmit={false}
+                  ref={emailInput}
                   textContentType="emailAddress"
                   value={email}
                 />
@@ -268,9 +278,12 @@ export default function RegisterScreen() {
                   className="ml-3 min-h-[62px] flex-1 py-3 text-base text-slate-900"
                   keyboardType="phone-pad"
                   onChangeText={(value) => updateField("phone", value)}
+                  onSubmitEditing={() => passwordInput.current?.focus()}
                   placeholder="Enter your phone number"
                   placeholderTextColor="#92978F"
                   returnKeyType="next"
+                  blurOnSubmit={false}
+                  ref={phoneInput}
                   textContentType="telephoneNumber"
                   value={phone}
                 />
@@ -286,9 +299,12 @@ export default function RegisterScreen() {
                   autoComplete="new-password"
                   className="ml-3 min-h-[62px] flex-1 py-3 text-base text-slate-900"
                   onChangeText={(value) => updateField("password", value)}
+                  onSubmitEditing={() => confirmPasswordInput.current?.focus()}
                   placeholder="At least 6 characters"
                   placeholderTextColor="#92978F"
                   returnKeyType="next"
+                  blurOnSubmit={false}
+                  ref={passwordInput}
                   secureTextEntry={!isPasswordVisible}
                   textContentType="newPassword"
                   value={password}
@@ -322,6 +338,7 @@ export default function RegisterScreen() {
                   placeholder="Re-enter your password"
                   placeholderTextColor="#92978F"
                   returnKeyType="go"
+                  ref={confirmPasswordInput}
                   secureTextEntry={!isConfirmPasswordVisible}
                   textContentType="newPassword"
                   value={confirmPassword}
