@@ -24,6 +24,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { registerUser } from "../../lib/api";
 import { getDashboardRoute } from "../../lib/auth";
+import { useAuth } from "../../contexts/AuthContext";
 
 type RegistrationField = "name" | "email" | "phone" | "password" | "confirmPassword";
 type RegistrationErrors = Partial<Record<RegistrationField, string>>;
@@ -31,6 +32,7 @@ type RegistrationErrors = Partial<Record<RegistrationField, string>>;
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function RegisterScreen() {
+  const { startSession } = useAuth();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -95,8 +97,17 @@ export default function RegisterScreen() {
         password,
       });
 
-      if (result.token && result.user) {
-        router.replace(getDashboardRoute(result.user.role) ?? "/UsersTab/home");
+      if (result.token) {
+        const session = await startSession(
+          result.user?.role ?? result.role,
+          result.token,
+          result.user,
+        );
+        const dashboardRoute = getDashboardRoute(session.role);
+        if (!dashboardRoute) {
+          throw new Error("This account type is not supported in the app.");
+        }
+        router.replace(dashboardRoute);
       } else {
         setIsRegistered(true);
       }

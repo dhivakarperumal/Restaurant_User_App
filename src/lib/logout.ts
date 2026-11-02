@@ -1,12 +1,13 @@
 import { router } from "expo-router";
 import type { CustomAlertOptions } from "../contexts/CustomAlertContext";
-import { logoutUser } from "./api";
 
 type LogoutStateHandler = (isLoggingOut: boolean) => void;
 type ShowAlert = (options: CustomAlertOptions) => void;
+type LogoutAction = () => Promise<void>;
 
 export function confirmLogout(
   showAlert: ShowAlert,
+  logout: LogoutAction,
   onStateChange?: LogoutStateHandler,
 ) {
   showAlert({
@@ -19,7 +20,7 @@ export function confirmLogout(
         text: "Log out",
         style: "destructive",
         onPress: () => {
-          void performLogout(showAlert, onStateChange);
+          void performLogout(showAlert, logout, onStateChange);
         },
       },
     ],
@@ -28,12 +29,13 @@ export function confirmLogout(
 
 async function performLogout(
   showAlert: ShowAlert,
+  logout: LogoutAction,
   onStateChange?: LogoutStateHandler,
 ) {
   onStateChange?.(true);
 
   try {
-    await logoutUser();
+    await logout();
     router.replace("/Auth/login");
   } catch (error) {
     console.error("Failed to clear the user session during logout:", error);

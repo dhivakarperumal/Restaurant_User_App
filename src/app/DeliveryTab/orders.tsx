@@ -1,7 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import DateTimePicker, {
+  DateTimePickerAndroid,
+} from "@react-native-community/datetimepicker";
 import {
   ActivityIndicator,
+  Image,
   Modal,
+  Platform,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -17,6 +22,7 @@ import {
   Check,
   CheckCircle2,
   Clock3,
+  Eye,
   MapPin,
   Navigation,
   Package,
@@ -28,9 +34,9 @@ import {
   XCircle,
 } from "lucide-react-native";
 import { useCustomAlert } from "../../contexts/CustomAlertContext";
-import api, { getApiErrorMessage } from "../../lib/api";
+import api, { API_BASE_URL, getApiErrorMessage } from "../../lib/api";
 
-type FilterKey = "new" | "all" | "delivery" | "cancelled";
+type FilterKey = "all" | "today" | "delivery" | "cancelled";
 type OrderView = {
   key: FilterKey;
   label: string;
@@ -38,12 +44,16 @@ type OrderView = {
 };
 
 const ORDER_VIEWS: OrderView[] = [
-  { key: "new", label: "New", statuses: ["NEW", "NEW_ORDER", "PENDING", "ORDER_PLACED"] },
   { key: "all", label: "All", statuses: null },
+  { key: "today", label: "Today", statuses: null },
   {
     key: "delivery",
     label: "Delivery",
     statuses: [
+      "NEW",
+      "NEW_ORDER",
+      "PENDING",
+      "ORDER_PLACED",
       "ASSIGNED",
       "ACCEPTED",
       "REACHED_PICKUP",
@@ -83,6 +93,10 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 const NEXT_STATUS: Record<string, string> = {
+  NEW: "ACCEPTED",
+  NEW_ORDER: "ACCEPTED",
+  PENDING: "ACCEPTED",
+  ORDER_PLACED: "ACCEPTED",
   ASSIGNED: "ACCEPTED",
   ACCEPTED: "REACHED_PICKUP",
   REACHED_PICKUP: "PICKED_UP",
@@ -152,6 +166,46 @@ function orderIdentifier(order: DeliveryOrder): string {
   return order.order_id;
 }
 
+function getOrderItemCount(order: DeliveryOrder): number | null {
+  const declaredCountValue = firstText(order, [
+    "item_count",
+    "items_count",
+    "itemCount",
+    "itemsCount",
+  ]);
+  const declaredCount = Number(declaredCountValue);
+  if (declaredCountValue && Number.isFinite(declaredCount) && declaredCount >= 0) {
+    return declaredCount;
+  }
+  if (order.items.length === 0) return null;
+
+  return order.items.reduce((count, item) => {
+    const quantity = Number(firstText(item, ["quantity", "qty"]));
+    return count + (Number.isFinite(quantity) && quantity > 0 ? quantity : 1);
+  }, 0);
+}
+
+function orderDisplayNumber(order: DeliveryOrder): string {
+  const keys = [
+    "order_number",
+    "order_no",
+    "order_code",
+    "orderNumber",
+    "orderNo",
+    "orderCode",
+  ];
+  const nestedOrder =
+    asRecord(order.order) ??
+    asRecord(order.order_details) ??
+    asRecord(order.delivery_order);
+  const displayNumber =
+    (nestedOrder ? firstText(nestedOrder, keys) : "") || firstText(order, keys);
+  return displayNumber &&
+    !/^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i.test(displayNumber)
+    ? displayNumber
+    : orderIdentifier(order);
+}
+
 function getCustomer(order: DeliveryOrder): Record<string, unknown> {
   return asRecord(order.customer) ?? {};
 }
@@ -180,9 +234,92 @@ function getDateKey(date: Date | null): string {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 }
 
+function parseDateFilter(value: string): Date | null {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+  if (!match) return null;
+  const date = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]), 12);
+  return getDateKey(date) === value ? date : null;
+}
+
+function formatFilterDate(value: string): string {
+  const date = parseDateFilter(value);
+  return date
+    ? date.toLocaleDateString([], { day: "numeric", month: "short", year: "numeric" })
+    : "Choose date";
+}
+
 function formatAmount(value: unknown): string {
   const amount = Number(value);
   return `₹${(Number.isFinite(amount) ? amount : 0).toLocaleString("en-IN")}`;
+}
+
+function getOrderTotal(order: DeliveryOrder): number | null {
+  for (const key of ["total_amount", "grand_total", "order_total", "total_price"]) {
+    const rawValue = order[key];
+    if (rawValue == null || rawValue === "") continue;
+    const amount = Number(rawValue);
+    if (Number.isFinite(amount)) return amount;
+  }
+
+  if (!order.items.length) return null;
+  let total = 0;
+  let hasItemAmount = false;
+  for (const item of order.items) {
+    const itemTotal = firstText(item, ["total_price", "item_total", "total_amount"]);
+    if (itemTotal) {
+      const amount = Number(itemTotal);
+      if (Number.isFinite(amount)) {
+        total += amount;
+        hasItemAmount = true;
+        continue;
+      }
+    }
+
+    const unitPrice = Number(firstText(item, ["price", "unit_price"]));
+    if (Number.isFinite(unitPrice) && unitPrice > 0) {
+      const quantity = Number(firstText(item, ["quantity", "qty"])) || 1;
+      total += unitPrice * quantity;
+      hasItemAmount = true;
+    }
+  }
+  return hasItemAmount ? total : null;
+}
+
+function getFirstItemImage(item: OrderItem | undefined): string {
+  if (!item) return "";
+  const images = item.food_images;
+  const firstImage = Array.isArray(images) ? images[0] : null;
+  const imageRecord = asRecord(firstImage);
+  const value =
+    firstText(item, ["product_image", "image", "thumbnail_image"]) ||
+    firstText(imageRecord ?? {}, ["image_url", "url", "image"]);
+  if (!value) return "";
+  if (/^(data:|blob:|https?:\/\/)/i.test(value)) return value;
+  const baseUrl = API_BASE_URL.replace(/\/api\/?$/i, "").replace(/\/+$/, "");
+  return `${baseUrl}${value.startsWith("/") ? value : `/${value}`}`;
+}
+
+function OrderItemThumbnail({
+  uri,
+  accessibilityLabel,
+}: {
+  uri: string;
+  accessibilityLabel: string;
+}) {
+  const [hasError, setHasError] = useState(false);
+  return uri && !hasError ? (
+    <Image
+      accessibilityLabel={accessibilityLabel}
+      className="mr-3 h-11 w-11 rounded-2xl bg-[#EAF4EA]"
+      onError={() => setHasError(true)}
+      resizeMode="cover"
+      source={{ uri }}
+    />
+  ) : (
+    <View className="mr-3 h-11 w-11 items-center justify-center rounded-2xl bg-[#EAF4EA]">
+      <Package color="#17663D" size={20} />
+    </View>
+  );
 }
 
 function getStatusColors(status: unknown): { background: string; foreground: string } {
@@ -261,7 +398,7 @@ function SummaryCard({
 }) {
   return (
     <View
-      className="mr-3 min-h-[118px] w-[148px] justify-between rounded-2xl p-4"
+      className="mb-3 min-h-[118px] w-[48.5%] justify-between rounded-2xl p-4"
       style={{ backgroundColor: background }}
     >
       <View className="flex-row items-center justify-between">
@@ -292,6 +429,8 @@ export default function DeliveryOrdersScreen() {
   const [page, setPage] = useState(1);
   const [selectedOrder, setSelectedOrder] = useState<DeliveryOrder | null>(null);
   const [updatingOrderId, setUpdatingOrderId] = useState<string | null>(null);
+  const [pickerMode, setPickerMode] = useState<"from" | "to" | null>(null);
+  const [pickerDraft, setPickerDraft] = useState(new Date());
 
   useEffect(() => {
     let active = true;
@@ -329,13 +468,17 @@ export default function DeliveryOrdersScreen() {
     setRefreshVersion((current) => current + 1);
   }, [loading, refreshing]);
 
-  const selectedView = ORDER_VIEWS.find((view) => view.key === activeFilter) ?? ORDER_VIEWS[1];
+  const todayKey = getDateKey(new Date());
+  const selectedView = ORDER_VIEWS.find((view) => view.key === activeFilter) ?? ORDER_VIEWS[0];
   const filteredOrders = useMemo(() => {
     const query = search.trim().toLocaleLowerCase();
     return orders.filter((order) => {
       const normalized = normalizeStatus(order.order_status);
-      const matchesView = !selectedView.statuses || selectedView.statuses.includes(normalized);
       const dateKey = getDateKey(getOrderDate(order));
+      const matchesView =
+        selectedView.key === "today"
+          ? dateKey === todayKey
+          : !selectedView.statuses || selectedView.statuses.includes(normalized);
       const matchesDate = (!dateFrom || (dateKey && dateKey >= dateFrom))
         && (!dateTo || (dateKey && dateKey <= dateTo));
       const customer = getCustomer(order);
@@ -343,6 +486,7 @@ export default function DeliveryOrdersScreen() {
         !query ||
         [
           orderIdentifier(order),
+          orderDisplayNumber(order),
           firstText(order, ["customer_name"]),
           firstText(customer, ["name", "full_name", "fullName"]),
           firstText(order, ["customer_phone", "phone"]),
@@ -350,7 +494,19 @@ export default function DeliveryOrdersScreen() {
         ].some((value) => value.toLocaleLowerCase().includes(query));
       return matchesView && matchesDate && matchesSearch;
     });
-  }, [dateFrom, dateTo, orders, search, selectedView]);
+  }, [dateFrom, dateTo, orders, search, selectedView, todayKey]);
+
+  const todayOrders = useMemo(
+    () =>
+      orders
+        .filter((order) => getDateKey(getOrderDate(order)) === todayKey)
+        .sort(
+          (first, second) =>
+            (getOrderDate(second)?.getTime() ?? 0) -
+            (getOrderDate(first)?.getTime() ?? 0),
+        ),
+    [orders, todayKey],
+  );
 
   const counts = useMemo(() => {
     const statusCount = (statuses: readonly string[]) =>
@@ -391,6 +547,34 @@ export default function DeliveryOrdersScreen() {
     setPage(1);
   };
 
+  const applyPickedDate = (mode: "from" | "to", value: Date) => {
+    const dateKey = getDateKey(value);
+    if (mode === "from") setDateFrom(dateKey);
+    else setDateTo(dateKey);
+    setPage(1);
+  };
+
+  const openDatePicker = (mode: "from" | "to") => {
+    const currentValue = mode === "from" ? dateFrom : dateTo;
+    const value = parseDateFilter(currentValue) ?? new Date();
+    if (Platform.OS === "android") {
+      DateTimePickerAndroid.open({
+        value,
+        mode: "date",
+        onValueChange: (_event, selectedDate) => applyPickedDate(mode, selectedDate),
+      });
+      return;
+    }
+
+    setPickerDraft(value);
+    setPickerMode(mode);
+  };
+
+  const confirmIOSDatePicker = () => {
+    if (pickerMode) applyPickedDate(pickerMode, pickerDraft);
+    setPickerMode(null);
+  };
+
   const updateOrderStatus = async (order: DeliveryOrder, nextStatus: string) => {
     if (updatingOrderId) return;
     setUpdatingOrderId(orderIdentifier(order));
@@ -420,7 +604,7 @@ export default function DeliveryOrdersScreen() {
       setSelectedOrder(result);
       showAlert({
         title: "Delivery status updated",
-        message: `Order ${orderIdentifier(order)} is now ${statusLabel(result.order_status)}.`,
+        message: `Order ${orderDisplayNumber(order)} is now ${statusLabel(result.order_status)}.`,
         variant: "success",
       });
     } catch (error: unknown) {
@@ -438,7 +622,7 @@ export default function DeliveryOrdersScreen() {
   const confirmOrderStatus = (order: DeliveryOrder, nextStatus: string) => {
     showAlert({
       title: "Confirm status update",
-      message: `Mark ${orderIdentifier(order)} as ${statusLabel(nextStatus)}?`,
+      message: `Mark order ${orderDisplayNumber(order)} as ${statusLabel(nextStatus)}?`,
       variant: "confirm",
       actions: [
         { text: "Cancel", style: "cancel" },
@@ -488,42 +672,119 @@ export default function DeliveryOrdersScreen() {
     ]);
     const dropoff = firstText(order, ["delivery_address", "dropoff_address"]);
     const isUpdating = updatingOrderId === orderIdentifier(order);
+    const orderTotal = getOrderTotal(order);
+    const itemCount = getOrderItemCount(order);
+    const firstItemImage = getFirstItemImage(order.items[0]);
 
     return (
       <Pressable
         accessibilityRole="button"
-        className="mb-3 rounded-2xl border border-[#E7EDE7] bg-white p-4 active:border-[#A8C5AE]"
+        className="mb-4 overflow-hidden rounded-[22px] border border-[#E3EAE3] bg-white p-4 active:border-[#A8C5AE]"
         key={orderIdentifier(order)}
         onPress={() => setSelectedOrder(order)}
       >
-        <View className="flex-row items-start justify-between">
-          <View className="mr-3 flex-1">
-            <Text className="text-xs font-semibold text-slate-500">
-              Order {orderIdentifier(order)}
+        <View className="flex-row items-center">
+          <OrderItemThumbnail
+            uri={firstItemImage}
+            accessibilityLabel="First food item image"
+          />
+          <View className="mr-2 flex-1">
+            <Text className="text-[10px] font-extrabold uppercase tracking-[1.2px] text-[#718078]">
+              Order {orderDisplayNumber(order)}
             </Text>
-            <Text className="mt-1 text-base font-extrabold text-[#17251E]">
+            <Text className="mt-0.5 text-base font-extrabold text-[#17251E]" numberOfLines={1}>
               {customerName}
             </Text>
           </View>
           {renderStatus(order.order_status)}
         </View>
-        <View className="mt-4 border-l-2 border-[#D9E5DB] pl-3">
-          <Text className="text-xs leading-5 text-slate-600" numberOfLines={2}>
-            <Text className="font-bold text-[#24372D]">Pickup · </Text>
-            {pickup || "Pickup location pending"}
-          </Text>
-          <Text className="mt-1 text-xs leading-5 text-slate-600" numberOfLines={2}>
-            <Text className="font-bold text-[#24372D]">Drop-off · </Text>
-            {dropoff || "Delivery location pending"}
-          </Text>
+        <View className="mt-4 rounded-2xl bg-[#F6F8F5] p-3">
+          <View className="flex-row items-start">
+            <View className="mr-2.5 mt-0.5 h-7 w-7 items-center justify-center rounded-lg bg-white">
+              <ShoppingBag color="#65806A" size={15} />
+            </View>
+            <View className="flex-1">
+              <Text className="text-[9px] font-extrabold uppercase tracking-wide text-[#718078]">
+                Pickup
+              </Text>
+              <Text className="mt-0.5 text-xs font-semibold leading-5 text-[#34443A]" numberOfLines={2}>
+                {pickup || "Pickup location pending"}
+              </Text>
+            </View>
+          </View>
+          <View className="ml-[13px] h-3 border-l border-dashed border-[#B8C9B9]" />
+          <View className="flex-row items-start">
+            <View className="mr-2.5 mt-0.5 h-7 w-7 items-center justify-center rounded-lg bg-white">
+              <MapPin color="#17663D" size={15} />
+            </View>
+            <View className="flex-1">
+              <Text className="text-[9px] font-extrabold uppercase tracking-wide text-[#718078]">
+                Drop-off
+              </Text>
+              <Text className="mt-0.5 text-xs font-semibold leading-5 text-[#34443A]" numberOfLines={2}>
+                {dropoff || "Delivery location pending"}
+              </Text>
+            </View>
+          </View>
         </View>
-        <View className="mt-4 flex-row items-center justify-between">
-          <Text className="flex-1 text-xs text-slate-500" numberOfLines={1}>
-            {formatDate(getOrderDate(order))}
-          </Text>
-          <Text className="ml-3 text-sm font-extrabold text-[#17663D]">
-            {formatAmount(order.delivery_charge)} delivery
-          </Text>
+        <View className="mt-3 flex-row items-center justify-between border-t border-[#EDF0EC] pt-3">
+          <View className="mr-2 flex-1">
+            <View className="flex-row items-center">
+              <CalendarDays color="#829087" size={14} />
+              <Text className="ml-1.5 flex-1 text-[10px] font-medium text-slate-500" numberOfLines={1}>
+                {formatDate(getOrderDate(order))}
+              </Text>
+            </View>
+            <View className="mt-1.5 flex-row items-center">
+              <Package color="#829087" size={14} />
+              <Text className="ml-1.5 text-[10px] font-semibold text-[#526057]">
+                {itemCount == null
+                  ? "Items unavailable"
+                  : `${itemCount} ${itemCount === 1 ? "item" : "items"}`}
+              </Text>
+            </View>
+          </View>
+          <View className="items-end">
+            <Text className="text-[9px] font-bold uppercase tracking-wide text-slate-500">
+              Order total
+            </Text>
+            <Text className="mt-0.5 text-sm font-black text-[#17663D]">
+              {orderTotal == null ? "Amount unavailable" : formatAmount(orderTotal)}
+            </Text>
+          </View>
+        </View>
+        <View className="mt-3 flex-row">
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`Track order ${orderIdentifier(order)} on map`}
+            className="mr-2 min-h-10 flex-1 flex-row items-center justify-center rounded-xl bg-[#EEF5EB] px-3 active:bg-[#E1EDE0]"
+            onPress={(event) => {
+              event.stopPropagation();
+              void openExternalUrl(
+                getLocationUrl(
+                  dropoff,
+                  order.delivery_latitude,
+                  order.delivery_longitude,
+                ),
+                "Navigation",
+              );
+            }}
+          >
+            <Navigation color="#17663D" size={15} />
+            <Text className="ml-2 text-xs font-bold text-[#17663D]">Track map</Text>
+          </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`View order ${orderIdentifier(order)}`}
+            className="min-h-10 flex-1 flex-row items-center justify-center rounded-xl border border-[#E1E8E1] bg-white px-3 active:bg-[#F6F8F5]"
+            onPress={(event) => {
+              event.stopPropagation();
+              setSelectedOrder(order);
+            }}
+          >
+            <Eye color="#53645A" size={16} />
+            <Text className="ml-2 text-xs font-bold text-[#39483F]">View order</Text>
+          </Pressable>
         </View>
         {normalizeStatus(order.order_status) === "REACHED_CUSTOMER" ? (
           <Pressable
@@ -563,6 +824,12 @@ export default function DeliveryOrdersScreen() {
   const selectedNextStatus = selectedOrder
     ? NEXT_STATUS[normalizeStatus(selectedOrder.order_status)]
     : undefined;
+  const canAcceptOrder = selectedOrder
+    ? ["NEW", "NEW_ORDER", "PENDING", "ORDER_PLACED"].includes(
+        normalizeStatus(selectedOrder.order_status),
+      )
+    : false;
+  const selectedOrderTotal = selectedOrder ? getOrderTotal(selectedOrder) : null;
   const customerName =
     firstText(selectedOrder ?? {}, ["customer_name"]) ||
     firstText(selectedCustomer, ["name", "full_name", "fullName"]) ||
@@ -583,41 +850,11 @@ export default function DeliveryOrdersScreen() {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        <View className="mb-5 flex-row items-center justify-between">
-          <View className="mr-3 flex-1">
-            <Text className="text-[10px] font-extrabold uppercase tracking-[1.6px] text-[#39754A]">
-              Deliveries
-            </Text>
-            <Text className="mt-1 text-2xl font-black text-[#17251E]">Your orders</Text>
-            <Text className="mt-1 text-xs leading-5 text-slate-500">
-              Only deliveries assigned to your account appear here.
-            </Text>
-          </View>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Refresh delivery orders"
-            className="h-11 w-11 items-center justify-center rounded-xl border border-[#E1E8E1] bg-white"
-            disabled={loading || refreshing}
-            onPress={refreshOrders}
-          >
-            {loading || refreshing ? (
-              <ActivityIndicator color="#17663D" size="small" />
-            ) : (
-              <RefreshCw color="#53645A" size={18} />
-            )}
-          </Pressable>
-        </View>
-
-        <ScrollView
-          className="mb-5"
-          contentContainerStyle={{ paddingRight: 4 }}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-        >
+        <View className="mb-2 flex-row flex-wrap justify-between">
           <SummaryCard
-            label="New orders"
-            count={counts.newOrders}
-            caption="Awaiting action"
+            label="Total Orders"
+            count={orders.length}
+            caption="All assigned orders"
             background="#C72D91"
             Icon={Clock3}
             loading={loading}
@@ -646,7 +883,7 @@ export default function DeliveryOrdersScreen() {
             Icon={XCircle}
             loading={loading}
           />
-        </ScrollView>
+        </View>
 
         <View className="mb-3 flex-row items-center rounded-xl border border-[#E1E8E1] bg-white px-3">
           <Search color="#87938A" size={18} />
@@ -688,7 +925,9 @@ export default function DeliveryOrdersScreen() {
               ? orders.filter((order) =>
                   view.statuses?.includes(normalizeStatus(order.order_status)),
                 ).length
-              : orders.length;
+              : view.key === "today"
+                ? todayOrders.length
+                : orders.length;
             return (
               <Pressable
                 accessibilityRole="button"
@@ -725,30 +964,60 @@ export default function DeliveryOrdersScreen() {
             <CalendarDays color="#39754A" size={15} />
             <Text className="ml-2 text-xs font-bold text-[#39483F]">Filter by date</Text>
           </View>
-          <View className="flex-row">
-            <TextInput
-              accessibilityLabel="Date from"
-              className="mr-2 min-h-10 flex-1 rounded-lg bg-[#F5F7F3] px-3 text-xs text-[#17251E]"
-              onChangeText={(value) => {
-                setDateFrom(value);
-                setPage(1);
-              }}
-              placeholder="From · YYYY-MM-DD"
-              placeholderTextColor="#98A199"
-              value={dateFrom}
-            />
-            <TextInput
-              accessibilityLabel="Date to"
-              className="min-h-10 flex-1 rounded-lg bg-[#F5F7F3] px-3 text-xs text-[#17251E]"
-              onChangeText={(value) => {
-                setDateTo(value);
-                setPage(1);
-              }}
-              placeholder="To · YYYY-MM-DD"
-              placeholderTextColor="#98A199"
-              value={dateTo}
-            />
-          </View>
+          {Platform.OS === "web" ? (
+            <View className="flex-row">
+              <TextInput
+                accessibilityLabel="Date from"
+                className="mr-2 min-h-10 flex-1 rounded-lg bg-[#F5F7F3] px-3 text-xs text-[#17251E]"
+                onChangeText={(value) => {
+                  setDateFrom(value);
+                  setPage(1);
+                }}
+                placeholder="From · YYYY-MM-DD"
+                placeholderTextColor="#98A199"
+                value={dateFrom}
+              />
+              <TextInput
+                accessibilityLabel="Date to"
+                className="min-h-10 flex-1 rounded-lg bg-[#F5F7F3] px-3 text-xs text-[#17251E]"
+                onChangeText={(value) => {
+                  setDateTo(value);
+                  setPage(1);
+                }}
+                placeholder="To · YYYY-MM-DD"
+                placeholderTextColor="#98A199"
+                value={dateTo}
+              />
+            </View>
+          ) : (
+            <View className="flex-row">
+              {(["from", "to"] as const).map((mode) => {
+                const value = mode === "from" ? dateFrom : dateTo;
+                const label = mode === "from" ? "From date" : "To date";
+                return (
+                  <Pressable
+                    accessibilityLabel={`${label}: ${value ? formatFilterDate(value) : "not selected"}`}
+                    accessibilityRole="button"
+                    className={`min-h-11 flex-1 flex-row items-center rounded-lg bg-[#F5F7F3] px-3 ${
+                      mode === "from" ? "mr-2" : ""
+                    }`}
+                    key={mode}
+                    onPress={() => openDatePicker(mode)}
+                  >
+                    <CalendarDays color="#39754A" size={16} />
+                    <View className="ml-2">
+                      <Text className="text-[9px] font-semibold text-slate-500">
+                        {label}
+                      </Text>
+                      <Text className="mt-0.5 text-xs font-bold text-[#17251E]">
+                        {formatFilterDate(value)}
+                      </Text>
+                    </View>
+                  </Pressable>
+                );
+              })}
+            </View>
+          )}
           {(dateFrom || dateTo || search) ? (
             <Pressable
               accessibilityRole="button"
@@ -860,7 +1129,7 @@ export default function DeliveryOrdersScreen() {
                     Delivery details
                   </Text>
                   <Text className="mt-1 text-xl font-black text-[#17251E]">
-                    Order {orderIdentifier(selectedOrder)}
+                    Order {orderDisplayNumber(selectedOrder)}
                   </Text>
                 </View>
                 <Pressable
@@ -981,19 +1250,30 @@ export default function DeliveryOrdersScreen() {
                     <Text className="ml-2 text-sm font-extrabold text-[#17251E]">Food items</Text>
                   </View>
                   {selectedOrder.items.length ? (
-                    selectedOrder.items.map((item, index) => (
-                      <View
-                        className="mt-3 flex-row justify-between border-b border-[#F0F2EE] pb-2"
-                        key={firstText(item, ["id", "food_id"]) || `${index}`}
-                      >
-                        <Text className="mr-3 flex-1 text-xs text-[#39483F]">
-                          {firstText(item, ["food_name", "name", "product_name"]) || "Food item"}
-                        </Text>
-                        <Text className="text-xs font-semibold text-slate-500">
-                          × {firstText(item, ["quantity", "qty"]) || "1"}
-                        </Text>
-                      </View>
-                    ))
+                    selectedOrder.items.map((item, index) => {
+                      const itemName =
+                        firstText(item, ["food_name", "name", "product_name"]) ||
+                        "Food item";
+                      return (
+                        <View
+                          className="mt-3 flex-row items-center border-b border-[#F0F2EE] pb-3"
+                          key={firstText(item, ["id", "food_id"]) || `${index}`}
+                        >
+                          <OrderItemThumbnail
+                            accessibilityLabel={`${itemName} image`}
+                            uri={getFirstItemImage(item)}
+                          />
+                          <Text className="mr-3 flex-1 text-xs font-semibold leading-5 text-[#39483F]">
+                            {itemName}
+                          </Text>
+                          <View className="rounded-full bg-[#F3F6F1] px-2.5 py-1">
+                            <Text className="text-xs font-bold text-slate-600">
+                              × {firstText(item, ["quantity", "qty"]) || "1"}
+                            </Text>
+                          </View>
+                        </View>
+                      );
+                    })
                   ) : (
                     <Text className="mt-3 text-xs text-slate-500">
                       Item details unavailable
@@ -1005,10 +1285,12 @@ export default function DeliveryOrdersScreen() {
                       {firstText(selectedOrder, ["payment_type", "payment_method"]) || "—"}
                     </Text>
                   </View>
-                  <View className="mt-2 flex-row justify-between">
-                    <Text className="text-xs font-bold text-[#39483F]">Delivery charge</Text>
-                    <Text className="text-xs font-extrabold text-[#17663D]">
-                      {formatAmount(selectedOrder.delivery_charge)}
+                  <View className="mt-3 flex-row justify-between border-t border-[#F0F2EE] pt-3">
+                    <Text className="text-sm font-extrabold text-[#17251E]">Total amount</Text>
+                    <Text className="text-sm font-black text-[#17663D]">
+                      {selectedOrderTotal == null
+                        ? "Unavailable"
+                        : formatAmount(selectedOrderTotal)}
                     </Text>
                   </View>
                 </View>
@@ -1076,6 +1358,8 @@ export default function DeliveryOrdersScreen() {
                       <Text className="text-sm font-extrabold text-white">
                         {normalizeStatus(selectedOrder.order_status) === "REACHED_CUSTOMER"
                           ? "Mark delivered"
+                          : canAcceptOrder
+                            ? "Accept delivery"
                           : statusLabel(selectedNextStatus)}
                       </Text>
                     ) : (
@@ -1088,6 +1372,46 @@ export default function DeliveryOrdersScreen() {
           ) : null}
         </View>
       </Modal>
+      {Platform.OS === "ios" && pickerMode ? (
+        <Modal
+          animationType="slide"
+          onRequestClose={() => setPickerMode(null)}
+          transparent
+          visible
+        >
+          <View className="flex-1 justify-end bg-black/45">
+            <View className="rounded-t-3xl bg-[#FFFCF6] px-4 pb-8 pt-4">
+              <View className="mb-2 flex-row items-center justify-between">
+                <Pressable
+                  accessibilityRole="button"
+                  className="min-h-11 justify-center px-2"
+                  onPress={() => setPickerMode(null)}
+                >
+                  <Text className="text-sm font-semibold text-[#728071]">Cancel</Text>
+                </Pressable>
+                <Text className="text-base font-extrabold text-[#183B2A]">
+                  {pickerMode === "from" ? "Select start date" : "Select end date"}
+                </Text>
+                <Pressable
+                  accessibilityRole="button"
+                  className="min-h-11 justify-center px-2"
+                  onPress={confirmIOSDatePicker}
+                >
+                  <Text className="text-sm font-extrabold text-[#1A6A3B]">Done</Text>
+                </Pressable>
+              </View>
+              <DateTimePicker
+                accentColor="#1A6A3B"
+                display="spinner"
+                mode="date"
+                onValueChange={(_event, value) => setPickerDraft(value)}
+                themeVariant="light"
+                value={pickerDraft}
+              />
+            </View>
+          </View>
+        </Modal>
+      ) : null}
     </View>
   );
 }

@@ -27,6 +27,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useCart } from "../../contexts/CartContext";
 import { useCustomAlert } from "../../contexts/CustomAlertContext";
 import FavoritesDrawer from "../../components/common/FavoritesDrawer";
+import { useAuth } from "../../contexts/AuthContext";
 import { getStoredUser } from "../../lib/api";
 import { confirmLogout } from "../../lib/logout";
 
@@ -56,6 +57,7 @@ export default function TopHeader({ title }: TopHeaderProps) {
   const { wishlist } = useCart();
   const { showAlert } = useCustomAlert();
   const blurTarget = useRef<ComponentRef<typeof View> | null>(null);
+  const { logout } = useAuth();
   const [isMenuVisible, setIsMenuVisible] = useState(false);
   const [isFavoritesVisible, setIsFavoritesVisible] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -276,7 +278,7 @@ export default function TopHeader({ title }: TopHeaderProps) {
               accessibilityRole="button"
               className="mx-2 mb-1 min-h-[44px] flex-row items-center rounded-xl bg-brand-warning-surface px-2 active:bg-brand-danger-soft"
               disabled={isLoggingOut}
-              onPress={() => confirmLogout(showAlert, setIsLoggingOut)}
+              onPress={() => confirmLogout(showAlert, logout, setIsLoggingOut)}
             >
               <View className="mr-2 h-8 w-8 items-center justify-center rounded-full bg-brand-danger-pale">
                 <LogOut color={colors["danger-dark"]} size={17} />

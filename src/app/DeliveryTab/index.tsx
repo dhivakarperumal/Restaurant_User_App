@@ -1,7 +1,9 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { router } from "expo-router";
+import * as Linking from "expo-linking";
 import {
   ActivityIndicator,
+  Image,
   Modal,
   Pressable,
   RefreshControl,
@@ -17,19 +19,22 @@ import {
   CheckCircle2,
   Clock3,
   IndianRupee,
+  Eye,
   MapPin,
+  Navigation,
   PackageCheck,
   Power,
   RefreshCw,
+  ShoppingBag,
   Timer,
-  WalletCards,
+  UserRound,
   X,
   XCircle,
+  WalletCards,
   Zap,
 } from "lucide-react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import api, { getApiErrorMessage } from "../../lib/api";
-import AuthLogoutButton from "../../components/AuthLogoutButton";
+import api, { API_BASE_URL, getApiErrorMessage } from "../../lib/api";
 import { useCustomAlert } from "../../contexts/CustomAlertContext";
 
 type Attendance = {
@@ -41,13 +46,21 @@ type Attendance = {
 };
 
 type DeliveryOrder = {
-  id?: string | number;
-  order_number?: string | number | null;
-  customer_name?: string | null;
-  address_line?: string | null;
-  area_locality?: string | null;
-  city?: string | null;
-  status?: string | null;
+  id: string;
+  [key: string]: unknown;
+};
+
+const NEXT_ORDER_STATUS: Record<string, string> = {
+  NEW: "ACCEPTED",
+  NEW_ORDER: "ACCEPTED",
+  PENDING: "ACCEPTED",
+  ORDER_PLACED: "ACCEPTED",
+  ASSIGNED: "ACCEPTED",
+  ACCEPTED: "REACHED_PICKUP",
+  REACHED_PICKUP: "PICKED_UP",
+  PICKED_UP: "OUT_FOR_DELIVERY",
+  OUT_FOR_DELIVERY: "REACHED_CUSTOMER",
+  REACHED_CUSTOMER: "DELIVERED",
 };
 
 type DashboardData = {
@@ -145,6 +158,71 @@ function unwrapDashboard(responseData: unknown): DashboardData | null {
     : null;
 }
 
+function asRecord(value: unknown): Record<string, unknown> | null {
+  return typeof value === "object" && value !== null && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : null;
+}
+
+function firstText(record: Record<string, unknown>, keys: string[]): string {
+  for (const key of keys) {
+    const value = record[key];
+    if (typeof value === "string" || typeof value === "number") {
+      const text = String(value).trim();
+      if (text) return text;
+    }
+  }
+  return "";
+}
+
+function normalizeOrderStatus(value: unknown): string {
+  if (typeof value !== "string" && typeof value !== "number") return "";
+  return String(value).trim().toUpperCase().replace(/[\s-]+/g, "_");
+}
+
+function orderStatusLabel(status: string): string {
+  return status
+    .toLowerCase()
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
+function normalizeOrders(responseData: unknown): DeliveryOrder[] {
+  const root = asRecord(responseData);
+  const nested = asRecord(root?.data);
+  const ordersValue = Array.isArray(responseData)
+    ? responseData
+    : root?.orders ?? nested?.orders ?? root?.data;
+  if (!Array.isArray(ordersValue)) {
+    throw new Error("The assigned orders response was invalid.");
+  }
+
+  const orders = ordersValue.flatMap((value) => {
+    const order = asRecord(value);
+    if (!order) return [];
+    const id = firstText(order, ["order_id", "id", "order_number"]);
+    return id ? [{ ...order, id }] : [];
+  });
+  return [...new Map(orders.map((order) => [order.id, order])).values()];
+}
+
+function getOrderDate(order: DeliveryOrder): Date | null {
+  const value = firstText(order, ["order_date", "created_at", "createdAt"]);
+  if (!value) return null;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function isToday(date: Date | null): boolean {
+  if (!date) return false;
+  const now = new Date();
+  return (
+    date.getFullYear() === now.getFullYear() &&
+    date.getMonth() === now.getMonth() &&
+    date.getDate() === now.getDate()
+  );
+}
+
 function formatMoney(value: unknown): string {
   if (value == null || value === "") return "—";
   const amount = Number(value);
@@ -168,6 +246,49 @@ function formatDate(value?: string | null): string {
     : date.toLocaleDateString([], { day: "numeric", month: "short", year: "numeric" });
 }
 
+function getFirstItemImage(order: DeliveryOrder): string {
+  const items = Array.isArray(order.items) ? order.items : [];
+  const item = asRecord(items[0]);
+  if (!item) return "";
+  const images = Array.isArray(item.food_images) ? item.food_images : [];
+  const firstImage = asRecord(images[0]);
+  const image = firstText(item, ["product_image", "image", "thumbnail_image"])
+    || firstText(firstImage ?? {}, ["image_url", "url", "image"]);
+  if (!image) return "";
+  if (/^(data:|blob:|https?:\/\/)/i.test(image)) return image;
+  const baseUrl = API_BASE_URL.replace(/\/api\/?$/i, "").replace(/\/+$/, "");
+  return `${baseUrl}${image.startsWith("/") ? image : `/${image}`}`;
+}
+
+function DashboardOrderThumbnail({ uri }: { uri: string }) {
+  const [hasError, setHasError] = useState(false);
+  return uri && !hasError ? (
+    <Image
+      accessibilityLabel="First food item image"
+      className="mr-3 h-12 w-12 rounded-2xl bg-[#EAF2E8]"
+      onError={() => setHasError(true)}
+      resizeMode="cover"
+      source={{ uri }}
+    />
+  ) : (
+    <View className="mr-3 h-12 w-12 items-center justify-center rounded-2xl bg-[#EAF2E8]">
+      <PackageCheck color="#21643A" size={20} />
+    </View>
+  );
+}
+
+function getMapUrl(address: string, latitude: unknown, longitude: unknown): string {
+  const lat = typeof latitude === "string" || typeof latitude === "number"
+    ? String(latitude).trim()
+    : "";
+  const lng = typeof longitude === "string" || typeof longitude === "number"
+    ? String(longitude).trim()
+    : "";
+  const destination =
+    lat && lng ? `${encodeURIComponent(lat)},${encodeURIComponent(lng)}` : encodeURIComponent(address);
+  return `https://www.google.com/maps/dir/?api=1&destination=${destination}`;
+}
+
 function formatDuration(totalSeconds: number): string {
   const seconds = Math.max(0, Math.floor(totalSeconds));
   const hours = Math.floor(seconds / 3600);
@@ -181,6 +302,10 @@ function formatDuration(totalSeconds: number): string {
 export default function DeliveryPartnerScreen() {
   const { showAlert } = useCustomAlert();
   const [dashboard, setDashboard] = useState<DashboardData | null>(null);
+  const [orders, setOrders] = useState<DeliveryOrder[]>([]);
+  const [updatingOrderId, setUpdatingOrderId] = useState<string | null>(null);
+  const [ordersLoading, setOrdersLoading] = useState(true);
+  const [ordersError, setOrdersError] = useState("");
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
@@ -191,6 +316,10 @@ export default function DeliveryPartnerScreen() {
   const [history, setHistory] = useState<AttendanceRecord[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [historyError, setHistoryError] = useState("");
+  const [checkInBusy, setCheckInBusy] = useState(false);
+  const [checkInError, setCheckInError] = useState("");
+  const [showAttendancePrompt, setShowAttendancePrompt] = useState(false);
+  const hasLoadedDashboard = useRef(false);
 
   useEffect(() => {
     let active = true;
@@ -202,6 +331,12 @@ export default function DeliveryPartnerScreen() {
         if (!active) return;
         setDashboard(data);
         setErrorMessage("");
+        if (!hasLoadedDashboard.current) {
+          hasLoadedDashboard.current = true;
+          setShowAttendancePrompt(
+            !Boolean(data.isCheckedIn ?? (data.attendance?.check_in && !data.attendance.check_out)),
+          );
+        }
         if (data.attendance?.duration_seconds != null) {
           setLiveSeconds(Number(data.attendance.duration_seconds) || 0);
         }
@@ -233,7 +368,48 @@ export default function DeliveryPartnerScreen() {
       (attendance?.check_in && !attendance.check_out),
   );
   const summary = dashboard?.summary ?? dashboard?.stats ?? {};
-  const activeOrder = dashboard?.active_order ?? dashboard?.activeOrder ?? null;
+  const todayOrders = orders
+    .filter((order) => isToday(getOrderDate(order)))
+    .sort(
+      (first, second) =>
+        (getOrderDate(second)?.getTime() ?? 0) - (getOrderDate(first)?.getTime() ?? 0),
+    );
+  const newOrderCount = orders.filter((order) =>
+    ["NEW", "NEW_ORDER", "PENDING", "ORDER_PLACED"].includes(
+      firstText(order, ["order_status", "status"])
+        .toUpperCase()
+        .replace(/[\s-]+/g, "_"),
+    ),
+  ).length;
+
+  useEffect(() => {
+    let active = true;
+    setOrdersLoading(true);
+    api
+      .get("/delivery-partner/orders")
+      .then((response) => {
+        const result = normalizeOrders(response.data);
+        if (!active) return;
+        setOrders(result);
+        setOrdersError("");
+      })
+      .catch((error: unknown) => {
+        console.error("Failed to load today's assigned delivery orders:", error);
+        if (active) {
+          setOrders([]);
+          setOrdersError(
+            getApiErrorMessage(error, "Today's assigned orders are unavailable."),
+          );
+        }
+      })
+      .finally(() => {
+        if (active) setOrdersLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [refreshVersion]);
 
   useEffect(() => {
     if (!isOnline || !isCheckedIn) return;
@@ -241,10 +417,84 @@ export default function DeliveryPartnerScreen() {
     return () => clearInterval(interval);
   }, [isOnline, isCheckedIn]);
 
+  const checkInAndContinue = async () => {
+    if (checkInBusy) return;
+    setCheckInBusy(true);
+    setCheckInError("");
+    try {
+      const response = await api.post("/attendance/clock-in");
+      const root = response.data as Record<string, unknown>;
+      const record = root.data;
+      if (typeof record !== "object" || record === null) {
+        throw new Error("Clock-in response did not include attendance details.");
+      }
+      const attendanceRecord = record as Attendance;
+      setDashboard((current) =>
+        current
+          ? { ...current, attendance: attendanceRecord, isCheckedIn: true }
+          : current,
+      );
+      setLiveSeconds(Number(attendanceRecord.duration_seconds) || 0);
+      setShowAttendancePrompt(false);
+    } catch (error: unknown) {
+      console.error("Failed to check in delivery partner:", error);
+      setCheckInError(getApiErrorMessage(error, "Unable to check in. Please try again."));
+    } finally {
+      setCheckInBusy(false);
+    }
+  };
+
   const refreshDashboard = useCallback(() => {
     setRefreshing(true);
     setRefreshVersion((value) => value + 1);
   }, []);
+
+  const updateOrderStatus = async (order: DeliveryOrder, nextStatus: string) => {
+    if (updatingOrderId) return;
+    setUpdatingOrderId(order.id);
+    try {
+      const response = await api.patch(
+        `/delivery-partner/orders/${encodeURIComponent(order.id)}/status`,
+        { status: nextStatus },
+      );
+      const root = asRecord(response.data);
+      const nested = asRecord(root?.data);
+      const updatedRecord = asRecord(root?.order) ?? asRecord(nested?.order) ?? nested;
+      const resolvedStatus =
+        firstText(updatedRecord ?? {}, ["order_status", "status"]) || nextStatus;
+      setOrders((current) =>
+        current.map((item) =>
+          item.id === order.id ? { ...item, order_status: resolvedStatus } : item,
+        ),
+      );
+      showAlert({
+        title: "Delivery status updated",
+        message: `Order ${order.id} is now ${orderStatusLabel(resolvedStatus)}.`,
+        variant: "success",
+      });
+    } catch (error: unknown) {
+      console.error("Failed to update delivery order status from dashboard:", error);
+      showAlert({
+        title: "Could not update delivery",
+        message: getApiErrorMessage(error, "Please try again."),
+        variant: "error",
+      });
+    } finally {
+      setUpdatingOrderId(null);
+    }
+  };
+
+  const confirmOrderStatus = (order: DeliveryOrder, nextStatus: string) => {
+    showAlert({
+      title: "Confirm status update",
+      message: `Mark order ${order.id} as ${orderStatusLabel(nextStatus)}?`,
+      variant: "confirm",
+      actions: [
+        { text: "Cancel", style: "cancel" },
+        { text: "Confirm", onPress: () => void updateOrderStatus(order, nextStatus) },
+      ],
+    });
+  };
 
   const updateAvailability = async (
     requestedState: boolean,
@@ -347,29 +597,7 @@ export default function DeliveryPartnerScreen() {
         }
         showsVerticalScrollIndicator={false}
       >
-        <View className="mb-5 flex-row items-center justify-between">
-          <View className="flex-1 pr-3">
-            <Text className="text-lg font-extrabold text-[#17251E]">
-              Your day, at a glance
-            </Text>
-            <Text className="mt-1 text-xs leading-5 text-slate-500">
-              Live duty status, assignments and earnings.
-            </Text>
-          </View>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Refresh dashboard"
-            className="h-11 w-11 items-center justify-center rounded-xl border border-[#DCE6DE] bg-white"
-            disabled={loading}
-            onPress={refreshDashboard}
-          >
-            {loading ? (
-              <ActivityIndicator color="#17663D" />
-            ) : (
-              <RefreshCw color="#53645A" size={18} />
-            )}
-          </Pressable>
-        </View>
+       
 
         <View
           className={`overflow-hidden rounded-[24px] border p-5 ${
@@ -447,7 +675,7 @@ export default function DeliveryPartnerScreen() {
             </View>
           ) : null}
 
-          <View className="mt-4 flex-row flex-wrap gap-2">
+          <View className="mt-4 flex-row flex-wrap justify-between gap-y-2">
             {isOnline ? (
               <>
                 <ActionButton
@@ -495,6 +723,62 @@ export default function DeliveryPartnerScreen() {
           </View>
         </View>
 
+        <View className="mt-5">
+          <Text className="mb-3 text-base font-extrabold text-[#17251E]">
+            Quick actions
+          </Text>
+          <View className="flex-row flex-wrap justify-between">
+            {([
+              {
+                label: "Orders",
+                description: "View assigned orders",
+                Icon: PackageCheck,
+                route: "/DeliveryTab/orders",
+              },
+              {
+                label: "Earnings",
+                description: "Check your income",
+                Icon: IndianRupee,
+                route: "/DeliveryTab/earnings",
+              },
+              {
+                label: "Attendance",
+                description: "View your shifts",
+                Icon: CalendarCheck2,
+                route: "/DeliveryTab/attendance",
+              },
+              {
+                label: "Profile",
+                description: "Manage your account",
+                Icon: UserRound,
+                route: "/DeliveryTab/profile",
+              },
+            ] as const).map(({ label, description, Icon, route }) => (
+              <Pressable
+                accessibilityRole="button"
+                className="mb-3 min-h-[92px] w-[48.5%] flex-row items-center rounded-2xl border border-[#E2E9E3] bg-white p-3 active:bg-[#F4F8F3]"
+                key={label}
+                onPress={() => router.push(route)}
+              >
+                <View className="mr-3 h-10 w-10 items-center justify-center rounded-xl bg-[#EAF2E8]">
+                  <Icon color="#21643A" size={19} />
+                </View>
+                <View className="min-w-0 flex-1">
+                  <Text className="text-sm font-extrabold text-[#17251E]">
+                    {label}
+                  </Text>
+                  <Text
+                    className="mt-1 text-[10px] leading-4 text-slate-500"
+                    numberOfLines={2}
+                  >
+                    {description}
+                  </Text>
+                </View>
+              </Pressable>
+            ))}
+          </View>
+        </View>
+
         {errorMessage ? (
           <View className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 p-4">
             <Text className="text-sm font-bold text-amber-900">Dashboard data notice</Text>
@@ -511,7 +795,8 @@ export default function DeliveryPartnerScreen() {
 
         <View className="mt-5 flex-row flex-wrap justify-between">
           {metrics.map(({ key, label, caption, Icon, colors, isMoney }) => {
-            const value = summary[key];
+            const value = key === "newOrders" ? newOrderCount : summary[key];
+            const metricLoading = key === "newOrders" ? ordersLoading : loading;
             return (
               <View
                 key={key}
@@ -529,7 +814,7 @@ export default function DeliveryPartnerScreen() {
                     <Icon color="#FFFFFF" size={17} strokeWidth={2.3} />
                   </View>
                 </View>
-                {loading ? (
+                {metricLoading ? (
                   <View className="mt-3 h-8 w-16 rounded-lg bg-white/25" />
                 ) : (
                   <Text
@@ -548,67 +833,225 @@ export default function DeliveryPartnerScreen() {
           })}
         </View>
 
-        <View className="mb-5 rounded-2xl border border-[#E2E9E3] bg-white p-4">
+        <View className="mb-5 rounded-[24px] border border-[#E2E9E3] bg-white p-4">
           <View className="flex-row items-center justify-between">
-            <View>
+            <View className="mr-3 flex-1">
               <Text className="text-[10px] font-extrabold uppercase tracking-[1.5px] text-[#39804F]">
-                On the road
+                Assigned deliveries
               </Text>
               <Text className="mt-1 text-lg font-extrabold text-[#17251E]">
-                Active delivery
+                Today&apos;s orders
+              </Text>
+            </View>
+            <View className="mr-2 min-w-9 items-center rounded-full bg-[#EAF2E8] px-3 py-2">
+              <Text className="text-sm font-extrabold text-[#21643A]">
+                {todayOrders.length}
               </Text>
             </View>
             <Pressable
               accessibilityRole="button"
-              className="flex-row items-center rounded-xl bg-[#EAF2E8] px-3 py-2"
+              accessibilityLabel="Open all delivery orders"
+              className="h-10 w-10 items-center justify-center rounded-xl bg-[#F4F7F2]"
               onPress={() => router.push("/DeliveryTab/orders")}
             >
-              <Text className="text-xs font-bold text-[#21643A]">Open orders</Text>
-              <ArrowRight color="#21643A" size={15} style={{ marginLeft: 5 }} />
+              <ArrowRight color="#21643A" size={18} />
             </Pressable>
           </View>
 
-          {activeOrder ? (
-            <View className="mt-4 rounded-xl bg-[#F5F8F5] p-4">
-              <View className="flex-row items-center justify-between">
-                <Text className="text-xs font-semibold text-slate-500">
-                  Order #{activeOrder.order_number || activeOrder.id || "—"}
-                </Text>
-                {activeOrder.status ? (
-                  <Text className="rounded-full bg-emerald-100 px-2.5 py-1 text-[10px] font-bold text-emerald-800">
-                    {activeOrder.status}
-                  </Text>
-                ) : null}
-              </View>
-              <Text className="mt-2 text-base font-extrabold text-[#17251E]">
-                {activeOrder.customer_name || "Customer"}
+          {ordersLoading ? (
+            <View className="mt-4 min-h-28 items-center justify-center rounded-2xl bg-[#F7F9F7]">
+              <ActivityIndicator color="#17663D" />
+              <Text className="mt-2 text-xs font-medium text-slate-500">
+                Loading today&apos;s orders…
               </Text>
-              <View className="mt-2 flex-row items-start">
-                <MapPin color="#39804F" size={16} />
-                <Text className="ml-2 flex-1 text-sm leading-5 text-slate-600">
-                  {[
-                    activeOrder.address_line,
-                    activeOrder.area_locality,
-                    activeOrder.city,
-                  ]
-                    .filter(Boolean)
-                    .join(", ") || "Delivery location pending"}
-                </Text>
-              </View>
             </View>
+          ) : ordersError ? (
+            <View className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 p-4">
+              <Text className="text-sm font-bold text-amber-900">
+                Could not load today&apos;s orders
+              </Text>
+              <Text className="mt-1 text-xs leading-5 text-amber-800">{ordersError}</Text>
+            </View>
+          ) : todayOrders.length ? (
+            todayOrders.map((order) => {
+              const customer = asRecord(order.customer);
+              const customerName =
+                firstText(order, ["customer_name"]) ||
+                firstText(customer ?? {}, ["name", "full_name", "fullName"]) ||
+                "Customer";
+              const location = [
+                firstText(order, ["delivery_address", "dropoff_address", "address_line"]),
+                firstText(order, ["area_locality"]),
+                firstText(order, ["city"]),
+              ]
+                .filter(Boolean)
+                .join(", ");
+              const pickupLocation = [
+                firstText(order, ["restaurant_name", "shop_name", "pickup_address", "restaurant_address"]),
+                firstText(order, ["restaurant_area", "shop_area"]),
+                firstText(order, ["restaurant_city", "shop_city"]),
+              ]
+                .filter(Boolean)
+                .join(", ");
+              const status = firstText(order, ["order_status", "status"]) || "New";
+              const normalizedStatus = normalizeOrderStatus(status);
+              const nextStatus =
+                NEXT_ORDER_STATUS[normalizedStatus] ??
+                (normalizedStatus === "SHIPPED" ? "DELIVERED" : undefined);
+              const isUpdatingOrder = updatingOrderId === order.id;
+              const statusStyle =
+                normalizedStatus === "DELIVERED" || normalizedStatus === "COMPLETED"
+                  ? { backgroundColor: "#EAF4E4", color: "#17663D" }
+                  : normalizedStatus === "CANCELLED"
+                    ? { backgroundColor: "#FFF0F2", color: "#C51D42" }
+                    : { backgroundColor: "#FFF6D8", color: "#A85B00" };
+              const placedAt = getOrderDate(order);
+              const orderNumber = firstText(order, ["order_number", "order_id", "id"]);
+              const itemImage = getFirstItemImage(order);
+
+              return (
+                <View
+                  className="mt-3 overflow-hidden rounded-2xl border border-[#E2E9E3] bg-white"
+                  key={order.id}
+                >
+                  <View className="p-4">
+                    <View className="flex-row items-center">
+                      <DashboardOrderThumbnail uri={itemImage} />
+                      <View className="flex-1">
+                        <Text className="text-xs font-bold text-slate-500">
+                          Order #{orderNumber}
+                        </Text>
+                        <Text className="mt-0.5 text-sm font-extrabold text-[#17251E]">
+                          {customerName}
+                        </Text>
+                      </View>
+                      <View
+                        className="rounded-full px-2.5 py-1.5"
+                        style={{ backgroundColor: statusStyle.backgroundColor }}
+                      >
+                        <Text
+                          className="text-[10px] font-bold"
+                          style={{ color: statusStyle.color }}
+                        >
+                          {status.replace(/_/g, " ")}
+                        </Text>
+                      </View>
+                    </View>
+
+                    <View className="mt-4 rounded-xl bg-[#F7F9F7] p-3">
+                      <View className="flex-row items-start">
+                        <ShoppingBag color="#39804F" size={15} />
+                        <View className="ml-2 flex-1">
+                          <Text className="text-[10px] font-bold uppercase tracking-wide text-[#39804F]">
+                            Pickup
+                          </Text>
+                          <Text className="mt-0.5 text-xs leading-5 text-slate-600" numberOfLines={2}>
+                            {pickupLocation || "Shop location pending"}
+                          </Text>
+                        </View>
+                      </View>
+                      <View className="ml-[7px] my-1 h-3 border-l border-dashed border-[#B8C9BA]" />
+                      <View className="flex-row items-start">
+                        <MapPin color="#C85A46" size={15} />
+                        <View className="ml-2 flex-1">
+                          <Text className="text-[10px] font-bold uppercase tracking-wide text-[#C85A46]">
+                            Delivery
+                          </Text>
+                          <Text className="mt-0.5 text-xs leading-5 text-slate-600" numberOfLines={2}>
+                            {location || "Delivery location pending"}
+                          </Text>
+                        </View>
+                      </View>
+                    </View>
+
+                    <View className="mt-3 flex-row items-center">
+                      <Clock3 color="#839087" size={13} />
+                      <Text className="ml-1.5 flex-1 text-[10px] font-semibold text-slate-500">
+                        {placedAt
+                          ? placedAt.toLocaleString([], {
+                              day: "numeric",
+                              month: "short",
+                              hour: "numeric",
+                              minute: "2-digit",
+                            })
+                          : "Date unavailable"}
+                      </Text>
+                    </View>
+                  </View>
+
+                  <View className="flex-row border-t border-[#E8EEE8]">
+                    <Pressable
+                      accessibilityRole="button"
+                      className="flex-1 flex-row items-center justify-center py-3"
+                      onPress={async () => {
+                        const url = getMapUrl(
+                          pickupLocation,
+                          order.restaurant_latitude ?? order.shop_latitude,
+                          order.restaurant_longitude ?? order.shop_longitude,
+                        );
+                        try {
+                          await Linking.openURL(url);
+                        } catch (error: unknown) {
+                          console.error("Unable to open the shop location:", error);
+                          showAlert({
+                            title: "Unable to open map",
+                            message: "Please try again.",
+                            variant: "error",
+                          });
+                        }
+                      }}
+                    >
+                      <Navigation color="#21643A" size={15} />
+                      <Text className="ml-1.5 text-xs font-bold text-[#21643A]">Track shop</Text>
+                    </Pressable>
+                    <View className="my-2 w-px bg-[#E8EEE8]" />
+                    <Pressable
+                      accessibilityRole="button"
+                      className="flex-1 flex-row items-center justify-center py-3"
+                      onPress={() => router.push("/DeliveryTab/orders")}
+                    >
+                      <Eye color="#21643A" size={15} />
+                      <Text className="ml-1.5 text-xs font-bold text-[#21643A]">View order</Text>
+                    </Pressable>
+                  </View>
+                  {nextStatus ? (
+                    <Pressable
+                      accessibilityRole="button"
+                      className="mx-3 mb-3 min-h-11 flex-row items-center justify-center rounded-xl bg-[#17663D]"
+                      disabled={Boolean(updatingOrderId)}
+                      onPress={() => confirmOrderStatus(order, nextStatus)}
+                    >
+                      {isUpdatingOrder ? (
+                        <ActivityIndicator color="#FFFFFF" />
+                      ) : (
+                        <Text className="text-sm font-bold text-white">
+                          {nextStatus === "ACCEPTED"
+                            ? "Accept delivery"
+                            : `Mark ${orderStatusLabel(nextStatus).toLowerCase()}`}
+                        </Text>
+                      )}
+                    </Pressable>
+                  ) : null}
+                </View>
+              );
+            })
           ) : (
-            <View className="mt-4 flex-row items-center rounded-xl bg-[#F7F9F7] p-4">
-              <PackageCheck color="#5B8063" size={20} />
-              <Text className="ml-3 flex-1 text-sm leading-5 text-slate-600">
+            <View className="mt-4 items-center rounded-2xl bg-[#F7F9F7] px-5 py-7">
+              <View className="h-12 w-12 items-center justify-center rounded-2xl bg-white">
+                <CalendarDays color="#5B8063" size={22} />
+              </View>
+              <Text className="mt-3 text-sm font-extrabold text-[#24372D]">
+                No assigned orders today
+              </Text>
+              <Text className="mt-1 text-center text-xs leading-5 text-slate-500">
                 {isOnline
-                  ? "No active delivery right now. You are online and waiting for new assignments."
-                  : "Go online to start receiving delivery assignments."}
+                  ? "You are online and ready for new delivery assignments."
+                  : "Go online when you are ready to receive delivery assignments."}
               </Text>
             </View>
           )}
         </View>
 
-        <AuthLogoutButton />
       </ScrollView>
 
       <Modal
@@ -695,6 +1138,60 @@ export default function DeliveryPartnerScreen() {
           </View>
         </View>
       </Modal>
+      <Modal
+        animationType="fade"
+        onRequestClose={() => undefined}
+        transparent
+        visible={showAttendancePrompt && dashboard !== null}
+      >
+        <View className="flex-1 items-center justify-center bg-[#292D3A]/85 px-7">
+          <View
+            accessibilityViewIsModal
+            className="w-full max-w-[560px] items-center rounded-[20px] bg-white px-6 pb-8 pt-9"
+          >
+            <View className="h-[70px] w-[70px] items-center justify-center rounded-[22px] bg-[#D1FAE8]">
+              <CalendarCheck2 color="#00805A" size={34} strokeWidth={2.2} />
+            </View>
+            <Text className="mt-5 text-xs font-extrabold tracking-[2.5px] text-[#00805A]">
+              STAFF ATTENDANCE
+            </Text>
+            <Text className="mt-3 text-center text-[29px] font-black leading-[36px] text-[#111827]">
+              Mark your attendance
+            </Text>
+            <Text className="mt-2 text-center text-base leading-[25px] text-[#52627A]">
+              Check in to begin your shift. You can access the staff pages after your
+              attendance is recorded.
+            </Text>
+            {checkInError ? (
+              <Text
+                accessibilityRole="alert"
+                className="mt-4 text-center text-sm font-semibold text-red-700"
+              >
+                {checkInError}
+              </Text>
+            ) : null}
+            <Pressable
+              accessibilityRole="button"
+              className={`mt-8 min-h-[56px] w-full flex-row items-center justify-center rounded-2xl bg-[#00805A] px-4 ${
+                checkInBusy ? "opacity-70" : "active:opacity-80"
+              }`}
+              disabled={checkInBusy}
+              onPress={() => void checkInAndContinue()}
+            >
+              {checkInBusy ? (
+                <ActivityIndicator color="#FFFFFF" />
+              ) : (
+                <>
+                  <CalendarCheck2 color="#FFFFFF" size={20} strokeWidth={2.2} />
+                  <Text className="ml-3 text-base font-extrabold text-white">
+                    Check In &amp; Continue
+                  </Text>
+                </>
+              )}
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -722,7 +1219,7 @@ function ActionButton({
     <Pressable
       accessibilityRole="button"
       accessibilityState={{ disabled }}
-      className={`min-h-10 flex-row items-center justify-center rounded-xl px-3 ${variantClass} ${
+      className={`min-h-11 w-[48.5%] flex-row items-center justify-center rounded-xl px-3 ${variantClass} ${
         disabled ? "opacity-60" : "active:opacity-80"
       }`}
       disabled={disabled}

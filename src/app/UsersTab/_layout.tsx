@@ -12,7 +12,9 @@ import {
 } from "lucide-react-native";
 import { Platform, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useCart } from "../../contexts/CartContext";
+import { CartProvider, useCart } from "../../contexts/CartContext";
+import { CustomAlertProvider } from "../../contexts/CustomAlertContext";
+import RequireAuth from "../../components/RequireAuth";
 import TopHeader from "../Navigations/TopHeader";
 
 const headerTitles: Record<string, string> = {
@@ -32,7 +34,16 @@ export const unstable_settings = {
 };
 
 export default function RootLayout() {
-  return <RootTabs />;
+  return (
+    <CustomAlertProvider>
+      <NavigationBar style="dark" />
+      <CartProvider>
+        <RequireAuth role="user">
+          <RootTabs />
+        </RequireAuth>
+      </CartProvider>
+    </CustomAlertProvider>
+  );
 }
 
 function RootTabs() {
