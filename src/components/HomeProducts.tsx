@@ -10,6 +10,7 @@ import { useCart } from "../contexts/CartContext";
 import { useProductNavigation } from "../hooks/useProductNavigation";
 import type { FoodProduct } from "../types/food";
 import FoodProductCard from "./common/FoodProductCard";
+import HomePromotionBanner from "./HomePromotionBanner";
 
 type HomeProductAction = "add" | "buy";
 
@@ -330,6 +331,7 @@ export default function HomeProducts() {
 
       {!loading && !error ? (
         <>
+          <HomePromotionBanner promotion="events" />
           {renderFilteredSection(
             "Just added",
             "New Arrivals",
@@ -337,6 +339,7 @@ export default function HomeProducts() {
             newArrivals,
             "New menu items will appear here.",
           )}
+          <HomePromotionBanner promotion="reservations" />
           {renderFilteredSection(
             "Plant-powered picks",
             "Vegetarian",
@@ -344,6 +347,7 @@ export default function HomeProducts() {
             vegetarianFoods,
             "No vegetarian items are available right now.",
           )}
+          <HomePromotionBanner promotion="menu" />
           {renderFilteredSection(
             "Made for meat lovers",
             "Non-Vegetarian",
