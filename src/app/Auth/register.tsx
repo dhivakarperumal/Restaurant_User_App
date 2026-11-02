@@ -1,4 +1,4 @@
-import { useRef, useState, type ComponentRef } from "react";
+import { useEffect, useRef, useState, type ComponentRef } from "react";
 import { router } from "expo-router";
 import {
   ArrowRight,
@@ -13,6 +13,7 @@ import {
 import {
   ActivityIndicator,
   Image,
+  Keyboard,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -50,6 +51,23 @@ export default function RegisterScreen() {
   const [isConfirmPasswordVisible, setIsConfirmPasswordVisible] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isRegistered, setIsRegistered] = useState(false);
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
+
+  useEffect(() => {
+    const showEvent = Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
+    const hideEvent = Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide";
+    const showSubscription = Keyboard.addListener(showEvent, () =>
+      setKeyboardVisible(true),
+    );
+    const hideSubscription = Keyboard.addListener(hideEvent, () =>
+      setKeyboardVisible(false),
+    );
+
+    return () => {
+      showSubscription.remove();
+      hideSubscription.remove();
+    };
+  }, []);
 
   const scrollInputIntoView = (input: ComponentRef<typeof TextInput> | null) => {
     if (input) {
@@ -207,13 +225,14 @@ export default function RegisterScreen() {
           className="flex-1"
           contentContainerStyle={{
             flexGrow: 1,
-            justifyContent: "center",
+            justifyContent: keyboardVisible ? "flex-start" : "center",
             paddingHorizontal: 24,
-            paddingVertical: 24,
+            paddingTop: keyboardVisible ? 12 : 24,
+            paddingBottom: keyboardVisible ? 48 : 24,
           }}
           keyboardShouldPersistTaps="handled"
-          keyboardDismissMode={Platform.OS === "ios" ? "interactive" : "on-drag"}
-          showsVerticalScrollIndicator={false}
+          keyboardDismissMode={Platform.OS === "ios" ? "interactive" : "none"}
+          showsVerticalScrollIndicator={keyboardVisible}
         >
           <View className="w-full self-center" style={{ maxWidth: 480 }}>
             <View className="mb-5 items-center">

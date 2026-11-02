@@ -1,9 +1,10 @@
-import { useRef, useState, type ComponentRef } from "react";
+import { useEffect, useRef, useState, type ComponentRef } from "react";
 import { router } from "expo-router";
 import { ArrowRight, Eye, EyeOff, LockKeyhole, UserRound } from "lucide-react-native";
 import {
   ActivityIndicator,
   Image,
+  Keyboard,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -27,6 +28,24 @@ export default function LoginScreen() {
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
+
+  useEffect(() => {
+    const showEvent = Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
+    const hideEvent = Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide";
+    const showSubscription = Keyboard.addListener(showEvent, () =>
+      setKeyboardVisible(true),
+    );
+    const hideSubscription = Keyboard.addListener(hideEvent, () =>
+      setKeyboardVisible(false),
+    );
+
+    return () => {
+      showSubscription.remove();
+      hideSubscription.remove();
+    };
+  }, []);
+
   const scrollInputIntoView = (input: ComponentRef<typeof TextInput> | null) => {
     if (input) {
       formScroll.current?.scrollResponderScrollNativeHandleToKeyboard(
@@ -107,10 +126,16 @@ export default function LoginScreen() {
         <ScrollView
           ref={formScroll}
           className="flex-1"
-          contentContainerStyle={{ flexGrow: 1, justifyContent: "center", paddingHorizontal: 24, paddingVertical: 28 }}
+          contentContainerStyle={{
+            flexGrow: 1,
+            justifyContent: keyboardVisible ? "flex-start" : "center",
+            paddingHorizontal: 24,
+            paddingTop: keyboardVisible ? 12 : 28,
+            paddingBottom: keyboardVisible ? 48 : 28,
+          }}
           keyboardShouldPersistTaps="handled"
-          keyboardDismissMode={Platform.OS === "ios" ? "interactive" : "on-drag"}
-          showsVerticalScrollIndicator={false}
+          keyboardDismissMode={Platform.OS === "ios" ? "interactive" : "none"}
+          showsVerticalScrollIndicator={keyboardVisible}
         >
           <View className="w-full self-center" style={{ maxWidth: 480 }}>
             <View className="mb-6 items-center">
