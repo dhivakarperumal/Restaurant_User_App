@@ -113,6 +113,8 @@ const styles = StyleSheet.create({
   },
   activeIcon: {
     backgroundColor: "#17663D",
+    borderRadius: 22,
+    overflow: "hidden",
   },
   label: {
     marginTop: 2,
