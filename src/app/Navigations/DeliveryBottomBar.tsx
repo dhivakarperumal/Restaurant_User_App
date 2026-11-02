@@ -17,6 +17,15 @@ const tabItems = [
   { href: "/DeliveryTab/profile", label: "Profile", Icon: UserRound },
 ] as const;
 
+function isTabFocused(pathname: string, href: string) {
+  const currentPath = pathname.replace(/\/+$/, "") || "/";
+  const tabPath = href.replace(/\/+$/, "") || "/";
+
+  return tabPath === "/DeliveryTab"
+    ? currentPath === tabPath
+    : currentPath === tabPath || currentPath.startsWith(`${tabPath}/`);
+}
+
 export default function DeliveryBottomBar() {
   const insets = useSafeAreaInsets();
   const pathname = usePathname();
@@ -29,11 +38,9 @@ export default function DeliveryBottomBar() {
       ]}
     >
       {tabItems.map(({ href, label, Icon }) => {
-        const focused =
-          href === "/DeliveryTab"
-            ? pathname === href || pathname === `${href}/`
-            : pathname === href;
-        const color = focused ? "#17663D" : "#829087";
+        const focused = isTabFocused(pathname, href);
+        const iconColor = focused ? "#FFFFFF" : "#829087";
+        const labelColor = focused ? "#17663D" : "#829087";
 
         return (
           <Pressable
@@ -47,11 +54,15 @@ export default function DeliveryBottomBar() {
             style={styles.tab}
           >
             <View style={[styles.icon, focused && styles.activeIcon]}>
-              <Icon color={color} size={21} strokeWidth={focused ? 2.5 : 2} />
+              <Icon color={iconColor} size={21} strokeWidth={focused ? 2.5 : 2} />
             </View>
             <Text
               numberOfLines={1}
-              style={[styles.label, { color }, focused && styles.activeLabel]}
+              style={[
+                styles.label,
+                { color: labelColor },
+                focused && styles.activeLabel,
+              ]}
             >
               {label}
             </Text>
@@ -84,16 +95,24 @@ const styles = StyleSheet.create({
     minHeight: 52,
     alignItems: "center",
     justifyContent: "center",
+    marginHorizontal: 3,
+    borderRadius: 14,
   },
   icon: {
-    width: 38,
-    height: 30,
+    width: 44,
+    height: 44,
+    minWidth: 44,
+    maxWidth: 44,
+    minHeight: 44,
+    maxHeight: 44,
+    flexShrink: 0,
+    alignSelf: "center",
     alignItems: "center",
     justifyContent: "center",
-    borderRadius: 12,
+    borderRadius: 999,
   },
   activeIcon: {
-    backgroundColor: "#EAF2E8",
+    backgroundColor: "#17663D",
   },
   label: {
     marginTop: 2,
