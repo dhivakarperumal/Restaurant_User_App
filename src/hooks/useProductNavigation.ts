@@ -1,9 +1,11 @@
-import { router } from "expo-router";
+import { router, usePathname } from "expo-router";
 import { useCallback } from "react";
 import { getFoodId } from "../lib/foods";
 import type { FoodProduct } from "../types/food";
 
 export function useProductNavigation() {
+  const pathname = usePathname();
+
   return useCallback(
     (food: FoodProduct) => {
       const foodId = getFoodId(food);
@@ -12,11 +14,21 @@ export function useProductNavigation() {
         return;
       }
 
-      router.push({
-        pathname: "/UsersTab/product/[id]",
-        params: { id: foodId },
-      });
+      const isOnProductPage = pathname.startsWith("/UsersTab/product/");
+
+      if (isOnProductPage) {
+        // Already on a product page — replace so back() returns to the previous screen
+        router.replace({
+          pathname: "/UsersTab/product/[id]",
+          params: { id: foodId },
+        });
+      } else {
+        router.push({
+          pathname: "/UsersTab/product/[id]",
+          params: { id: foodId },
+        });
+      }
     },
-    [],
+    [pathname],
   );
 }
